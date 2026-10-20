@@ -60,6 +60,26 @@ class TsaKeyWarningTest {
     }
 
     @Test
+    @DisplayName("seznam zdrojů vypíše přijímané a odmítnuté funkce i podpis razítka")
+    void hashesAndSigningLines() {
+        TsaProfile p = profile(SignatureAlgorithm.RSA_SHA384, 4096, null);
+        assertEquals("Hashovací funkce: přijímané zatím nezjištěny; aplikace žádá s: SHA-256",
+                TsaManagerDialog.hashesLine(p));
+        // I.CA: SHA-384 odmítá, ostatní bere (měření v TimestampingService.probe)
+        p.setSupportedHashes(java.util.List.of(TsaProfile.HASH_SHA256, TsaProfile.HASH_SHA512));
+        assertEquals("Přijímá hashovací funkce: SHA-512, SHA-256 (odmítá SHA-384);"
+                + " aplikace žádá s: SHA-256", TsaManagerDialog.hashesLine(p));
+        assertEquals("Razítka podepisuje: RSA, klíč 4 096 bitů, hash SHA-384",
+                TsaManagerDialog.signingLine(p));
+        assertNull(TsaManagerDialog.signingLine(profile(null, 0, null)));
+        p.setCertNotAfter(Date.from(Instant.parse("2034-08-02T10:00:00Z")));
+        assertEquals("Razítka podepisuje: RSA, klíč 4 096 bitů, hash SHA-384;"
+                + " Platnost certifikátu do: 2. 8. 2034", TsaManagerDialog.signingLine(p));
+        assertEquals("Platnost certifikátu do: 10. 10. 2032", TsaManagerDialog.signingLine(
+                profile(null, 0, "2032-10-10T10:00:00Z")));
+    }
+
+    @Test
     @DisplayName("klíč se zapíše do nastavení a zase přečte")
     void persistRoundTrip() {
         TsaSigningKey key = new TsaSigningKey(SignatureAlgorithm.RSA_SSA_PSS_SHA256_MGF1, 3072);

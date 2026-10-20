@@ -153,6 +153,20 @@ public record TsaSigningKey(SignatureAlgorithm algorithm, int keyLength) {
         return algorithm.getEncryptionAlgorithm().getName() + ", klíč " + size + " bitů";
     }
 
+    /**
+     * „RSA, klíč 4 096 bitů, hash SHA-384“ — celý podpis razítka, pro seznam zdrojů v nastavení
+     * (pokyn uživatele z 20. 10. 2026).
+     *
+     * <p>Hash podpisu je vlastnost autority, ne žádosti: měření 20. 10. 2026 ukázalo, že Sectigo
+     * Qualified podepisuje SHA-384 a Izenpe SHA-256 bez ohledu na to, zda žádost nesla otisk
+     * SHA-512, SHA-384 nebo SHA-256. Proto stačí klíč z jednoho razítka sondy.
+     */
+    public String describeSignature() {
+        DigestAlgorithm digest = algorithm.getDigestAlgorithm();
+        return describe() + (digest != null ? ", hash " + TsaProfile.displayHash(digest.getName())
+                : "");
+    }
+
     /** Zápis do nastavení: jméno algoritmu DSS a délka. */
     public String persist() {
         return algorithm.name() + ":" + keyLength;

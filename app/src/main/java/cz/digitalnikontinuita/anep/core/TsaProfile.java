@@ -136,6 +136,11 @@ public class TsaProfile {
         return java.util.List.of(HASH_SHA512, HASH_SHA384, HASH_SHA256);
     }
 
+    /** „SHA512“ → „SHA-512“ (i jména DSS); co tvar nemá, vrátí beze změny. */
+    public static String displayHash(String name) {
+        return name == null ? "" : name.replaceFirst("^SHA(1|\\d{3})$", "SHA-$1");
+    }
+
     /**
      * Otiskové funkce, které smí nastavení nabídnout.
      *

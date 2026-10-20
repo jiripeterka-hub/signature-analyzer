@@ -107,13 +107,22 @@ public class TsaManagerDialog {
                 lblName.setStyle("-fx-font-weight:bold;");
 
                 String detail = p.getUrl()
-                        + "  •  " + p.getHashAlgorithm()
                         + "  •  " + authDescription(p);
                 Label lblDetail = new Label(detail);
                 lblDetail.setStyle("-fx-font-size:11px;-fx-text-fill:#555555;");
                 wrapping(lblDetail, 380);
 
                 VBox nameCol = new VBox(2, lblName, lblDetail);
+                // Co test zdroje naměřil, vypsané celé (pokyn uživatele z 20. 10. 2026): dřív
+                // byla v řádku jen nastavená funkce a výčet přijímaných jen v bublině editačního
+                // okna, a jen když nějakou zdroj odmítl.
+                for (String line : new String[]{hashesLine(p), signingLine(p)}) {
+                    if (line == null) continue;
+                    Label l = new Label(line);
+                    l.setStyle("-fx-font-size:11px;-fx-text-fill:#555555;");
+                    wrapping(l, 380);
+                    nameCol.getChildren().add(l);
+                }
                 // Naměřená kvalifikovanost patří na řádek, ne do nápovědy: podle ní se uživatel
                 // rozhoduje, který zdroj vybere, a nekvalifikovaný zdroj mění, co aplikace
                 // o dokumentu po zásahu tvrdí. Mlčí se jen tam, kde se nic nenaměřilo.
@@ -281,6 +290,46 @@ public class TsaManagerDialog {
             case CERTIFICATE -> "klientský certifikát";
             case NONE        -> "bez přihlášení";
         };
+    }
+
+    /**
+     * Které hashovací funkce zdroj v žádosti přijímá a se kterou se ho aplikace ptá. Nastavená
+     * funkce se uvádí jako „aplikace žádá s:“ (pokyn uživatele z 20. 10. 2026) — holé „žádá s“
+     * se dalo číst jako vlastnost zdroje.
+     *
+     * <p>Odmítnuté se jmenují zvlášť: zkouší se jen SHA-512, SHA-384 a SHA-256 a bez nich by
+     * výčet mohl vypadat jako úplný seznam toho, co autorita umí. U zdroje, u kterého test
+     * neproběhl (založený dřív, než se to zjišťovalo), se to říká, místo aby se mlčelo.
+     */
+    static String hashesLine(TsaProfile p) {
+        String used = "aplikace žádá s: " + TsaProfile.displayHash(p.getHashAlgorithm());
+        List<String> ok = p.getSupportedHashes();
+        if (ok.isEmpty()) {
+            return "Hashovací funkce: přijímané zatím nezjištěny; " + used;
+        }
+        List<String> refused = new ArrayList<>(TsaProfile.allHashAlgorithms());
+        refused.removeAll(ok);
+        return "Přijímá hashovací funkce: "
+                + String.join(", ", ok.stream().map(TsaProfile::displayHash).toList())
+                + (refused.isEmpty() ? "" : " (odmítá "
+                        + String.join(", ", refused.stream().map(TsaProfile::displayHash).toList())
+                        + ")")
+                + "; " + used;
+    }
+
+    /**
+     * Čím autorita razítka podepisuje a dokdy platí její certifikát (konec platnosti doplněn
+     * na pokyn uživatele z 20. 10. 2026); co se nezjistilo, vynechá se. {@code null}, když se
+     * nezjistilo ani jedno.
+     */
+    static String signingLine(TsaProfile p) {
+        List<String> parts = new ArrayList<>();
+        TsaSigningKey key = p.getSigningKey();
+        if (key != null) parts.add("Razítka podepisuje: " + key.describeSignature());
+        if (p.getCertNotAfter() != null) {
+            parts.add("Platnost certifikátu do: " + day(p.getCertNotAfter()));
+        }
+        return parts.isEmpty() ? null : String.join("; ", parts);
     }
 
     /**
