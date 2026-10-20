@@ -1,0 +1,21 @@
+target/
+.idea/
+*.iml
+.vscode/
+packaging/windows/dist/
+*.log
+
+# classpath dump z dependency:build-classpath (pomocný soubor pro profilaci)
+cp.txt
+cp-dist.txt
+cp-test.txt
+
+# vystupy sond z app/src/test/.../tools (AugmentSizeProbe, PreserveProbe apod.)
+*-augmented.pdf
+*-preserved.pdf
+
+# prirucka.epub se vyraba z docs/prirucka.html pro cteni na ctecce; do repozitare nepatri
+docs/prirucka.epub
+
+# bajtkód generátorů v docs/ (docx_kit.py je od 16. 9. 2026 importovaný modul)
+__pycache__/

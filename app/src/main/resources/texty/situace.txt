@@ -1,0 +1,514 @@
+# ======================================================================================
+#  V Y S V Ě T L I V K Y   S I T U A C Í
+#
+#  Tenhle soubor čte AnEP při spuštění. Co je tady, to uvidí uživatel — nikde v kódu
+#  už ta znění podruhé nejsou. Upravíte-li text zde, stačí projekt přeložit.
+#
+#  Situace je to, co ověření o prvku <zjistilo>; důvod je to, proč výsledek není kladný.
+#  Texty důvodů jsou ve vedlejším souboru duvody.txt.
+#
+#  ---------------------------------------------------------------------------------
+#  J A K   S E   S O U B O R   P Í Š E
+#
+#  [7]            začátek situace číslo 7
+#  text = ...     vysvětlivka
+#
+#  Text se píše za rovnítko, pod ně (odsazený dvěma mezerami), nebo obojí naráz — věta
+#  začatá za rovnítkem smí pokračovat na odsazených řádcích pod ním;
+#  odsazené řádky se spojí do jednoho odstavce, takže na zalomení řádků nezáleží.
+#  Prázdný řádek uvnitř odsazeného textu začíná nový odstavec. Řádek začínající křížkem
+#  je poznámka. Soubor je v kódování UTF-8.
+#
+#  ---------------------------------------------------------------------------------
+#  U P O Z O R N Ě N Í   S   D A T E M
+#
+#  Situace 2 a 48 mluví o revokovaném certifikátu a ověření někdy zná i den odvolání.
+#  Ten se vkládá doprostřed věty, na místo {datum}; není-li znám, nevloží se nic.
+#  Totéž znění nese tlačítko ⚠ v přehledech. Vysvětlivka situace 48 je obsahuje celou,
+#  a aby nebyla v souboru dvakrát, bere si ji přes {upozorneni}. Obojí slovo ve větě
+#  nechte, jinak se údaj čtenáři neukáže.
+#
+#  ---------------------------------------------------------------------------------
+#  Č Í S L A   S I T U A C Í
+#
+#  Čísla se nemění a nepřečíslují: odkazuje na ně kód i dokumentace, a některé vysvětlivky
+#  se na sebe navzájem odvolávají. Přidání nové situace vyžaduje zásah do kódu.
+# ======================================================================================
+
+# Upozornění u situace 2; {datum} nahradí den odvolání, je-li znám.
+[2/upozorneni]
+text =
+  Dostupné revokační informace prokazují, že podpisový certifikát byl revokován (předčasně
+  zneplatněn){datum} — dříve, než kam sahá důkaz existence podpisu. Časové razítko, které rozhodný
+  okamžik určuje, je ale horní mez okamžiku podpisu, ne dolní: dokládá, že podpis v ten čas už
+  existoval, nikoli že nevznikl ještě před revokací. Standardy proto odmítají prohlásit podpis za
+  neplatný, a ze stejného důvodu ani za platný. Stav platnosti zůstává neznámý — nikoli neplatný.
+
+# Upozornění u situace 48; {datum} nahradí den odvolání, je-li znám.
+[48/upozorneni]
+text =
+  Dostupné revokační informace prokazují, že podpisový certifikát byl revokován (předčasně
+  zneplatněn){datum}. Ověřování tyto informace přijalo a opřelo se o ně. Chybí ale důkaz o tom,
+  kdy podpis vznikl — podpis není opatřen časovým razítkem — a tak nelze rozhodnout, zda vznikl
+  ještě před revokací (a byl by platný), nebo až po ní (a byl by neplatný). Standardy proto
+  odmítají prohlásit podpis za neplatný, a ze stejného důvodu ani za platný. Stav platnosti
+  zůstává neznámý — nikoli neplatný.
+
+[1]
+text =
+  Porušení integrity — podepsaná data byla po podpisu pozměněna. Otisk podepsaných dat nesouhlasí
+  s tím, který je uložen v podpisu. Od situace 53 se liší právě tímto: tam otisk souhlasí a vada
+  je uvnitř podpisu, tady se změnil obsah.
+
+[2]
+text =
+  Podpisový certifikát byl k rozhodnému okamžiku (BST) již revokován. Rozhodný okamžik určuje
+  časové razítko, a to je horní mez okamžiku podpisu, ne dolní: dokládá, že podpis v ten čas už
+  existoval, nikoli že neexistoval ještě před revokací. Standardy proto odmítají prohlásit podpis
+  za neplatný — a ze stejného důvodu ani za platný. Stav platnosti zůstává neznámý. Od situace 48
+  se liší jen tím, že tam žádné razítko není a rozhodným okamžikem je přítomnost.
+
+[3]
+text = Podpisový certifikát expiroval; podpis není opatřen důvěryhodným časovým razítkem
+
+[4]
+text = Certifikáty TSA u přiložených časových razítek expirovaly
+
+[5]
+text = Vložená revokační data jsou nedůvěryhodná — certifikát respondéru expiroval
+
+[6]
+text =
+  Dostupné revokační informace (OCSP nebo CRL) vydány po expiraci certifikátu; DSS je při
+  ověřování dle standardů odmítá (lze změnit v Nastavení volbou "Využij i revokační informace,
+  vydané po expiraci certifikátu")
+
+[7]
+text = Online OCSP odpověď uvádí stav certifikátu jako NEZNÁMÝ
+
+[8]
+text = Vložená revokační data jsou nepoužitelná (jiný důvod než expirace respondéru)
+
+[9]
+text = Online revokační informace se nepodařilo získat
+
+[10]
+text = Podpisový certifikát v době podpisu ještě nebyl platný
+
+[11]
+text = Certifikát certifikační autority v řetězu byl revokován
+
+[12]
+text =
+  Řetězec certifikátů nelze sestavit k důvěryhodné kotvě (může být přímou příčinou nebo důsledkem
+  jiného selhání)
+
+[13]
+text = Podepsaná data nebyla nalezena — soubor pravděpodobně nebyl přiložen k podpisu
+
+[14]
+text =
+  Nesouhlasí hash externího podpisu — pravděpodobně jde o nesprávnou dvojici soubor + podpis
+
+[15]
+text =
+  Zastaralá hashovací funkce SHA1 v podpisu nebo certifikátech řetězu — ověření lze v Nastavení
+  zvolit tolerantní
+
+[16]
+text =
+  Kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160) v podpisu nebo certifikátech
+  řetězu — tolerantní režim tu nepomůže
+
+[17]
+text =
+  Podpis je ve formátu PDF-NOT-ETSI, nikoli PAdES — nesplňuje ETSI EN 319 102-2; chybí povinný
+  atribut signing-certificate. Jde typicky o starší podpis vytvořený před nástupem eIDAS (dle
+  směrnice 1999/93/ES).
+
+[18]
+text =
+  Podpis je ve formátu PKCS #7, nikoli CAdES — nesplňuje ETSI EN 319 122-1; nejde o plnohodnotný
+  zaručený elektronický podpis dle eIDAS.
+
+[19]
+text =
+  Podpis nebo pečeť je v technickém formátu, který tato aplikace nedokáže ověřit (SubFilter
+  nepodporovaný validátorem DSS). Přítomnost autentizačního prvku byla zjištěna z podpisového pole
+  PDF, platnost nelze posoudit.
+
+[20]
+text =
+  Ověření proběhlo jako platné na základě vložených revokačních informací, které byly vydány ještě
+  před revokací certifikátu. Aplikace však zároveň získala on-line revokační informaci (OCSP nebo
+  CRL), která prokazuje, že certifikát byl v době podpisu (BST) již revokován. Tato revokační
+  informace byla vydána po expiraci certifikátu a v režimu ověřování dle standardů ji aplikace
+  nepoužila. Zaškrtnutím volby "Využij i revokační informace, vydané po expiraci certifikátu" v
+  Nastavení ji do ověření vpustíte; výsledek pak nebude kladný, ale ani neplatný — zůstane
+  neznámý, protože nic nedokládá, zda podpis vznikl před revokací, nebo až po ní.
+
+[21]
+text =
+  Platnost podpisu je neznámá, protože dostupná on-line revokační informace (OCSP nebo CRL) byla
+  vydána po expiraci podpisového certifikátu a v režimu ověřování dle standardů ji aplikace
+  nepoužila. Tato revokační informace však prokazuje, že certifikát byl v době své platnosti
+  revokován. Zaškrtnutí volby "Využij i revokační informace, vydané po expiraci certifikátu" v
+  Nastavení na výsledku nic nezmění: informace se sice použije, ale platnost zůstane neznámá.
+  Chybí totiž něco jiného — důkaz, kdy podpis vznikl. Revokace je horní mez, razítko také; že
+  podpis neexistoval ještě před revokací, nedokládá nic, a standardy proto odmítají prohlásit
+  podpis za neplatný stejně jako za platný.
+
+[22]
+text =
+  Podpis nenese podepsaný atribut 'signing-time' (deklarovaný čas podpisu). AnEP jej
+  nevyžaduje: o době vzniku podpisu rozhoduje časové razítko a ETSI EN 319 102-1 deklarovaný
+  čas potřebuje jen pro kontrolu zpoždění razítka. Výchozí validační politika knihovny DSS jej
+  ale vyžaduje, takže validátory postavené na jejím výchozím nastavení mohou podpis kvůli tomu
+  odmítnout (výsledek „neurčitelný“).
+
+[23]
+text =
+  Přiložené časové razítko pochází od TSA, která není zapsána v důvěryhodném seznamu EU (EUTL).
+  DSS proto razítku nemůže důvěřovat a bez důvěryhodného razítka nelze stanovit rozhodný okamžik
+  (BST) pro ověření platnosti podpisu. Řešení: přidat certifikát příslušné TSA do vlastního
+  úložiště důvěryhodných certifikátů (Nastavení → Certifikáty).
+
+[24]
+text =
+  Ověření proběhlo k zadanému datu. K tomuto datu byl certifikát platný. Aplikace má však k
+  dispozici informaci (byť vydanou po expiraci certifikátu), která dokládá, že certifikát byl
+  následně revokován.
+
+[25]
+text =
+  Rozhodný okamžik, ke kterému se platnost posuzovala, leží až za koncem řádné doby platnosti
+  podpisového certifikátu (za datem notAfter). Buď podpis (či pečeť) opravdu vznikl až potom, nebo
+  se jen nepodařilo prokázat dřívější existenci — časové razítko z doby platnosti certifikátu buď
+  chybí, nebo neobstálo (situace 27). Sama tato situace mezi těmi dvěma možnostmi nerozlišuje.
+
+[26]
+text =
+  Podpis (či pečeť) byl vytvořen ještě předtím, než začala řádná doba platnosti podpisového
+  certifikátu (tj. před datem notBefore).
+
+[27]
+text =
+  Přiložené časové razítko (razítka) se nepodařilo ověřit jako platné, a proto neslouží jako důkaz
+  existence podpisu (PoE). Bez PoE nelze určit rozhodný okamžik (BST) pro ověření platnosti
+  certifikátu.
+
+[29]
+text =
+  Vložená OCSP odpověď pochází od respondéra, jehož certifikát byl v okamžiku vydání té odpovědi
+  už po expiraci. Taková odpověď nevznikla v pořádku nikdy — nejde o respondéra, kterému platnost
+  skončila až potom. Ověření dle standardů ji proto nepřijme a AnEP kvůli tomu snižuje výsledek na
+  neznámý.
+
+[30]
+text =
+  On-line revokační informace (OCSP nebo CRL) prokazují revokaci podpisového certifikátu k
+  rozhodnému okamžiku (BST). V režimu ověřování dle standardů je ale nelze použít, protože byly
+  vydány až po skončení řádné doby platnosti (notAfter) certifikátu.
+
+[31]
+text =
+  Nepřerušený časový řetězec: první razítko bylo přidáno před expirací podpisového certifikátu a
+  každé další razítko bylo přidáno ještě za platnosti certifikátu některého z razítek, která mu
+  předcházejí. Nemusí to být razítko bezprostředně předchozí: mladší razítko s kratším
+  certifikátem řadu nezkracuje, protože důkaz existence se opře o to starší, jehož certifikát
+  ještě platí.
+  Posuzuje se výhradně řádná doba platnosti certifikátů; o revokaci tato situace nevypovídá. To,
+  že archivní razítko nesmí vzniknout až po revokaci podpisového certifikátu (ETSI EN 319 122-1,
+  čl. 6.3 písm. m), hlídá situace 44 a brána pro nabídku uchování.
+
+[32]
+text =
+  Řada časových razítek je dosud krytá platným certifikátem: alespoň jednomu z platných časových
+  razítek, která kryjí tento prvek, dosud neskončila řádná doba platnosti certifikátu jeho
+  autority. Nemusí to být razítko poslední — stačí kterékoli z nich, o jehož certifikát se dá
+  důkaz existence opřít.
+
+[33]
+text =
+  Jsou k dispozici všechny chybějící revokační informace: pro všechny certifikáty v řetězci
+  podpisového certifikátu, v řetězcích certifikátů všech časových razítek a v řetězcích
+  certifikátů respondérů OCSP/vydavatelů CRL byla úspěšně získána dle standardů využitelná
+  revokační data (OCSP nebo CRL), která dosud nejsou vložena do podpisu. Zachování ověřitelnosti
+  je do dokumentu doplní a zároveň přidá archivní časové razítko, takže podpis zůstane ověřitelný
+  i poté, co podpisový certifikát expiruje a vydavatel přestane revokační informace zveřejňovat.
+  Samotné doplnění revokačních dat (úroveň LT) se nenabízí: vložená data by sice v dokumentu byla,
+  ale nic by nedokládalo, kdy tam byla vložena — ten důkaz dodává až archivní razítko. U podpisu v
+  referenčním formátu tím vzniká úroveň LTA; u nereferenčního (PKCS #7, PDF-NOT-ETSI) se formát
+  nemění — revokační data se vloží touž konstrukcí (slovník DSS/VRI) a razítko přibude stejně, ale
+  podpis referenčním nebude.
+
+[34]
+text =
+  Ověření proběhlo bez ústupků, tedy přísně podle standardů: nebyla zapnuta žádná z tolerancí
+  (revokační informace po expiraci certifikátu nebo od expirovaného vydavatele, zastaralost SHA-1,
+  formát PDF-NOT-ETSI) ani ověření k zadanému času. Výsledek tedy stojí na tom, co uznává
+  konformní validátor.
+
+[35]
+text =
+  Ověření dle standardů nenašlo použitelné revokační informace, ale data, která k tomu chybějí, už
+  v dokumentu jsou — jenže posuzování na ně v této podobě nedosáhne: bez razítka nad celým
+  souborem se podpis soudí postupem, který se ptá jen na dnešní platnost vydavatele. Uchování
+  (záložka Digitální kontinuita) ty informace přesune do dlouhodobého úložiště a přidá razítko,
+  čímž se posuzování přenese tam, kde se s důkazy existence pracuje — proto může platnost teprve
+  vytvořit, ne jen prodloužit.
+
+[36]
+text =
+  Porušená integrita časového razítka: otisk (message imprint), který razítko nese, neodpovídá
+  datům, jež má krýt — případně nesouhlasí podpis samotného razítka. Takové razítko nic
+  neprokazuje a nemůže sloužit jako důkaz existence (PoE). Jde o zvláštní případ situace 27; na
+  rozdíl od jejích ostatních příčin (nedůvěryhodná TSA, zastaralá hashovací funkce, expirovaný
+  řetěz) to nelze napravit žádným nastavením ani doplněním certifikátu.
+
+[37]
+text =
+  Evidenční záznam se odchyluje od schématu svého standardu (RFC 4998 pro ERS, RFC 6283 pro
+  XMLERS). Není to vada důkazu: strom otisků i časové razítko se ověřují nezávisle na schématu a
+  pokud sedí, záznam svou funkci plní. Nejčastější příčinou jsou doplňková metadata, která do
+  záznamu vložil nástroj, jenž ho vytvořil, na místo, kde je standard nepředpokládá. Odchylka ale
+  může vadit jiné aplikaci, která záznam odmítne zpracovat.
+
+[38]
+text =
+  Evidenční záznam nekryje vše, co podpis podepisuje. Uchováno je tedy jen to, co záznam obsahuje;
+  u zbytku podepsaných dat nedokládá nic, a jejich existenci bude po expiraci podpisového
+  certifikátu potřeba prokázat jinak. Zjišťuje to sama knihovna DSS podle politiky ověřování
+  (kontroly SignedFilesCovered a ContainerSignedAndTimestampedFilesCovered).
+
+[39]
+text =
+  Porušená integrita dat krytých evidenčním záznamem: otisk předloženého objektu neodpovídá
+  hodnotě zaznamenané ve stromu otisků. Data byla po vytvoření záznamu změněna a záznam pro ně
+  neprokazuje nic. Netýká se objektů, které nebyly předloženy — ty se nekontrolují a proti záznamu
+  nesvědčí.
+
+[40]
+text =
+  Žádné z časových razítek evidenčního záznamu se nepodařilo ověřit jako platné. Strom otisků tím
+  není nijak ukotven v čase, takže záznam neslouží jako důkaz existence (PoE) — bez ohledu na to,
+  jak dobře otisky krytých dat souhlasí.
+
+[41]
+text =
+  Evidenční záznam kryje podpis, který nemá vložené revokační informace (úroveň B nebo T). Záznam
+  uchovává existenci a neporušenost dat, nikoli stav revokace certifikátu — ten se u takového
+  podpisu musí dohledávat on-line při každém ověření. Po expiraci podpisového certifikátu ho ale
+  vydavatel zpravidla přestane zveřejňovat, takže záznam sice doloží, kdy podpis existoval, ale
+  nedoloží už nic o tom, že certifikát tehdy nebyl revokován. Doplnit to zpětně nelze: augmentace
+  na úroveň LT by přepsala právě ta data, nad nimiž je spočítán strom otisků záznamu. Správné
+  pořadí je nejprve augmentovat na LT, teprve pak vytvořit záznam. ETSI TS 119 132-3 a TS 119
+  122-3 proto uznávají vložený evidenční záznam jen u podpisů úrovně LT a vyšší.
+
+[43]
+text =
+  Rozhodný okamžik (BST) by musel stát na časovém razítku od razítkovací služby, jejíž status v
+  důvěryhodném seznamu je dnes odňatý ("withdrawn"). Takové razítko se jako důkaz existence
+  nepřijímá, a to je důvod, proč výsledek ověření není kladný. Důvod: čas, který razítko uvádí,
+  tvrdí razítko samo o sobě a není ničím nezávisle doložen. Posuzovat podle něj důvěryhodnost téže
+  služby by bylo kruhem — kdo měl klíč té razítkovací autority, mohl razítko vyrobit kdykoli za
+  platnosti jejího certifikátu a napsat do něj libovolný čas uvnitř téhož období. Standard (ETSI
+  EN 319 102-1) proto stav služby posuzuje k okamžiku, ke kterému je existence razítka nezávisle
+  prokázána (tzv. nejnižší POE) — tím je buď pozdější archivní časové razítko, které je kryje,
+  nebo, není-li žádné, teprve přítomnost. K tomu okamžiku už ale služba kladný status nemá. Tuto
+  úvahu provádí sama knihovna DSS: konec kladného statusu (tzv. sunset) si bere z důvěryhodného
+  seznamu a od něj odvíjí rozhodný okamžik. Pokud dokument obsahuje pozdější razítko, které
+  existenci toho staršího doloží ještě před sunsetem, podpis projde a tato situace se neindikuje.
+  Ze seznamu služba nezmizela: nese i svou historii, z níž je vidět, že v době, kterou razítko
+  uvádí, status kladný měla — u razítek z doby před 1. 7. 2016, kdy se začalo uplatňovat nařízení
+  eIDAS, byl "accredited" (akreditovaná) nebo "undersupervision" (pod dohledem) podle směrnice
+  1999/93/ES, poté "granted". Sama o sobě to ale není záruka, právě proto, že se váže na čas,
+  který nikdo nedokládá. Zpětně to napravit nelze — na dokumentu se nic nezměnilo, změnil se
+  status služby. Předejít tomu jde jen včas: uchovat dokument (a tím jej opatřit novým razítkem)
+  dřív, než služba svůj kladný status ztratí, čímž vznikne důkaz existence od služby, která status
+  má.
+
+[44]
+text =
+  Ověřitelnost tohoto dokumentu zachovat nelze: certifikát byl revokován dřív, než je podpis (či
+  pečeť) prokazatelně existoval. Zachovat ověřitelnost znamená doplnit archivní časové razítko, a
+  to podle normy (ETSI EN 319 122-1, čl. 6.3 písm. m; shodně EN 319 102-1, čl. 4.3.3.4 pozn. 2)
+  nesmí vzniknout až po revokaci certifikátu. Nejde o opatrnost aplikace ani o nastavení, které by
+  šlo změnit — je to danost tohoto podpisu. Nedává to smysl ani věcně: úkon má zachovat
+  ověřitelnost platného podpisu, kdežto zde by vznikl dokument, který působí průkazněji, než jaký
+  je. Jeho dnešní výsledek se opírá o revokační informace stažené ze sítě a ty by výsledná kopie
+  nenesla; až je vydavatel přestane zveřejňovat, ověřila by se už jen proti vložené starší
+  informaci, podle které byl certifikát v pořádku. Co udělat místo toho: tlačítkem Vytvořit
+  forenzní balíček vznikne kontejner s dokumentem a jeho podklady — dokument zůstane nedotčen a k
+  pozdějšímu zkoumání se zachová i to, co dnes o revokaci víme.
+
+[45]
+text =
+  Revokační informace jsou k dispozici ke všem certifikátům, ale u některého z nich jen v podobě,
+  kterou přísná pravidla nepřipouštějí: buď byly vydány až po skončení řádné doby platnosti
+  (notAfter) certifikátu, jehož se týkají, nebo pocházejí od vydavatele, který byl v době jejich
+  vydání sám už po expiraci. Situace 33 proto neplatí: úklid při ukládání by taková data z
+  dokumentu zase vyřadil, protože ověřovateli, který se drží standardů, nic nedokládají. Řada
+  ověřovatelů však takové informace uznává, protože se ptá, zda byl certifikát platný a zda o něm
+  nějaký seznam či odpověď tvrdí revokaci; tak pracují mimo jiné CzechPOINT a podatelny orgánů
+  veřejné moci, které si revokační informace mohou opatřit samy. Pro ně se při zachování
+  ověřitelnosti přidá časové razítko a vloží se ty revokační informace, které o certifikátu něco
+  vypovídají: vydané za jeho platnosti (i od vydavatele, který je dnes po expiraci), vydané později
+  s výslovným závazkem vydavatele (expiredCertsOnCRL, archiveCutOff) a ty, které tvrdí revokaci.
+  Odpověď "nerevokován" vydaná po expiraci bez takového závazku se nevkládá: ověřovatel podle
+  standardů ji nezapočte a ověřovatelé s vlastní zásobou ji z dokumentu potřebovat nemusejí. Děje
+  se to jen u podpisu vyhodnoceného jako platný a jen spolu se situacemi 31 a 32 — bez
+  nepřerušeného časového řetězce zakončeného dosud platným certifikátem razítkovací autority by
+  dokument odmítli i tito ověřovatelé. Průkaznějším pro ověřovatele přísné se tím dokument
+  nestává.
+
+[46]
+text =
+  Revokační informace nelze použít, protože certifikát jejich vydavatele (respondéra OCSP nebo
+  vydavatele CRL) k rozhodnému okamžiku neplatil. Buď už jeho platnost skončila, nebo — ověřuje-li
+  se k okamžiku v minulosti — tehdy ještě nezačala, protože odpověď podepsal respondér zřízený až
+  později. Standardy žádají, aby šlo vydavatele revokační informace k rozhodnému okamžiku ověřit,
+  a takovou informaci proto nepřipouštějí (lze změnit v Nastavení volbou "Přijmout i revokační
+  informace od již expirovaného vydavatele"). Situace 5 se týká jen dat vložených v dokumentu od
+  vydavatele po expiraci; tahle bere zbytek, který dosud neměl kdo ohlásit.
+
+[47]
+text =
+  Stažená revokační informace o certifikátu nic neříká: seznam (CRL) vyšel až po skončení
+  platnosti certifikátu a nenese příznak expiredCertsOnCRL s datem, které by do doby jeho
+  platnosti sahalo. Podle RFC 5280 čl. 3.3 smí vydavatel záznam o certifikátu po expiraci ze
+  seznamu vypustit, takže mlčení takového seznamu nedokládá, že certifikát odvolán nebyl (DSS to
+  hlásí jako BBB_XCV_REVOC_HAS_CERT_INFO_ANS). Na rozdíl od situace 9 nějaká informace k dispozici
+  je — jen bezcenná.
+
+# Začíná týmž upozorněním, jaké nese tlačítko ⚠ — viz [48/upozorneni] výše.
+[48]
+text =
+  {upozorneni} Od situace 2 se liší tím, že tam důkaz existence je — jen ukazuje na špatnou
+  stranu: rozhodný okamžik určuje časové razítko, kdežto zde přítomnost. Stav platnosti je v obou
+  případech neznámý. Od situace 30 se liší tím, že revokační informace je bezvadná — nebrání jí
+  její vlastní stáří, ale to, že není k čemu ji vztáhnout.
+
+[49]
+text =
+  Ověření skončilo kladně, ale rozhodný okamžik (BST) nese časové razítko, které v době svého
+  vlastního důkazu existence už kvalifikované nebylo. Razítkovací služba, která je vydala, měla v
+  důvěryhodném seznamu kladný status k času, který razítko uvádí — jenže ten čas tvrdí razítko
+  samo o sobě a nikdo jej nedokládá. Standard (ETSI EN 319 102-1) proto stav služby posuzuje k
+  okamžiku, ke kterému je existence razítka nezávisle prokázána (tzv. nejnižší POE): buď k
+  pozdějšímu razítku, které je kryje, nebo, není-li žádné, teprve k přítomnosti. K tomu okamžiku
+  už služba kladný status nemá, a knihovna DSS proto témuž razítku uvádí kvalifikaci "QTSA při
+  vzniku" a "TSA k nejnižšímu POE". Proč je výsledek přesto kladný: platnost razítka nestojí na
+  statusu služby, ale na jeho certifikačním řetězu — a ten končí u kotvy důvěry, které se odnětí
+  statusu netýká. Bývá to vydávající certifikační autorita, která si kvalifikovaný status
+  podržela, nebo kořenový certifikát vložený do vlastního úložiště; vložený certifikát z povahy
+  věci žádný sunset nemá. Co z toho plyne: podpis je platný, ale důkaz jeho existence není
+  kvalifikovaný. Validátor, který kvalifikovanost důkazu vyžaduje — nebo který tu kotvu nemá —
+  může u téhož dokumentu dojít k jinému závěru. Předejít tomu jde jen včas: uchovat dokument (a
+  tím jej opatřit novým razítkem) dřív, než služba svůj kladný status ztratí. Zpětně to napravit
+  nelze — na dokumentu se nic nezměnilo, změnil se status služby. Rub situace 43: tam odnětí
+  statusu kladný výsledek zmařilo, zde jej provází.
+
+[50]
+text =
+  Ověření skončilo kladně, ale důkaz o tom, že rozhodné časové razítko existovalo, nese další
+  časové razítko — a to samo kvalifikované nebylo. Řada razítek, na které kladný výsledek stojí,
+  drží tak, jak drží její nejslabší článek: každé razítko dokládá existenci toho předchozího,
+  takže článek bez kvalifikovaného statusu přeruší kvalifikovanost celého důkazu, i když platnost
+  samotná zůstane. Nastat to může dvěma způsoby, které se liší závažností. Buď razítko kvalifikaci
+  ztratilo — v době, kterou uvádí, jeho služba kladný status ještě měla, ale k okamžiku, ke
+  kterému je nezávisle doložena jeho vlastní existence (tzv. nejnižší POE), už ne. Nebo ji nemělo
+  od začátku, protože vzniklo až poté, co byla jeho služba z důvěryhodných seznamů vyřazena; to je
+  horší, protože takový článek nebyl kvalifikovaný ani na okamžik. Proč je výsledek přesto kladný:
+  platnost razítka nestojí na statusu služby, ale na jeho certifikačním řetězu, a ten končí u
+  kotvy důvěry, které se odnětí netýká. Od situace 49 se liší tím, o kterém prvku mluví: tam jde o
+  razítko, které určuje rozhodný okamžik, zde o řadu, která za ním stojí. Nastat mohou obě naráz i
+  každá zvlášť — rozhodné razítko může mít status v pořádku a přitom viset na důkazu od služby,
+  která ho nemá. Předejít tomu jde jen včas: uchovat dokument (a tím jej opatřit novým razítkem)
+  dřív, než služba svůj kladný status ztratí.
+
+[51]
+text =
+  Závěr o tom, že podpisový certifikát nebyl odvolán, stojí na revokačním údaji, který vznikl dřív
+  než samotný podpis. Takový údaj o okamžiku podepsání nevypovídá: odpověď „neodvolán“ mluví ke
+  svému vlastnímu času a odvolání se navíc zapisuje zpětně, takže „nebyl odvolán tehdy“ umí
+  doložit jedině údaj vydaný až po podpisu. Mezi vydáním údaje a podpisem může ležet cokoli,
+  odvolání certifikátu nevyjímaje — a přesně na tom stojí známý způsob podvrhu: podepsat až po
+  odvolání a do dokumentu vložit starší odpověď z doby, kdy byl certifikát ještě v pořádku.
+  Neznamená to, že podpis je vadný. U poctivého podpisu bývá odstup minutový — podepisující
+  program si vyžádá stav certifikátu těsně předtím, než podepíše — a čím je odstup delší, tím
+  větší je prostor, o kterém se nic neví. Rozhodnout to zdejší ověřování nedokáže a už nikdy
+  nedokáže: novější údaj k tomu certifikátu zpravidla nevznikne, protože mu mezitím skončila
+  platnost. Pomoci může jedině seznam odvolaných certifikátů (CRL) z té doby — ověřovatelé s
+  vlastní zásobou revokačních informací, jako CzechPOINT nebo podatelny OVM, je mívají. Vlastní
+  seznam lze aplikaci předat v nastavení, ve vlastním úložišti CRL, a ověření pak zopakovat.
+
+[52]
+text =
+  Dokument nese časové razítko uložené ve slovníku DSS/VRI, nikoli v podpisu samotném — a žádné
+  dokumentové (archivní) razítko je nekryje. Takové razítko nezakládá důkaz existence podpisu
+  (PoE), takže se platnost přesto posuzuje k aktuálnímu času. Norma PAdES uznává pro úroveň T jen
+  dvě konstrukce: atribut signature-time-stamp uvnitř podpisu a dokumentové časové razítko.
+  Razítko ve VRI záznamu není ani jedno z nich a do dokumentu přibylo inkrementálním updatem;
+  dokud ho nekryje dokumentové razítko, může je kdokoli odstranit či nahradit, aniž by to šlo
+  poznat. Důkaz, který lze beze stopy odstranit, nemůže nést závěr o platnosti. Samotné razítko je
+  přitom kryptograficky v pořádku a skutečně dokládá, že podpis v uvedený čas existoval. Konformní
+  validátory — včetně online služby DSS — s ním ale nepočítají a rozhodný okamžik ponechávají na
+  aktuálním čase. AnEP se chová stejně, aby nesliboval ověřitelnost, kterou jinde nepotvrdí. Kdyby
+  dokument obsahoval dokumentové časové razítko, které tento token kryje, platilo by něco jiného:
+  krytí ho chrání před odstraněním, uplatní se extrakce důkazů existence a rozhodný okamžik by se
+  posunul na čas tohoto razítka.
+
+[53]
+text =
+  Podpisovou hodnotu se nepodařilo ověřit veřejným klíčem z podpisového certifikátu, ačkoli
+  podepsaný obsah zůstal nezměněný. Otisk podepsaných dat souhlasí — po podpisu do dokumentu nikdo
+  nezasáhl — takže vada je uvnitř samotného podpisu. Ověření dle standardů takový podpis odmítne a
+  výsledek uzavře jako neplatný (DSS to hlásí jako BBB_CV_ISI_ANS, „The signature is not intact!“,
+  se závěrem TOTAL_FAILED/SIG_CRYPTO_FAILURE). Nejčastější příčinou je rozpor v identifikátorech
+  algoritmů uvnitř struktury CMS: pole signatureAlgorithm uvádí jiný algoritmus otisku, než jakým
+  byl podpis skutečně vytvořen a než jaký uvádí pole digestAlgorithm. Takové podpisy vytvářely
+  některé starší verze programu Adobe Acrobat. Validátory, které se řídí polem digestAlgorithm —
+  Adobe Reader a nástroje z něj vycházející, ale i CzechPOINT či Signer — podpis ověří jako
+  platný; validátory postavené na knihovně DSS berou signatureAlgorithm doslova, a proto ověření
+  selže. Od situace 1 se liší v tom podstatném: tam otisk podepsaných dat nesouhlasí, protože se
+  obsah po podpisu změnil. Tady souhlasí.
+
+[54]
+text =
+  Tento prvek sám žádný důkaz o době svého vzniku nenese, ale je kryt pozdějším prvkem téhož
+  dokumentu, který platné časové razítko má. Z toho plyne, že existoval nejpozději v čase onoho
+  razítka, a k tomuto okamžiku se také posuzovala platnost podpisového certifikátu. Technické
+  standardy s takovým údajem počítají: ETSI EN 319 102-1 uvádí mezi vstupy ověřování „time
+  indication for signature existence", tedy údaj o době existence podpisu, který ověřující
+  aplikace předává ověřovací službě, a tímto údajem se inicializuje rozhodný okamžik. Jiné
+  validátory ale tuto úvahu obvykle nedělají, takže tentýž dokument u nich může skončit s neznámou
+  platností.
+
+[55]
+text =
+  Deklarovaný čas podpisu (atribut 'signing-time', u PDF také údaj ve slovníku podpisu) leží mimo
+  dobu platnosti podpisového certifikátu — například před jeho vydáním, protože hodiny počítače
+  podepisujícího nebo software, který podpis vytvořil, údaj zapsaly chybně. AnEP to za překážku
+  nepovažuje: deklarovaný čas pochází od podepisujícího a sám nic nedokládá, o době vzniku podpisu
+  rozhoduje časové razítko. Výchozí validační politika knihovny DSS ale shodu deklarovaného času
+  s platností certifikátu vyžaduje, takže validátory postavené na jejím výchozím nastavení mohou
+  podpis kvůli tomu odmítnout.
+
+[56]
+text =
+  Hashovací funkce, kterou validační politika nepřipouští, protože ji ETSI TS 119 312 neuvádí
+  (SHA3-224, MD2 a další), v podpisu, v certifikátech řetězu nebo v časovém razítku. Funkce není
+  kryptograficky slabá; žádný ústupek v nastavení tu ale nepomůže
+
+# Situace 22, když atribut signing-time v podpisu je, jen jej knihovna DSS nepřečetla (zapsaný
+# jako GeneralizedTime, ač RFC 5652 pro léta 1950–2049 chce UTCTime). Znění bez lomítka by
+# tvrdilo, že atribut chybí — a to není pravda. Od 3. 10. 2026 je situace 22 jen poznámka
+# (Poznámky k výsledku): požadavek na atribut AnEP trvale nevyžaduje.
+[22/necitelny]
+text =
+  Podpis podepsaný atribut 'signing-time' (deklarovaný čas podpisu) obsahuje, ale zapsaný
+  v jiném tvaru, než předepisuje standard (GeneralizedTime místo UTCTime, RFC 5652). Knihovna DSS
+  jej proto nepřečte a pokládá za chybějící. AnEP jej nevyžaduje — o době vzniku podpisu
+  rozhoduje časové razítko —, validátory postavené na výchozím nastavení knihovny DSS však mohou
+  podpis kvůli tomu odmítnout. Tolerantnější validátory čas v tomto tvaru přečíst mohou.

@@ -1,0 +1,1075 @@
+# ======================================================================================
+#  P Ř I P O M Í N K Y   O D   K N I H O V N Y   D S S
+#
+#  Tenhle soubor čte AnEP při spuštění. Co je tady, to uvidí uživatel — nikde v kódu
+#  už ta znění podruhé nejsou. Upravíte-li text zde, stačí projekt přeložit.
+#
+#  Knihovna DSS vydává ke každému ověřenému prvku tři vrstvy hlášení: chyby (červené),
+#  připomínky (žluté) a informativní výpisy kroků. Sem patří jen ta prostřední vrstva:
+#  prvek obstál, ale něco na něm stojí za povšimnutí. Chyby nese verdikt a rozebírá je
+#  blok „Zjištěné důvody a doporučení“.
+#
+#  ---------------------------------------------------------------------------------
+#  J A K   S E   S O U B O R   P Í Š E
+#
+#  [QUAL_QSCD_AT_ST_ANS]   začátek oddílu; název je klíč hlášení DSS, přesně jak ho
+#                          knihovna vydává (najdete ho i v záložce „Protokoly DSS“)
+#  kratce = ...            jednou větou, česky, co to hlášení znamená — je vidět hned
+#  vyklad = ...            odstavec pro čtenáře, který PKI nedělá
+#
+#  Text se píše za rovnítko, pod ně (odsazený dvěma mezerami), nebo obojí naráz;
+#  odsazené řádky se spojí do jednoho odstavce, takže na zalomení řádků nezáleží.
+#  Prázdný řádek uvnitř odsazeného textu začíná nový odstavec. Řádek začínající křížkem
+#  je poznámka. Soubor je v kódování UTF-8.
+#
+#  ---------------------------------------------------------------------------------
+#  K L Í Č ,   K T E R Ý   T U   N E N Í
+#
+#  Karta ho nezamlčí: ukáže původní anglickou větu knihovny a pod ní poznámku, že
+#  zdejší výklad k tomu hlášení zatím není. Klíčů zná DSS stovky, připomínkou ale může
+#  být jen ten, jehož kontrolu má politika AnEP na úrovni WARN. Výčet tu proto stojí na
+#  dvou zdrojích: na tom, co se opravdu naměřilo na sbírce (sonda DssWarningScan), a na
+#  rozboru knihovny DSS 6.5 — které kontroly vydávají které hlášení a na jaké úrovni je
+#  má výchozí politika spolu s úpravami a ústupky AnEP (12. 10. 2026). Mimo zůstala
+#  hlášení o ověřování atestací EAA, seznamů LoTE a certifikátů QWAC a kvalifikovanost
+#  „k okamžiku ověření“ (…_AT_VT_…): AnEP je u podpisů a razítek nevydává. Objeví-li
+#  se přesto nový klíč — třeba po přechodu na novější DSS —, přidejte oddíl sem.
+# ======================================================================================
+
+
+# ──────────────────────────────────────────────────────────────────────────────────────
+#  O V Ě Ř E N Í   P O D P I S U   (AdES)
+# ──────────────────────────────────────────────────────────────────────────────────────
+
+[ACCM_ANS]
+kratce = Některý použitý kryptografický algoritmus už neplatí za dostatečně odolný.
+vyklad =
+  Podpis stojí na algoritmech, které se považovaly za bezpečné v době svého vzniku, ale dnes už
+  za takové neplatí — typicky otisk SHA-1 nebo krátký klíč. Na zdejším výsledku to nic nezměnilo:
+  posuzovalo se k rozhodnému okamžiku, a tehdy ten algoritmus ještě vyhovoval. Je ale dobré o tom
+  vědět, protože nástroj, který by týž podpis posuzoval k dnešku, může dojít k jinému závěru.
+
+[ADEST_IBSVPTADC_ANS]
+kratce = Některé časové razítko u podpisu neobstálo; výsledek podpisu se o ně neopírá.
+vyklad =
+  K podpisu je přiloženo víc časových razítek a některé z nich se nepodařilo ověřit kladně —
+  certifikát razítkovací autority třeba není důvěryhodný, razítko je poškozené nebo jeho otisk
+  nesedí. Knihovna takové razítko při posuzování podpisu pomine a opře se o ta, která obstála;
+  proto jde jen o připomínku. Razítko, které neobstálo, ovšem nic nedokládá: kdyby bylo jediné,
+  podpis by o svůj důkaz času přišel. Které razítko to je a proč neobstálo, ukazuje výčet
+  časových razítek u prvku.
+
+[ADEST_IBSVPTC_ANS]
+kratce = Časové razítko nešlo jednoznačně ověřit k dnešku, a muselo se proto posoudit zpětně.
+vyklad =
+  Časové razítko se nejdřív ověřuje k okamžiku ověření. Tady to jednoznačně nevyšlo — typicky
+  proto, že certifikát razítkovací autority mezitím vypršel nebo jeho algoritmus už neplatí za
+  spolehlivý. Tím razítko ještě neztrácí cenu: knihovna ho posoudí zpětně, k okamžiku, kdy jeho
+  existenci dokládá další razítko nebo jiný důkaz existence. Připomínka říká jen to, že u prvního
+  kroku ověření neskončilo; o tom, zda razítko obstálo, rozhodlo až to zpětné posouzení.
+
+[ADEST_IRERVPC_ANS]
+kratce = Evidenční záznam (evidence record) u podpisu neobstál; výsledek podpisu se o něj neopírá.
+vyklad =
+  Evidenční záznam podle RFC 4998 nebo RFC 6283 dokládá, že podpis a data existovaly k určitému
+  okamžiku, a obnovuje tak ochranu dlouhodobě uchovávaných dokumentů. Tenhle záznam se kladně
+  ověřit nepodařilo — otisky v něm nesedí na data nebo neobstálo časové razítko, na kterém stojí.
+  Knihovna ho při posouzení podpisu pomine a výsledek se opírá jen o ostatní důkazy. Proč záznam
+  neobstál, je vidět v záložce „Protokoly DSS“.
+
+[ADEST_RORPIIC_ANS]
+kratce = Některý revokační údaj neobstál při vlastním ověření, a nebyl proto využit.
+vyklad =
+  Seznamy CRL i odpovědi OCSP jsou samy podepsané a knihovna je ověřuje podobně jako podpis:
+  zda sedí jejich podpis, zda je vydavatel důvěryhodný a zda jeho certifikát platil. Tenhle údaj
+  tím neprošel, a k určení stavu odvolání se proto nepoužil. Na výsledku to nerozhodlo — jinak by
+  šlo o chybu, ne o připomínku. Které údaje využity byly, vypisuje v Analýze blok „Revokační
+  informace“.
+
+[ADEST_VFDTAOCST_ANS]
+kratce = Při výchozím nastavení knihovny DSS by ověření skončilo kvůli chybějícímu deklarovanému času podpisu.
+vyklad =
+  Totéž zjištění jako připomínka o chybějícím atributu „signing-time“, jen vyslovené v závěru
+  ověření: knihovna DSS ve svém výchozím nastavení deklarovaný čas podpisu vyžaduje, a bez něj
+  by ověření skončilo neúspěchem. AnEP ten požadavek nepřebírá — o době vzniku podpisu rozhoduje
+  časové razítko, ne údaj zapsaný podepisujícím —, a výsledek proto ovlivněn nebyl. Validátory
+  postavené na výchozím nastavení knihovny DSS ale mohou takový podpis odmítnout.
+
+[ARCH_ICHFCRLPOET_ANS]
+kratce = Algoritmus otisku v časovém razítku už nebyl spolehlivý v nejstarším doloženém okamžiku jeho existence.
+vyklad =
+  Časové razítko zajišťuje to, co kryje, otiskem. Při posuzování dlouhodobé ochrany se knihovna
+  ptá, zda byl algoritmus toho otisku ještě spolehlivý v nejstarším okamžiku, k němuž je existence
+  razítka doložena. Tady už nebyl — typicky jde o otisk SHA-1 u razítka, jehož existence je
+  doložena až po roce 2012. Co takové razítko kryje, je pak doloženo slabě. Na výsledku to
+  nerozhodlo, jinak by šlo o chybu.
+
+[ASCCM_AR_ANS_ANR]
+kratce = Odkaz na podpisový certifikát je uvnitř podpisu zajištěn otiskem SHA-1.
+vyklad =
+  Podpis v sobě nese odkaz na certifikát, kterým byl vytvořen, a ten odkaz je udělán otiskem
+  SHA-1. Ten už se nepovažuje za spolehlivý. Netýká se to samotné podpisové hodnoty ani
+  podepsaného obsahu — jen té vnitřní vazby na certifikát. Rozhodný okamžik leží v době, kdy
+  SHA-1 ještě vyhovovala, takže na výsledku to nic nemění.
+
+[ASCCM_AR_ANS_AKSNR]
+kratce = Podpisový algoritmus s touto délkou klíče se podle ETSI TS 119 312 už nepovažuje za spolehlivý.
+vyklad =
+  Knihovna DSS vede k podpisovým algoritmům data, od kterých je přestává považovat za spolehlivé
+  (podle ETSI TS 119 312). U tohoto prvku některé takové datum už uplynulo — nejčastěji jde
+  o klíč RSA o 2 048 bitech, jehož datum je 1. 1. 2027. Týkat se to může samotného podpisu,
+  časového razítka i revokačního údaje.
+
+  Datum leží za poslední aktualizací kryptografických pravidel knihovny, je to tedy odhad, ne
+  zjištěná slabina, a knihovna ho proto hlásí jen jako připomínku: na výsledku ověření to nic
+  nemění. Validátory s aktualizovanými nebo přísnějšími pravidly ale mohou takový prvek odmítnout.
+  Ochranu dává časové razítko se silnějším algoritmem, pořízené dřív, než se algoritmus stane
+  skutečně nedůvěryhodným — tedy uchování dokumentu u zdroje časových razítek s delším klíčem.
+
+[BBB_ACCEPT_ANS]
+kratce = Některý dílčí krok ověřování nedošel k jednoznačnému závěru.
+vyklad =
+  Knihovna DSS skládá ověření z dílčích kroků (building blocks): formát, identifikace
+  podepisujícího, certifikační řetěz, kryptografie a další. Jeden z nich tady skončil bez
+  jednoznačného závěru, ale postup ověřování ho k rozhodnutí nepotřeboval, a tak z toho zbyla jen
+  připomínka. O který krok šlo, napoví ostatní připomínky u téhož prvku nebo záložka
+  „Protokoly DSS“.
+
+[BBB_CV_AAMEF_ANS]
+kratce = Některé soubory, které podpis vyjmenovává ve svém manifestu, se nenašly.
+vyklad =
+  Podpis v kontejneru ASiC-E nepodepisuje soubory přímo, ale jejich seznam — manifest — s otiskem
+  každého z nich; obdobně to umí i podpis XAdES. Některé ze souborů, které manifest uvádí, nejsou
+  v kontejneru ani mezi daty předanými k ověření. Podpis tím porušen není, o chybějícím souboru ale
+  nic nedokládá. Bývá to po vyjmutí souboru z kontejneru, nebo když se k odděleně uloženému
+  podpisu nepřiložily všechny podepsané soubory.
+
+[BBB_CV_DMENMND_ANS]
+kratce = Jméno souboru v manifestu podpisu neodpovídá jménu dokumentu.
+vyklad =
+  Manifest podpisu uvádí podepsané soubory jménem a otiskem. U některého souboru otisk sedí, jméno
+  ale ne — soubor se po podpisu přejmenoval nebo byl předán pod jiným jménem. Obsah je tedy
+  podepsaný a neporušený; podpis jen nekryje jméno, pod kterým je soubor dnes veden. Na tom záleží
+  tam, kde jméno samo nese význam, například označení přílohy.
+
+[BBB_CV_DRNMND_ANS]
+kratce = Jméno, pod kterým podpis odkazuje na podepsaný dokument, neodpovídá jménu dokumentu.
+vyklad =
+  Podpis XAdES nebo JAdES odkazuje na podepsaná data jménem (URI) a otiskem. Otisk sedí, jméno ale
+  ne — dokument se po podpisu přejmenoval, nebo byl k odděleně uloženému podpisu předán pod jiným
+  jménem. Obsah je podepsaný a neporušený; podpis jen nekryje jméno, pod kterým je dokument dnes
+  veden.
+
+[BBB_CV_ER_DFHVLCDOG_ANS]
+kratce = Evidenční záznam kryje i jiná data než ta, která byla předána k ověření.
+vyklad =
+  Evidenční záznam začíná seznamem otisků dat, která chrání. V tomhle seznamu jsou i otisky, ke
+  kterým se mezi předanými daty nenašel odpovídající soubor. Bývá to v pořádku: archivní systémy
+  obvykle chrání jedním záznamem několik dokumentů najednou. Pro data, která předána byla, záznam
+  platnost neztrácí.
+
+[BBB_CV_ER_HASSDOC_ANS]
+kratce = Evidenční záznam nekryje všechna data, která podpis podepisuje.
+vyklad =
+  Evidenční záznam má dokládat dlouhodobou existenci podpisu i dat, která podpis kryje. Mezi otisky,
+  které záznam chrání, se ale některá z podepsaných dat nenašla. Pro ta data záznam nic nedokládá;
+  jejich dlouhodobou ochranu musí nést jiný důkaz, například archivní časové razítko.
+
+[BBB_CV_IAFS_ANS]
+kratce = V kontejneru je víc souborů, než kolik jich kryje tenhle jeden podpis.
+vyklad =
+  Kontejner (ASiC) obsahuje vedle sebe několik souborů a k nim několik podpisů, časových razítek
+  i evidenčních záznamů. Knihovna se u každého podpisu zvlášť ptá, zda sám kryje celý obsah
+  kontejneru — a tady odpověděla, že ne. Neplyne z toho, že něco zůstalo bez ochrany: nejběžnější
+  je kontejner s několika podpisy, z nichž každý podepsal svůj dokument a teprve dohromady kryjí
+  všechno. Zbývající soubor také může krýt časové razítko nebo evidenční záznam — ty se sem ale
+  nepočítají, protože otázka zní výhradně na podpis. Čím je který soubor kryt, ukáže tlačítko
+  „Zobrazit obsah kontejneru“; u jednotlivých položek je to v údaji „Kryto podpisem“.
+
+[BBB_CV_ISMEC_ANS]
+kratce = Soubory uvedené v manifestu podpisu se neověřovaly.
+vyklad =
+  Podpis kryje manifest — seznam souborů s jejich otisky — a knihovna má u každého z nich ověřit,
+  zda otisk sedí. Tady k tomu nedošlo, nejčastěji proto, že soubory nebyly k dispozici. Podpis sám
+  je v pořádku a manifest kryje; o souborech v něm uvedených ale ověření nic neříká.
+
+[BBB_CV_ISMEC_ANS_2]
+kratce = Žádný ze souborů uvedených v manifestu podpisu se nenašel.
+vyklad =
+  Podpis kryje manifest — seznam souborů s jejich otisky —, ale ani jeden z těch souborů se mezi
+  daty předanými k ověření nenašel. Podpis tak dokládá jen to, že podepisující podepsal ten seznam;
+  o samotných souborech nic. Typicky jde o odděleně uložený podpis, k němuž se podepsané soubory
+  nepřiložily.
+
+[BBB_FC_DBTOOST_ANS]
+kratce = Rozsah bajtů (/ByteRange) podpisu v PDF se překrývá s jiným podpisem nebo razítkem.
+vyklad =
+  Podpis v PDF kryje celý soubor kromě místa, kam je sám vložen; to místo vymezuje údaj
+  /ByteRange. U řádně vzniklého dokumentu se tato místa různých podpisů nepřekrývají. Tady se
+  překrývají, což běžné nástroje nedělají: bývá to známkou ručního zásahu do souboru nebo některého
+  z útoků na podpisy v PDF, které s rozsahem bajtů pracují. Podepsaná data jsou v pořádku, jinak by
+  šlo o chybu; stojí ale za to prověřit, odkud dokument pochází.
+
+[BBB_FC_IAHIV_ANS]
+kratce = Atribut „ats-hash-index“ archivního časového razítka neodpovídá obsahu podpisu.
+vyklad =
+  Archivní časové razítko podpisu CAdES ve verzi 3 nese atribut ats-hash-index — seznam otisků
+  certifikátů, revokačních údajů a nepodepsaných atributů, které razítko kryje. Ten seznam tady
+  obsahu podpisu neodpovídá, obvykle proto, že nástroj, který razítko přidal, ho sestavil
+  nepřesně, nebo se podpis po přidání razítka ještě měnil. Samotný podpis razítko kryje; co z dalšího
+  obsahu kryje, je ale nejisté.
+
+[BBB_FC_IAOD_ANS]
+kratce = Na stránce se překrývají viditelné prvky.
+vyklad =
+  U dokumentů PDF knihovna hlídá, zda se na stránce nepřekrývají viditelné prvky — překryv by
+  totiž mohl zakrýt něco z podepsaného obsahu, aniž by se změnil jediný bajt. Nejčastěji jde
+  o nevinnou věc: viditelný podpis položený přes jiný prvek stránky. Chcete-li mít jistotu,
+  porovnejte, co je vidět, s tím, co je v dokumentu skutečně zapsáno.
+
+[BBB_FC_DSCNUOM_ANS]
+kratce = Po podpisu do dokumentu přibyly změny, které knihovna neumí zařadit.
+vyklad =
+  Dokument PDF se smí po podpisu doplňovat, aniž se tím podpis poruší — tak vznikají další
+  podpisy, časová razítka nebo poznámky. Knihovna každou takovou změnu zařazuje a upozorňuje,
+  že některou z nich zařadit neumí. Není to tvrzení, že někdo obsah pozměnil: podepsaná data
+  jsou v pořádku, jinak by šlo o chybu, ne o připomínku. Bývá za tím program, který do souboru
+  zápisem přidal něco vlastního — metadata, přílohu, úprava formuláře. Chcete-li mít jistotu,
+  porovnejte podepsanou revizi dokumentu s tím, co vidíte dnes.
+
+[BBB_FC_IECKSCDA_ANS1]
+kratce = U podpisu s eliptickou křivkou se nepodařilo určit podpisový algoritmus.
+vyklad =
+  Podpisy JAdES uvádějí algoritmus zkratkou podle RFC 7518 (například ES256) a ta zároveň určuje,
+  jaká eliptická křivka a jaký otisk se k ní mají použít. Knihovna kontroluje, že si zkratka
+  a skutečný klíč odpovídají; tady ale nepoznala ani samotný algoritmus. Kontrola souladu se proto
+  neprovedla. Na platnost podpisu to vliv nemá, jen ji nic dalšího nepotvrzuje.
+
+[BBB_FC_IECKSCDA_ANS2]
+kratce = U podpisu s eliptickou křivkou se nepodařilo určit algoritmus otisku.
+vyklad =
+  Podpisy JAdES uvádějí algoritmus zkratkou podle RFC 7518 (například ES256) a ta zároveň určuje,
+  jaká eliptická křivka a jaký otisk se k ní mají použít. Knihovna kontroluje, že si zkratka
+  a skutečný klíč odpovídají; tady ale nepoznala algoritmus otisku, a soulad proto neověřila. Na
+  platnost podpisu to vliv nemá.
+
+[BBB_FC_IECKSCDA_ANS3]
+kratce = U podpisu s eliptickou křivkou se nepodařilo určit délku klíče.
+vyklad =
+  Podpisy JAdES uvádějí algoritmus zkratkou podle RFC 7518 (například ES256) a ta zároveň určuje,
+  jaká eliptická křivka se má použít. Knihovna kontroluje, že zkratka odpovídá skutečnému klíči;
+  tady ale délku klíče nezjistila, a soulad proto neověřila. Na platnost podpisu to vliv nemá.
+
+[BBB_FC_IECKSCDA_ANS4]
+kratce = Algoritmus otisku neodpovídá tomu, co pro daný podpisový algoritmus předepisuje RFC 7518.
+vyklad =
+  Podpisy JAdES uvádějí algoritmus zkratkou podle RFC 7518 a ta pevně určuje dvojici křivka
+  a otisk — ES256 znamená křivku P-256 s SHA-256, ES384 P-384 s SHA-384, ES512 P-521 s SHA-512.
+  Tady byl použit jiný otisk, než zkratka předepisuje. Kryptograficky podpis obstál; jiné nástroje
+  pracující přísně podle RFC 7518 ho ale mohou odmítnout.
+
+[BBB_FC_IECKSCDA_ANS5]
+kratce = Délka klíče neodpovídá podpisovému algoritmu, který podpis uvádí (RFC 7518).
+vyklad =
+  Podpisy JAdES uvádějí algoritmus zkratkou podle RFC 7518 a ta pevně určuje eliptickou křivku —
+  ES256 křivku P-256, ES384 P-384, ES512 P-521. Klíč podpisového certifikátu je ale na křivce jiné
+  délky. Kryptograficky podpis obstál; jiné nástroje pracující přísně podle RFC 7518 ho ale mohou
+  odmítnout.
+
+[BBB_FC_IEMCF_ANS]
+kratce = Soubor „mimetype“ v kontejneru ASiC nemá očekávaný obsah.
+vyklad =
+  Kontejner ASiC je archiv ZIP a jeho soubor „mimetype“ říká, o jaký druh kontejneru jde
+  (application/vnd.etsi.asic-e+zip nebo application/vnd.etsi.asic-s+zip). Tady obsahuje jinou
+  hodnotu. Podpisy uvnitř tím porušeny nejsou, kontejner ale neodpovídá normě EN 319 162 a jiné
+  programy ho nemusí rozpoznat jako kontejner s podpisy.
+
+[BBB_FC_IMFCS_ANS]
+kratce = Soubor manifestu v kontejneru ASiC není pojmenován podle normy.
+vyklad =
+  Norma pro kontejnery ASiC (EN 319 162) předepisuje, jak se jmenují soubory ve složce META-INF —
+  manifest například ASiCManifest….xml. Tady jméno předpisu neodpovídá. Na podpis to vliv nemá,
+  jiné programy ale mohou soubor přehlédnout nebo kontejner odmítnout.
+
+[BBB_FC_ISFCS_ANS]
+kratce = Soubor s podpisem nebo časovým razítkem v kontejneru ASiC není pojmenován podle normy.
+vyklad =
+  Norma pro kontejnery ASiC (EN 319 162) předepisuje, jak se jmenují soubory ve složce META-INF —
+  podpis například signatures….xml nebo signature….p7s, časové razítko timestamp….tst. Tady jméno
+  předpisu neodpovídá. Na podpis to vliv nemá, jiné programy ale mohou soubor přehlédnout nebo
+  kontejner odmítnout.
+
+[BBB_FC_ISFP_ASTFORAMC_ANS]
+kratce = Pozdější podpis nebo razítko v kontejneru nekryje všechno, co kryly ty předchozí.
+vyklad =
+  V kontejneru ASiC-E se další podpis, časové razítko nebo evidenční záznam obvykle přidávají tak,
+  aby kryly i vše, co bylo podepsáno nebo orazítkováno dříve. Tenhle prvek to nedělá: některý
+  soubor, na který odkazuje předchozí podpis, razítko nebo manifest, jím krytý není. Prvek sám je
+  v pořádku, jen neprodlužuje ochranu na celý obsah kontejneru — archivní razítko pak například
+  nechrání všechno, co by se od něj čekalo. Čím je který soubor kryt, ukáže tlačítko „Zobrazit
+  obsah kontejneru“.
+
+[BBB_FC_ISVADMDPD_ANS]
+kratce = Dokument obsahuje změny, které certifikační podpis (/DocMDP) nedovoluje.
+vyklad =
+  Prvním podpisem lze dokument „certifikovat“ — podepisující přitom určí, co se s dokumentem
+  smí dál dělat: nic, jen vyplňovat formulář, nebo ještě přidávat poznámky. Knihovna nalezla
+  změnu, která ten rámec překračuje. Podepsaná data tím porušena nejsou; jde o to, že
+  s dokumentem se pracovalo způsobem, který si podepisující vymínil zakázat.
+
+[BBB_FC_ISVAFMDPD_ANS]
+kratce = Dokument obsahuje změny, které zamykací slovník /FieldMDP nedovoluje.
+vyklad =
+  Podepisující při podpisu určil, která formulářová pole už nesmí nikdo měnit. Knihovna nalezla
+  změnu, která tomu omezení odporuje. Nejde o porušení integrity podepsaných dat — ta jsou
+  v pořádku —, nýbrž o nedodržení pravidla, které si podepisující stanovil.
+
+[BBB_FC_ISVASFLD_ANS]
+kratce = Dokument obsahuje změny, které zámek podpisového pole (/SigFieldLock) nedovoluje.
+vyklad =
+  Podpisové pole nese zámek, kterým podepisující omezil další úpravy dokumentu, a knihovna
+  nalezla změnu, jež to omezení překračuje. Podepsaná data tím porušena nejsou; jde o to, že
+  s dokumentem se dál pracovalo způsobem, který si podepisující vymínil zakázat.
+
+[BBB_FC_IVDBSFR_ANS]
+kratce = Podepsaná podoba dokumentu PDF se na některých stránkách vzhledově liší od dnešní.
+vyklad =
+  Knihovna vykreslí stránky tak, jak vypadaly při podpisu, a tak, jak vypadají dnes, a porovná je.
+  Na stránkách, které hlášení jmenuje, našla rozdíl. Podepsaná data porušena nejsou — PDF se smí
+  po podpisu doplňovat —, ale to, co čtenář dnes vidí, není přesně to, co bylo podepsáno. Rozdíl
+  může způsobit nevinná věc (další viditelný podpis, vyplněné pole, poznámka) stejně jako pozdější
+  úprava obsahu. Chcete-li mít jistotu, porovnejte podepsanou revizi s dnešní podobou dokumentu.
+
+[BBB_ICS_AIDNASNE_ANS]
+kratce = Údaj „issuer-serial“ v podpisu neodpovídá podpisovému certifikátu.
+vyklad =
+  Atribut signing-certificate váže podpis k certifikátu otiskem a k tomu může uvádět jméno
+  vydavatele a sériové číslo (issuer-serial). Otisk sedí — certifikát je tedy ten správný —, jméno
+  vydavatele nebo sériové číslo ale ne. Nejčastěji jde o jiný zápis jména vydavatele (kódování,
+  pořadí položek), který některé podpisové nástroje dělají. Vazba podpisu na certifikát drží
+  díky otisku.
+
+[BBB_ICS_DKIDVM_ANS]
+kratce = Identifikátor klíče („kid“) v podpisu neodpovídá podpisovému certifikátu.
+vyklad =
+  Podpis JAdES může v hlavičce nést identifikátor klíče „kid“, který odkazuje na podpisový
+  certifikát. Ten tady na nalezený podpisový certifikát nesedí. Certifikát se určil jinak — otiskem
+  nebo z přiloženého certifikátu — a vazba podpisu na něj drží; nesoulad ale může zmást nástroje,
+  které by certifikát hledaly podle „kid“.
+
+[BBB_ICS_ISACDP_ANS]
+kratce = Atribut „signing-certificate“ neobsahuje otisk podpisového certifikátu.
+vyklad =
+  Atribut signing-certificate má podpisový certifikát vázat k podpisu jeho otiskem (cert-digest).
+  Tady atribut sice je, otisk v něm ale chybí, takže certifikát se musel určit jinak. Bez otisku
+  nelze vyloučit, že by se podpis dal přiřadit jinému certifikátu s týmž klíčem.
+
+[BBB_ICS_ISASCPU_ANS]
+kratce = Atribut „signing-certificate“ je v podpisu víckrát.
+vyklad =
+  Podpis má nést údaj o podpisovém certifikátu jen jednou. Tady je atributů signing-certificate
+  (případně signing-certificate-v2) víc, což norma nepřipouští. Bývá to chyba nástroje, který
+  zapsal starou i novou podobu atributu zároveň. Ukazují-li všechny na týž certifikát, na výsledek
+  to vliv nemá.
+
+[BBB_ICS_ISASCP_ANS]
+kratce = V podpisu chybí atribut „signing-certificate“ — vazba na podpisový certifikát.
+vyklad =
+  Podpis neobsahuje podepsaný údaj o tom, kterým certifikátem byl vytvořen. Certifikát se proto
+  hledá jinak (bývá přiložen u podpisu) a nikdo nezaručuje, že to byl právě ten zamýšlený. Bez
+  toho atributu by šlo podpis přenést pod jiný certifikát téhož klíče. Starší podpisy tenhle
+  údaj často nemají, protože se stal povinným až s pozdějšími verzemi standardů.
+
+[BBB_RFC_NUP_ANS]
+kratce = Seznam zneplatněných certifikátů (CRL) neuvádí, kdy vyjde jeho další vydání.
+vyklad =
+  Seznam CRL obvykle říká, do kdy je aktuální — kdy vyjde jeho další vydání (nextUpdate). Tenhle to
+  neuvádí, takže se nedá dobře posoudit, jak dlouho po vydání se na něj lze spolehnout. Profil
+  podle RFC 5280 ten údaj vyžaduje; jeho absence bývá znakem neobvyklého nebo starého vydavatele.
+
+[BBB_SAV_DMICTSTMCMI_ANS]
+kratce = Otisk uvnitř časového razítka nesouhlasí s tím, co má razítko krýt.
+vyklad =
+  Časové razítko přiložené k podpisu tvrdí otisk, který nesedí na data, jež má razítko zajišťovat.
+  Takové razítko nedokládá nic — ani čas, ani to, že v tom čase podpis existoval. Dokument buď
+  někdo po přidání razítka změnil, nebo razítko vzniklo vadně.
+
+[BBB_SAV_DSCACRCC_ANS]
+kratce = Podpis odkazuje na jiné certifikáty, než jaké jsou v jeho řetězu.
+vyklad =
+  Údaj „Signing Certificate“ uvnitř podpisu vyjmenovává certifikáty, a některý z nich v řetězu,
+  který se podařilo sestavit, není. Bývá to pozůstatek po přebalení podpisu nebo po výměně
+  mezilehlého certifikátu vydavatele; pro ověření to zůstalo bez následku, jinak by to nebyla
+  připomínka, ale chyba.
+
+[BBB_SAV_ICTVS_ANS]
+kratce = Časové razítko nad podepisovaným obsahem (content time-stamp) neobstálo.
+vyklad =
+  Některé podpisy nesou časové razítko pořízené nad obsahem ještě před podpisem; dokládá, že obsah
+  existoval nejpozději v době razítka. Tohle razítko se kladně ověřit nepodařilo. Podpis tím
+  porušen není a jeho výsledek se o to razítko neopírá; chybí jen doklad o tom, kdy obsah
+  existoval před podpisem.
+
+[BBB_SAV_ISQPMDOSPP_ANS]
+kratce = V podpisu chybí podepsaný otisk dat — atribut „message-digest“, u XAdES „SignedProperties“.
+vyklad =
+  Standardy ETSI žádají, aby podpis nesl otisk podepsaných dat jako podepsaný atribut; v CAdES
+  a PAdES se jmenuje „message-digest“, v XAdES „SignedProperties“. Podpisy v PDF, které vytváří
+  Adobe Acrobat Reader ve svém standardním nastavení — tedy v nereferenčním formátu
+  PDF-NOT-ETSI —, ani jeden nemají: podepisuje se rovnou rozsah bajtů dokumentu. Kryptograficky
+  je takový podpis v pořádku a neporušenost obsahu dokládá, jen na něj nelze hledět jako na
+  podpis podle ETSI. Přísně vzato je to překážka; připomínkou se z toho stává tam, kde se
+  ověřovalo s ústupkem „Ověřovat i podpisy ve formátu PDF-NOT-ETSI“. U týchž podpisů obvykle
+  vystoupí i připomínka o chybějícím atributu „signing-certificate“ — je to táž vada formátu,
+  jen z druhé strany.
+
+[BBB_SAV_ISQPSTP_ANS]
+kratce = V podpisu chybí deklarovaný čas podpisu (atribut „signing-time“).
+vyklad =
+  Deklarovaný čas podpisu zapisuje do podpisu software podepisujícího podle hodin jeho počítače;
+  o skutečné době vzniku podpisu sám nic nedokládá — tu prokazuje časové razítko. Standard
+  EN 319 102-1 ho k ověření nevyžaduje, a AnEP proto také ne. Výchozí validační politika knihovny
+  DSS ho ale vyžaduje a jeho absenci považuje za chybu; zde z ní zbyla jen připomínka. Totéž
+  hlášení vystoupí i tehdy, když atribut v podpisu je, ale je zapsaný v podobě, kterou knihovna
+  nepřečte (GeneralizedTime místo UTCTime).
+
+[BBB_SAV_ISQPSTWSCVR_ANS]
+kratce = Deklarovaný čas podpisu (atribut „signing-time“) leží mimo dobu platnosti podpisového certifikátu.
+vyklad =
+  Deklarovaný čas podpisu zapisuje do podpisu software podepisujícího podle hodin jeho počítače —
+  a ty mohou jít špatně, takže čas vyjde třeba před vydáním certifikátu. O skutečné době vzniku
+  podpisu ani o jeho platnosti sám nic nedokládá; tu prokazuje časové razítko. Výchozí validační
+  politika knihovny DSS shodu deklarovaného času s platností certifikátu vyžaduje a nesoulad
+  považuje za chybu. AnEP ten požadavek nepřebírá, takže zde z něj zbyla jen připomínka.
+  Validátory postavené na výchozím nastavení knihovny DSS ale mohou takový podpis odmítnout.
+
+[BBB_SAV_ISSV_ANS]
+kratce = Struktura podpisu neodpovídá schématu jeho formátu.
+vyklad =
+  Knihovna ověřuje podpisy XAdES a JAdES i proti formálnímu schématu formátu. Tenhle podpis mu
+  neodpovídá — obsahuje prvek navíc, nějaký chybí nebo stojí na nesprávném místě. Knihovna podpis
+  přesto zpracovala a ověřila; nástroje, které podpis nejprve kontrolují proti schématu, ho ale
+  mohou odmítnout.
+
+[BBB_TAV_DTSAVM_ANS]
+kratce = Jméno autority uvedené uvnitř časového razítka neodpovídá certifikátu, kterým je razítko podepsané.
+vyklad =
+  Časové razítko může v poli „tsa“ uvádět jméno autority, která ho vydala. Tady se to jméno
+  neshoduje s certifikátem, kterým je razítko podepsané. Bývá to drobná nepřesnost razítkovací
+  služby, třeba jiný zápis jména; platnost razítka určuje jeho podpis a certifikát, ne tohle pole.
+
+[BBB_VCI_ISPM_ANS]
+kratce = Otisk podpisové politiky uvedený v podpisu neodpovídá dokumentu politiky.
+vyklad =
+  Podpis může odkazovat na podpisovou politiku — dokument s pravidly, podle nichž byl vytvořen a má
+  se ověřovat — a uvádí k ní i její otisk. Knihovna dokument politiky měla, jeho otisk ale s tím
+  v podpisu nesouhlasí: dokument se od podpisu změnil, nebo jde o jinou jeho verzi. Platnost
+  podpisu to neovlivňuje; jen nelze doložit, podle jakého znění politiky podpis vznikl.
+
+[BBB_VCI_IZHSP_ANS]
+kratce = Otisk podpisové politiky uvedený v podpisu nebylo s čím porovnat.
+vyklad =
+  Podpis odkazuje na podpisovou politiku a uvádí k ní otisk, podle kterého se dá ověřit, že jde
+  právě o to znění. Norma připouští i takzvaný nulový otisk — odkaz bez nároku na kontrolu —, ten
+  se tu ale nepoužil, a dokument politiky přitom knihovna k dispozici neměla. Platnost podpisu to
+  neovlivňuje; jen nelze doložit, podle jakého znění politiky podpis vznikl.
+
+[BBB_XCV_AIA_PRES_ANS]
+kratce = V certifikátu chybí odkaz na certifikát vydavatele (rozšíření AIA).
+vyklad =
+  Certifikáty obvykle nesou odkaz, na kterém si ověřovatel může stáhnout certifikát svého
+  vydavatele a doplnit si tak chybějící článek řetězu. Tenhle certifikát takový odkaz nemá.
+  Zde to nevadilo — řetěz se podařilo sestavit z toho, co je v dokumentu, a z důvěryhodných
+  seznamů —, ale nástroj, kterému by článek chyběl, by ho neměl kde vzít.
+
+[BBB_XCV_DCCUCE_ANS]
+kratce = Certifikát obsahuje kritické rozšíření, které knihovna nezná.
+vyklad =
+  Rozšíření certifikátu označené jako kritické má ověřovatel podle RFC 5280 odmítnout, nerozumí-li
+  mu. Tady takové rozšíření v certifikátu je (hlášení ho jmenuje). Výchozí politika knihovny DSS to
+  hlásí jen jako připomínku a certifikát přijme; přísnější nástroj ho ale může odmítnout.
+
+[BBB_XCV_DCSBSINC_ANS]
+kratce = Jméno v certifikátu nesplňuje omezení jmen (name constraints), která stanovil vydavatel.
+vyklad =
+  Certifikační autorita může podřízeným autoritám omezit, pro jaká jména smějí certifikáty vydávat
+  — třeba jen pro jednu doménu nebo organizaci. Tenhle certifikát takové omezení porušuje. Podle
+  RFC 5280 by řetěz neměl projít; výchozí politika knihovny DSS to ale hlásí jen jako připomínku.
+  Přísnější nástroj certifikát odmítne.
+
+[BBB_XCV_IAKIP_ANS]
+kratce = V certifikátu chybí identifikátor klíče vydavatele (rozšíření Authority Key Identifier).
+vyklad =
+  Rozšíření Authority Key Identifier říká, kterým klíčem vydavatele byl certifikát podepsán,
+  a usnadňuje sestavení řetězu, zvlášť když má vydavatel klíčů víc. RFC 5280 ho u běžných
+  certifikátů vyžaduje. Tady chybí; řetěz se podařilo sestavit i bez něj, jiný nástroj s tím ale
+  může mít potíž.
+
+[BBB_XCV_IARDPFC_ANS]
+kratce = Revokační údaj k certifikátu sice je, ale ověření ho nevzalo za průkazný.
+vyklad =
+  Zjišťování stavu odvolání má dva kroky: nejdřív zda je vůbec z čeho stav určit, a potom zda to,
+  co je k dispozici, obstojí — je-li dost čerstvé, vztahuje-li se k témuž certifikátu a pochází-li
+  od vydavatele, který v rozhodné době platil. Tady první krok prošel a druhý ne: údaj existuje,
+  ale za průkazný vzat nebyl. Na výsledku to nerozhodlo, jinak by nešlo o připomínku, ale o chybu;
+  závěr se opřel o jiný krok ověřování. Který údaj nakonec využit byl a který ne, vypisuje v Analýze
+  blok „Revokační informace“.
+
+[BBB_XCV_ICNRAEV_ANS]
+kratce = Rozšíření noRevAvail je v certifikátu použito v rozporu s pravidly.
+vyklad =
+  Rozšířením noRevAvail (RFC 9608) vydavatel říká, že o certifikátu nebude vydávat revokační údaje —
+  typicky u krátkodobých certifikátů. Smí se ale použít jen za určitých podmínek: například ne
+  v certifikátu autority a ne spolu s odkazem na seznam CRL nebo respondér OCSP. Tady některá
+  podmínka splněna není. Na výsledek to nemělo vliv, certifikát ale normě neodpovídá.
+
+[BBB_XCV_ICPTV_ANS]
+kratce = Politiky certifikátů v řetězu na sebe nenavazují (strom politik je neplatný).
+vyklad =
+  Certifikáty nesou politiky, podle nichž byly vydány, a nadřízené autority mohou omezovat, jaké
+  politiky smějí podřízené certifikáty nést (RFC 5280, kapitola 6). Knihovna strom politik sestavila
+  a vyšel neplatný — některý certifikát nese politiku, kterou jeho nadřízení nepřipouštějí. Výchozí
+  politika knihovny DSS to hlásí jen jako připomínku; přísnější nástroj řetěz odmítne.
+
+[BBB_XCV_IRDPFC_ANS]
+kratce = K certifikátu nebyl nalezen žádný revokační údaj.
+vyklad =
+  O certifikátu se nepodařilo zjistit, zda nebyl odvolán: v dokumentu k němu není seznam CRL ani
+  odpověď OCSP a stáhnout je nešlo. Připomínkou je to tam, kde politika ověřování stav odvolání
+  toho certifikátu nevyžaduje, nebo kde výsledek stojí na jiném kroku ověření. Které revokační
+  údaje k dispozici byly, vypisuje v Analýze blok „Revokační informace“.
+
+[BBB_XCV_IRDPFRC_ANS]
+kratce = O certifikátu, kterým je podepsán revokační údaj, se nezjišťovalo, zda sám nebyl odvolán.
+vyklad =
+  Stav odvolání se zjišťuje ze seznamu CRL nebo z odpovědi OCSP, a i ta je něčím podepsaná.
+  Knihovna upozorňuje, že o certifikátu jejího vydavatele žádný vlastní revokační údaj nemá.
+  Bývá to v pořádku: certifikáty respondérů OCSP obvykle nesou příznak, kterým vydavatel říká,
+  že se jejich stav zjišťovat nemá (id-pkix-ocsp-nocheck), právě aby se ověřování nezacyklilo.
+
+[BBB_XCV_ICTIVRCIRI_ANS]
+kratce = Certifikát vydavatele revokačního údaje k okamžiku ověření neplatil.
+vyklad =
+  Seznam CRL i odpověď OCSP jsou podepsané — seznam vydavatelem certifikátu, odpověď jeho
+  respondérem. Knihovna se ptá, zda certifikát toho, kdo údaj podepsal, platil k okamžiku, ke
+  kterému se ověřuje, a tady odpověděla, že ne. Nejčastěji to nastává při ověřování k zadanému
+  okamžiku v minulosti: revokační údaj se pořizuje až teď a podepisuje ho respondér, jehož
+  certifikát byl vydán později, takže k zadanému okamžiku ještě neexistoval. Druhou možností je,
+  že certifikát vydavatele už vypršel. Připomínkou místo chyby je to jen proto, že takového
+  vydavatele připustil ústupek uvedený v bloku „Průběh ověřování“.
+
+[BBB_XCV_ISCGKU_ANS]
+kratce = Certifikát nemá mezi dovolenými způsoby použití klíče ten, který se tu očekává.
+vyklad =
+  V certifikátu je zapsáno, k čemu všemu se jeho klíč smí používat — podepisování, šifrování,
+  vydávání časových razítek a podobně. Tady se očekával jiný účel, než jaký je v certifikátu
+  uveden. Pro zdejší výsledek to nebylo rozhodující, ale přísnější nástroj takový certifikát
+  pro daný účel odmítne.
+
+[BBB_XCV_ISCGKU_ANS_CERT]
+kratce = Certifikát v řetězu nemá mezi dovolenými způsoby použití klíče ten, který se tu očekává.
+vyklad =
+  V certifikátu je zapsáno, k čemu se jeho klíč smí používat — u certifikátu autority například
+  k podepisování certifikátů a seznamů CRL. U tohoto certifikátu v řetězu (ne podpisového) se
+  očekával jiný účel, než jaký je v něm uveden. Pro zdejší výsledek to nebylo rozhodující, ale
+  přísnější nástroj takový řetěz odmítne.
+
+[BBB_XCV_ISNSSC_ANS]
+kratce = Certifikát je podepsaný sám sebou (self-signed).
+vyklad =
+  Certifikát podepsaný sám sebou bývá kořenovým certifikátem autority. Na jiném místě řetězu —
+  zvlášť jako podpisový certifikát — to obvykle znamená, že si ho jeho držitel vytvořil sám, bez
+  certifikační autority, a jeho údaje tedy nikdo neověřil. Připomínkou zůstalo jen proto, že
+  certifikát byl přijat jinou cestou, například jako přímo důvěryhodný.
+
+[BBB_XCV_ISSSC_ANS]
+kratce = Certifikát, u něhož se to očekávalo, není podepsaný sám sebou.
+vyklad =
+  Některé kroky ověřování očekávají, že daný certifikát bude kořenový, tedy podepsaný sám sebou.
+  Tenhle takový není: důvěra se opírá o certifikát, který má sám ještě vydavatele — například
+  o mezilehlou autoritu zapsanou v důvěryhodném seznamu. U evropských důvěryhodných seznamů je to
+  běžné a samo o sobě to nevadí.
+
+[BBB_XCV_RAC_ANS]
+kratce = Posouzení, zda je revokační údaj přijatelný, nedošlo k jednoznačnému závěru.
+vyklad =
+  U každého seznamu CRL a odpovědi OCSP knihovna posuzuje, zda je pro daný certifikát přijatelný:
+  zda se k němu vztahuje, zda je jeho vydavatel důvěryhodný a jeho certifikát platil a zda údaj
+  vznikl v pravou dobu. U některého údaje to jednoznačně nevyšlo, a ten se proto nevyužil. Na
+  výsledku to nerozhodlo, jinak by šlo o chybu. Které údaje využity byly, vypisuje v Analýze blok
+  „Revokační informace“.
+
+[BBB_XCV_REVOC_ISSUER_VALID_AT_PROD_ANS]
+kratce = Revokační údaj vznikl v době, kdy certifikát jeho vydavatele neplatil.
+vyklad =
+  Seznam CRL i odpověď OCSP jsou podepsané certifikátem, který měl v okamžiku vydání údaje platit.
+  Tady neplatil — údaj vznikl před vydáním toho certifikátu nebo po jeho expiraci. Bývá to
+  u respondérů OCSP s krátkodobými certifikáty, kde se čas odpovědi a platnost certifikátu
+  o chvilku míjejí. Výchozí politika knihovny DSS z toho dělá chybu; připomínkou je to tady proto,
+  že se ověřovalo s ústupkem „Využij i revokační informace, vydané po expiraci certifikátu“ nebo
+  k zadanému datu a času.
+
+[BBB_XCV_REVOC_PRES_ANS]
+kratce = Certifikát neuvádí, kde zjistit jeho stav odvolání (chybí odkaz na CRL i OCSP).
+vyklad =
+  Certifikáty obvykle nesou adresu seznamu CRL nebo respondéru OCSP. Tenhle žádnou nemá, takže stav
+  jeho odvolání nelze zjistit online a spolehnout se lze jen na údaje přiložené k dokumentu.
+  U kořenových certifikátů a certifikátů respondérů OCSP je to běžné.
+
+[BBB_XCV_REVOC_SELF_ISSUED_OCSP_ANS]
+kratce = Odpověď OCSP o certifikátu podepsal respondér, v jehož řetězu je tentýž certifikát.
+vyklad =
+  O stavu certifikátu má vypovídat někdo jiný než certifikát sám. Tady se ověřovaný certifikát
+  objevuje v certifikační cestě respondéru, který odpověď OCSP podepsal — certifikát tak de facto
+  vypovídá sám o sobě a taková odpověď nic nedokládá. Na výsledku to nerozhodlo, jinak by šlo
+  o chybu.
+
+[BSV_ICTGTNASCET_ANS]
+kratce = Časové razítko nad obsahem vzniklo až po skončení platnosti podpisového certifikátu.
+vyklad =
+  Razítko nad obsahem (content time-stamp) se pořizuje před podpisem, a mělo by tedy vzniknout
+  v době, kdy podpisový certifikát ještě platil. Tady vzniklo až po jeho expiraci — z čehož plyne,
+  že ani podpis nemohl vzniknout dřív. V základním kroku ověření je to jen připomínka; výsledek
+  určily další kroky, které posuzují podpis podle doložených časů.
+
+[BSV_ICTGTNASCRT_ANS]
+kratce = Časové razítko nad obsahem vzniklo až po odvolání podpisového certifikátu.
+vyklad =
+  Razítko nad obsahem (content time-stamp) se pořizuje před podpisem, a mělo by tedy vzniknout
+  v době, kdy podpisový certifikát ještě nebyl odvolán. Tady vzniklo až po jeho odvolání — z čehož
+  plyne, že ani podpis nemohl vzniknout dřív. V základním kroku ověření je to jen připomínka;
+  výsledek určily další kroky, které posuzují podpis podle doložených časů.
+
+[BSV_ISAVRC_ANS]
+kratce = Kontrola přijatelnosti podpisu (Signature Acceptance Validation) nedošla k jednoznačnému závěru.
+vyklad =
+  V tomhle kroku knihovna porovnává podpis s politikou ověřování: zda nese předepsané atributy
+  a zda jsou jeho algoritmy a délky klíčů přijatelné k okamžiku ověření. Jednoznačně to nevyšlo,
+  ověřování tím ale neskončilo — rozhodnutí se přesunulo na pozdější kroky, které posuzují podpis
+  k dřívějšímu okamžiku (typicky když algoritmus dnes už nevyhovuje, ale v době časového razítka
+  ještě ano). Výsledek je z nich.
+
+[BSV_ISCCTC_ANS]
+kratce = Podpis nemá časové razítko nad podepisovaným obsahem (content time-stamp).
+vyklad =
+  Knihovna hledala razítko pořízené nad obsahem před podpisem, protože by mohlo doložit, že podpis
+  vznikl dřív, než podpisový certifikát vypršel nebo byl odvolán. Takové razítko podpis nemá; doklad
+  o čase se proto hledal jinde, typicky v časovém razítku nad podpisem. Většina podpisů razítko nad
+  obsahem nemá a není to vada.
+
+[BSV_ISCRAVTC_ANS]
+kratce = Podpisový certifikát je k okamžiku ověření odvolaný.
+vyklad =
+  K okamžiku ověření je podpisový certifikát odvolaný. Samo o sobě to podpis nezneplatňuje:
+  rozhoduje, zda podpis vznikl dřív, než byl certifikát odvolán. Knihovna to proto v základním
+  kroku hlásí jen jako připomínku a rozhodnutí nechá na posouzení k dřívějšímu okamžiku podle
+  časového razítka. Obstál-li prvek, bylo doloženo, že podpis existoval ještě před odvoláním.
+
+[BSV_IVTAVRSC_ANS]
+kratce = Okamžik ověření leží mimo dobu platnosti podpisového certifikátu.
+vyklad =
+  K okamžiku ověření podpisový certifikát neplatí — nejčastěji proto, že mezitím vypršel. U starších
+  dokumentů je to běžné a podpis to nezneplatňuje: rozhoduje, zda je doloženo, že vznikl v době,
+  kdy certifikát platil. Knihovna to proto v základním kroku hlásí jen jako připomínku a rozhodnutí
+  nechá na posouzení k dřívějšímu okamžiku podle časového razítka.
+
+[BSV_IXCVRC_ANS]
+kratce = Ověření certifikačního řetězu k okamžiku ověření nedošlo k jednoznačnému závěru.
+vyklad =
+  Certifikační řetěz podpisu se nejdřív ověřuje k okamžiku ověření. Jednoznačně to nevyšlo —
+  typicky proto, že některý certifikát mezitím vypršel nebo byl odvolán. Ověřování tím neskončilo:
+  knihovna řetěz posoudila znovu k dřívějšímu okamžiku, k němuž je existence podpisu doložena
+  časovým razítkem. Výsledek je z toho posouzení.
+
+[LTV_ISCKNR_ANS0]
+kratce = O podpisovém certifikátu není doloženo, že nebyl odvolaný.
+vyklad =
+  Knihovna se ptá, zda je o podpisovém certifikátu doloženo, že nebyl odvolaný — tedy zda je k němu
+  použitelný seznam CRL nebo odpověď OCSP. Tady takový údaj není nebo nebyl přijat. Připomínkou se
+  z toho stává tam, kde na téhle otázce ověření netrvá, typicky kvůli ústupku uvedenému v bloku
+  „Průběh ověřování“; bez něj je z téže věty chyba a výsledek skončí jako neurčitý.
+
+[LTV_ISCKNR_ANS1]
+kratce = Že podpisový certifikát nebyl odvolaný, dokládá jen údaj od vydavatele, jemuž mezitím skončila platnost.
+vyklad =
+  Knihovna se k dnešnímu dni ptá, zda je o podpisovém certifikátu známo, že nebyl odvolaný. Odpověď
+  má — seznam CRL nebo odpověď OCSP, která ho hlásí v pořádku —, jenže certifikátu toho, kdo ji
+  vydal, už skončila platnost. Sám údaj tím nezneplatní: v době, kdy vznikl, byl jeho vydavatel
+  v pořádku. Chybí jen to, co by to dnes doložilo — důkaz existence, který by ten údaj zastihl ještě
+  uvnitř platnosti jeho vydavatele. Připomínkou se z toho stává tam, kde na téhle otázce ověření
+  netrvá: typicky proto, že se ověřovalo s ústupkem „Využij i revokační informace od již
+  expirovaného vydavatele“. Bez něj je z téže věty chyba a výsledek skončí jako neurčitý. Přidat
+  další časové razítko to spraví jedině tehdy, padne-li ještě do doby platnosti vydavatele toho
+  revokačního údaje; pozdější už ne.
+
+[PCV_IVTSC_ANS]
+kratce = Posun okamžiku ověření do minulosti (validation time sliding) nedošel k jednoznačnému závěru.
+vyklad =
+  Když řetěz nelze ověřit k dnešku, hledá knihovna dřívější okamžik, ke kterému by obstál — okamžik
+  ověření „posouvá“ zpět podle dostupných revokačních údajů a důkazů existence (EN 319 102-1,
+  oddíl 5.6.2.2). Tady se takový okamžik jednoznačně najít nepodařilo. Výsledek se opřel o jinou
+  cestu ověřování.
+
+[PSV_DIURDSCHPVR_ANS]
+kratce = O vydavateli využitého revokačního údaje se nedá doložit, že byl důvěryhodný už v době, kdy údaj vydal.
+vyklad =
+  Hlášení pochází z kroku, kterým se podpis posuzuje zpětně k dřívějšímu okamžiku — k době, kdy
+  certifikáty ještě platily. Aby to šlo, musí být o každém článku doloženo, že už tehdy existoval.
+  Certifikát, kterým je podepsán revokační údaj o podpisovém certifikátu, takový důkaz uvnitř své
+  vlastní doby platnosti nemá: časové razítko, které by ho krylo, buď v dokumentu není, anebo
+  vzniklo až po skončení jeho platnosti. Je to táž námitka, na které padá i kontrola
+  LTV_ISCKNR_ANS1, jen položená v jiném kroku ověřování, a překlápí ji tentýž ústupek „Využij
+  i revokační informace od již expirovaného vydavatele“. Plyne z toho i praktický důsledek:
+  přidat archivní časové razítko má smysl, dokud vydavatel revokačního údaje ještě platí —
+  pozdější razítko už tuhle mezeru nezacelí.
+
+[PSV_HRDBIBCT_ANS]
+kratce = Revokační údaj vznikl až v okamžiku, ke kterému se podpis zpětně posuzuje, nebo později.
+vyklad =
+  Při posouzení podpisu k dřívějšímu okamžiku knihovna hledá revokační údaj vydaný ještě před ním.
+  Využitý údaj vznikl až v tom okamžiku nebo později. O stavu certifikátu v minulosti může i pozdější
+  údaj vypovídat, ale tenhle krok ověřování to hlásí jako odchylku od postupu. Na výsledku to
+  nerozhodlo, jinak by šlo o chybu.
+
+[PSV_ICRDIT_ANS]
+kratce = Certifikát vydavatele revokačního údaje není sám kotvou důvěry.
+vyklad =
+  Při zpětném posouzení podpisu se knihovna ptá, zda je certifikát toho, kdo podepsal revokační
+  údaj, sám důvěryhodný, tedy zda je kotvou důvěry z důvěryhodného seznamu. Tady není, a revokační
+  údaj se proto musí opírat o vlastní certifikační řetěz a o důkaz, že existoval v době jeho
+  platnosti. To je běžný stav, ne vada.
+
+[PSV_IPCRIAIDBEDC_ANS]
+kratce = Pro vydavatele revokačního údaje chybí důkaz existence z doby jeho platnosti.
+vyklad =
+  Při posouzení podpisu k dřívějšímu okamžiku musí být o každém článku doloženo, že tehdy existoval.
+  Certifikát, kterým je podepsán využitý revokační údaj, takový důkaz uvnitř své doby platnosti nemá
+  — časové razítko, které by ho krylo, buď v dokumentu není, anebo vzniklo až po skončení jeho
+  platnosti. Je to táž námitka jako u připomínky PSV_DIURDSCHPVR_ANS. Přidat archivní časové razítko
+  má smysl, dokud vydavatel revokačního údaje ještě platí; pozdější razítko tuhle mezeru nezacelí.
+
+[PSV_ITPOOBCT_ANS]
+kratce = K okamžiku, ke kterému se podpis zpětně posuzuje, nebyl nalezen důkaz existence.
+vyklad =
+  Posoudit podpis k dřívějšímu okamžiku jde jen tehdy, je-li doloženo, že podpis v tom okamžiku už
+  existoval — časovým razítkem, evidenčním záznamem nebo jiným důkazem existence. K okamžiku, který
+  tenhle krok zkoumal, se takový důkaz nenašel. Výsledek se opřel o jiný okamžik nebo jinou cestu
+  ověřování, jinak by šlo o chybu.
+
+[PSV_ITPOSVAOBCT_ANS]
+kratce = Pro podpisovou hodnotu chybí důkaz existence k okamžiku, ke kterému se podpis zpětně posuzuje.
+vyklad =
+  Posoudit podpis k dřívějšímu okamžiku jde jen tehdy, je-li doloženo, že podpisová hodnota v tom
+  okamžiku už existovala — typicky časovým razítkem nad podpisem. K okamžiku, který tenhle krok
+  zkoumal, se takový důkaz nenašel. Výsledek se opřel o jiný okamžik nebo jinou cestu ověřování,
+  jinak by šlo o chybu.
+
+[TSV_ASTPTCT_ANS]
+kratce = Časová razítka na sebe nenavazují tak, jak odpovídá jejich úloze.
+vyklad =
+  Razítka v podpisu mají svou posloupnost: nejdřív razítko nad podepisovaným obsahem, pak nad
+  podpisem, nakonec razítko archivní. Knihovna porovnává jejich časy s tímhle pořadím a našla
+  dvojici, která si odporuje — razítko, jež má být starší, nese pozdější čas, nebo razítko kryje
+  jiné, které vzniklo až po něm. Bývá za tím dokument, do něhož se razítka doplňovala postupně
+  a některý nástroj je zapsal jinam, než odpovídá jejich úloze. Podepsaná data tím porušena
+  nejsou; na pořadí ale stojí úvaha o tom, co které razítko dokládá.
+
+
+# ──────────────────────────────────────────────────────────────────────────────────────
+#  K V A L I F I K O V A N O S T   P O D L E   D Ů V Ě R Y H O D N Ý C H   S E Z N A M Ů
+#
+#  Dvojice „…_AT_ST_…“ a „…_AT_CC_…“ říká totéž o dvou různých okamžicích: ST je rozhodný
+#  okamžik ověření (best signature time), CC okamžik vydání certifikátu. Obojí se posuzuje,
+#  protože stav služby v důvěryhodném seznamu se v čase mění.
+# ──────────────────────────────────────────────────────────────────────────────────────
+
+[QUAL_QSCD_AT_ST_ANS]
+kratce = K rozhodnému okamžiku nebylo doloženo, že klíč byl v kvalifikovaném prostředku (QSCD).
+vyklad =
+  Aby byl podpis kvalifikovaný, nestačí kvalifikovaný certifikát — soukromý klíč musí být navíc
+  uložen v kvalifikovaném prostředku pro vytváření podpisů (QSCD), tedy na čipové kartě, tokenu
+  nebo u kvalifikované služby vzdáleného podepisování. Z certifikátu ani z důvěryhodných seznamů
+  to tady nevyplývá. Podpis tím neztrácí platnost; jde ale pouze o uznávaný elektronický podpis
+  (zaručený elektronický podpis, založený na kvalifikovaném certifikátu), nikoli o kvalifikovaný
+  elektronický podpis.
+
+[QUAL_QSCD_AT_CC_ANS]
+kratce = Ani k okamžiku vydání certifikátu nebylo doloženo uložení klíče v prostředku QSCD.
+vyklad =
+  Totéž, co říká připomínka o rozhodném okamžiku, jen vztažené k době, kdy byl certifikát vydán.
+  Knihovna se ptá na obojí, protože stav služby v důvěryhodném seznamu se v čase mění a mohl by
+  se mezi vydáním certifikátu a podpisem lišit.
+
+[QUAL_QC_AT_ST_ANS]
+kratce = K rozhodnému okamžiku se certifikát nepočítá za kvalifikovaný.
+vyklad =
+  Kvalifikovaný je certifikát, který vydal poskytovatel s kvalifikovaným statusem v evropských
+  důvěryhodných seznamech a který sám nese příslušné údaje (QC statements). K rozhodnému
+  okamžiku to tady neplatí. Podpis může být dál platný a zaručený, nesplňuje ale podmínky pro
+  kvalifikovaný podpis podle nařízení eIDAS.
+
+[QUAL_QC_AT_CC_ANS]
+kratce = Ani k okamžiku vydání se certifikát nepočítal za kvalifikovaný.
+vyklad =
+  Totéž vztažené k době, kdy byl certifikát vydán. Rozdíl mezi oběma okamžiky má smysl:
+  poskytovatel může kvalifikovaný status získat nebo pozbýt, a pak se táž otázka zodpoví
+  pokaždé jinak.
+
+[QUAL_CERT_TYPE_AT_ST_ANS]
+kratce = K rozhodnému okamžiku nelze jednoznačně určit, zda jde o certifikát pro podpis, nebo pro pečeť.
+vyklad =
+  Certifikát má být zřetelně buď pro elektronický podpis (drží ho člověk), nebo pro elektronickou
+  pečeť (drží ho organizace), a pozná se to z údajů v něm a ze zápisu služby v důvěryhodném
+  seznamu. Tady se ty dva zdroje neshodují nebo mlčí. AnEP druh prvku odhaduje z obsahu
+  certifikátu; kdo potřebuje jistotu, musí se opřít o smluvní podmínky vydavatele.
+
+[QUAL_CERT_TYPE_AT_CC_ANS]
+kratce = Ani k okamžiku vydání nebyl druh certifikátu jednoznačně určen.
+vyklad =
+  Totéž vztažené k době, kdy byl certifikát vydán.
+
+[QUAL_HAS_CAQC_ANS]
+kratce = Vydavatel certifikátu je v důvěryhodném seznamu veden pod jiným typem služby než „CA/QC“.
+vyklad =
+  Důvěryhodné seznamy členských států uvádějí u každé služby její typ. „CA/QC“ je vydavatel
+  kvalifikovaných certifikátů; jiné hodnoty znamenají něco jiného — „CA/PKC“ je běžná certifikační
+  autorita, kterou stát v seznamu vede, ale bez kvalifikovaného postavení. Hlášení vždy jmenuje
+  typ, který v seznamu skutečně stojí. Podpis z takové služby může být v pořádku a platný, jen to
+  není podpis kvalifikovaný, takže mu nesvědčí to, co nařízení eIDAS váže na kvalifikovanou úroveň.
+
+[QUAL_HAS_CAQC_ANS_2]
+kratce = Vydavatel certifikátu je v důvěryhodném seznamu veden pod typy služeb, z nichž žádný není „CA/QC“.
+vyklad =
+  Totéž co připomínka QUAL_HAS_CAQC_ANS, jen pro případ, kdy certifikát spadá pod několik zápisů
+  v důvěryhodném seznamu najednou; hlášení vyjmenuje typy, které u nich stojí. Žádný z nich není
+  „CA/QC“, tedy vydavatel kvalifikovaných certifikátů. Podpis může být platný, kvalifikovaný ale
+  není.
+
+[QUAL_HAS_GRANTED_ANS]
+kratce = Služba, pod kterou certifikát spadá, nemá v důvěryhodném seznamu stav „granted“.
+vyklad =
+  Vedle typu vede důvěryhodný seznam u každé služby i její stav. „granted“ znamená udělené
+  kvalifikované postavení; jiné hodnoty znamenají něco jiného — „withdrawn“ postavení odebrané,
+  „recognised at national level“ službu uznanou jen vnitrostátně, a podobně. Hlášení vždy jmenuje
+  stav, který v seznamu skutečně stojí. Na platnost podpisu to samo o sobě nemusí mít vliv, na
+  kvalifikovanost ale ano. Stav se navíc v čase mění, takže záleží i na tom, ke kterému okamžiku
+  se služba posuzuje; na to se ptají hlášení s příponou „_AT_ST_“ a „_AT_CC_“.
+
+[QUAL_HAS_GRANTED_ANS_2]
+kratce = Žádná ze služeb, pod které certifikát spadá, nemá v důvěryhodném seznamu stav „granted“.
+vyklad =
+  Totéž co připomínka QUAL_HAS_GRANTED_ANS, jen pro případ, kdy certifikát spadá pod několik zápisů
+  v důvěryhodném seznamu najednou; hlášení vyjmenuje stavy, které u nich stojí. Žádný z nich není
+  „granted“ — udělené kvalifikované postavení. Na platnost podpisu to vliv mít nemusí, na
+  kvalifikovanost ano.
+
+[QUAL_HAS_METS_ANS]
+kratce = Certifikát nespadá pod službu uznanou na základě dohody o vzájemném uznávání (MRA).
+vyklad =
+  Knihovna umí posuzovat i certifikáty z důvěryhodných seznamů třetích zemí, s nimiž EU uzavřela
+  dohodu o vzájemném uznávání (Mutual Recognition Agreement, čl. 14 nařízení eIDAS). Tenhle
+  certifikát ale pod žádnou službu, na kterou se taková dohoda vztahuje, nespadá. Podle evropských
+  pravidel tak jeho kvalifikovanost nemá oporu; platnost podpisu tím dotčena není.
+
+[QUAL_HAS_METS_HCCECBA_ANS]
+kratce = Pravidla dohody o vzájemném uznávání (MRA) pro převod obsahu certifikátu se na tento certifikát nevztahují.
+vyklad =
+  Dohoda o vzájemném uznávání s třetí zemí určuje, jak se údaje v jejích certifikátech převádějí na
+  evropské — například který zápis znamená kvalifikovaný certifikát nebo uložení klíče v prostředku
+  QSCD. Ta pravidla platí jen pro certifikáty, které splňují podmínky stanovené v důvěryhodném
+  seznamu. Tenhle certifikát je nesplňuje, takže se jeho údaje převést nedaly a kvalifikovanost
+  podle evropských pravidel nemá oporu.
+
+[QUAL_HAS_METS_HCCECBA_ANS_2]
+kratce = Pravidlo dohody o vzájemném uznávání (MRA), které hlášení jmenuje, se na tento certifikát nevztahuje.
+vyklad =
+  Dohoda o vzájemném uznávání s třetí zemí určuje, jak se údaje v jejích certifikátech převádějí na
+  evropské; každé z těch pravidel platí jen pro certifikáty splňující stanovené podmínky. Pravidlo,
+  které hlášení jmenuje, na tenhle certifikát nedopadá, a údaj, k jehož převodu slouží, se proto
+  podle evropských pravidel neuznal.
+
+[QUAL_HAS_METS_HCCECBA_ANS_3]
+kratce = Pravidla dohody o vzájemném uznávání (MRA) uvedená v hlášení se na tento certifikát nevztahují.
+vyklad =
+  Dohoda o vzájemném uznávání s třetí zemí určuje, jak se údaje v jejích certifikátech převádějí na
+  evropské; každé z těch pravidel platí jen pro certifikáty splňující stanovené podmínky. Pravidla,
+  která hlášení vyjmenuje, na tenhle certifikát nedopadají, a údaje, k jejichž převodu slouží, se
+  proto podle evropských pravidel neuznaly.
+
+[QUAL_IS_TRUST_CERT_MATCH_SERVICE_ANS0]
+kratce = Služba v důvěryhodném seznamu nemá certifikát, se kterým by šlo porovnat jméno poskytovatele.
+vyklad =
+  Knihovna kontroluje, zda certifikát, kterým je služba v důvěryhodném seznamu označena, patří
+  opravdu tomu poskytovateli, pod nímž je zapsána. U téhle služby se takový certifikát nenašel
+  (služba je označena jinak, například jen identifikátorem klíče), takže porovnání neproběhlo.
+  Na posouzení podpisu to vliv nemá.
+
+[QUAL_IS_TRUST_CERT_MATCH_SERVICE_ANS1]
+kratce = Certifikát služby v důvěryhodném seznamu neuvádí jméno organizace.
+vyklad =
+  Knihovna kontroluje, zda certifikát, kterým je služba v důvěryhodném seznamu označena, patří
+  opravdu tomu poskytovateli, pod nímž je zapsána, a porovnává k tomu jméno organizace. Tenhle
+  certifikát ho neuvádí, takže porovnání neproběhlo. Je to nedostatek zápisu v seznamu, ne podpisu.
+
+[QUAL_IS_TRUST_CERT_MATCH_SERVICE_ANS2]
+kratce = Certifikát služby v důvěryhodném seznamu neodpovídá jménu poskytovatele ani služby.
+vyklad =
+  Knihovna kontroluje, zda certifikát, kterým je služba v důvěryhodném seznamu označena, patří
+  opravdu tomu poskytovateli, pod nímž je zapsána: porovnává jméno organizace v certifikátu se
+  jménem poskytovatele, jeho obchodním jménem a jménem služby. Tady se neshoduje ani jedno. Bývá to
+  po přejmenování nebo převzetí poskytovatele; zápis ve státním seznamu je přesto platný a služba se
+  podle něj posoudila.
+
+[QUAL_LIST_OF_TRUSTED_LISTS_ACCEPT_ANS]
+kratce = Evropský seznam důvěryhodných seznamů (LOTL) nebyl uznán za přijatelný.
+vyklad =
+  Evropská komise vydává seznam důvěryhodných seznamů (List of Trusted Lists, LOTL), který odkazuje
+  na seznamy jednotlivých států a sám je podepsaný. Knihovna ho posuzuje stejně jako ty seznamy:
+  zda je dost čerstvý, zda nevypršel, má-li platnou strukturu a podpis. Některá z těch podmínek
+  splněna nebyla (podrobněji ji uvede další připomínka). Posouzení kvalifikovanosti se o seznam
+  přesto opřelo; jistota, že odpovídá dnešnímu stavu, je ale menší.
+
+[QUAL_TL_EXP_ANS]
+kratce = Důvěryhodný seznam už měl být nahrazen novějším vydáním.
+vyklad =
+  Každý důvěryhodný seznam uvádí, kdy nejpozději vyjde jeho další vydání (next update). Ten termín
+  u použitého seznamu už uplynul. Buď se novější vydání nepodařilo stáhnout, nebo ho vydavatel
+  nevydal včas. Kvalifikovanost se posoudila podle toho, co v seznamu stojí; mohlo se ale mezitím
+  změnit.
+
+[QUAL_TL_FRESH_ANS]
+kratce = Knihovna DSS nepovažuje důvěryhodný seznam za čerstvý — od jeho synchronizace uplynulo víc než šest hodin.
+vyklad =
+  Výchozí politika knihovny DSS považuje důvěryhodný seznam za čerstvý šest hodin od jeho poslední
+  synchronizace a po té době vydá tuhle připomínku. Kvalifikovanost se přesto posoudila podle
+  seznamu, který byl k dispozici; změny, které mezitím vyšly, se do ní ale promítnout nemohly.
+
+  V AnEP se tahle připomínka objevuje jen výjimečně. U seznamů sestavených z uložené kopie
+  aplikace knihovně jako čas synchronizace uvádí okamžik samotného ověření, takže jejich stáří
+  touto kontrolou neprojde — skutečné stáří uložené kopie knihovna nevidí. Kdy se seznamy naposledy
+  aktualizovaly ze sítě, ukazuje lišta „Důvěryhodné seznamy EU“ v hlavním okně; seznam, jemuž už
+  uplynul termín dalšího vydání, ohlásí připomínka QUAL_TL_EXP_ANS.
+
+[QUAL_TL_SERV_CONS_ANS0]
+kratce = Mezi službami, pod které certifikát spadá, není vydavatel kvalifikovaných certifikátů (CA/QC).
+vyklad =
+  Knihovna kontroluje, zda jsou zápisy o službě v důvěryhodném seznamu vnitřně v pořádku (podle
+  ETSI TS 119 615). Pro posouzení kvalifikovanosti potřebuje službu typu „CA/QC“, tedy vydavatele
+  kvalifikovaných certifikátů. Žádná taková se ale mezi službami, pod které certifikát spadá,
+  nenašla. Certifikát proto za kvalifikovaný uznat nelze; platnost podpisu tím dotčena není.
+
+[QUAL_TL_SERV_CONS_ANS1]
+kratce = Zápis služby v důvěryhodném seznamu si odporuje: certifikát označuje jako kvalifikovaný i nekvalifikovaný zároveň.
+vyklad =
+  Zápis služby v důvěryhodném seznamu může upřesňovat, jak se na certifikáty pohlíží (tzv.
+  qualifiers). Tady obsahuje zároveň „QCStatement“ (certifikát je kvalifikovaný) i „NotQualified“
+  (není), což si odporuje. Knihovna takový zápis podle ETSI TS 119 615 za konzistentní nepovažuje
+  a pro posouzení kvalifikovanosti ho nepoužije.
+
+[QUAL_TL_SERV_CONS_ANS3]
+kratce = Zápis služby v důvěryhodném seznamu si odporuje v tom, zda je klíč v prostředku QSCD.
+vyklad =
+  Zápis služby může upřesňovat, zda jsou klíče k certifikátům uloženy v kvalifikovaném prostředku
+  (QSCD). Tady uvádí zároveň, že jsou (QCWithQSCD), i že nejsou (QCNoQSCD). Knihovna takový zápis
+  podle ETSI TS 119 615 za konzistentní nepovažuje a pro posouzení kvalifikovanosti ho nepoužije.
+
+[QUAL_TL_SERV_CONS_ANS3A]
+kratce = Zápis služby v důvěryhodném seznamu kombinuje „QSCD podle certifikátu“ s pevným údajem o QSCD.
+vyklad =
+  Zápis služby může buď sám říct, zda jsou klíče v kvalifikovaném prostředku (QSCD), nebo odkázat
+  na to, co uvádí certifikát (QCQSCDStatusAsInCert). Tady dělá obojí zároveň, což si odporuje.
+  Knihovna takový zápis podle ETSI TS 119 615 za konzistentní nepovažuje a pro posouzení
+  kvalifikovanosti ho nepoužije.
+
+[QUAL_TL_SERV_CONS_ANS3B]
+kratce = Zápis služby v důvěryhodném seznamu uvádí údaj o SSCD bez odpovídajícího údaje o QSCD.
+vyklad =
+  Před nařízením eIDAS se zabezpečené prostředky pro vytváření podpisu označovaly SSCD, dnes
+  kvalifikované prostředky QSCD. Zápis služby tady pracuje se starým označením SSCD, aniž by
+  obsahoval odpovídající údaj o QSCD. Knihovna takový zápis podle ETSI TS 119 615 za konzistentní
+  nepovažuje a pro posouzení kvalifikovanosti ho nepoužije.
+
+[QUAL_TL_SERV_CONS_ANS3C]
+kratce = Zápis služby v důvěryhodném seznamu obsahuje upřesnění (qualifier), které knihovna nezná.
+vyklad =
+  Zápis služby může upřesňovat, jak se na její certifikáty pohlíží, pomocí ustálených hodnot
+  (qualifiers). Tady obsahuje hodnotu, kterou knihovna nezná. Takový zápis za konzistentní
+  nepovažuje a pro posouzení kvalifikovanosti ho nepoužije.
+
+[QUAL_TL_SERV_CONS_ANS4]
+kratce = Zápis služby v důvěryhodném seznamu určuje certifikátům neslučitelná použití (podpis, pečeť, web).
+vyklad =
+  Zápis služby může určovat, k čemu jsou její kvalifikované certifikáty: pro elektronický podpis
+  (QCForESig), pro elektronickou pečeť (QCForESeal), nebo pro autentizaci internetových stránek
+  (QCForWSA). Jeden certifikát smí mít jen jedno z těch určení; tady jich zápis kombinuje víc.
+  Knihovna takový zápis podle ETSI TS 119 615 za konzistentní nepovažuje a pro posouzení
+  kvalifikovanosti ho nepoužije.
+
+[QUAL_TL_SERV_CONS_ANS5]
+kratce = Zápis služby v důvěryhodném seznamu z doby před 1. 7. 2016 má stav, který tehdy neexistoval.
+vyklad =
+  Nařízení eIDAS platí od 1. 7. 2016 a s ním se změnily i stavy služeb v důvěryhodných seznamech.
+  Zápis platný před tím datem tady nese stav, který se tehdy nepoužíval. Knihovna takový zápis
+  podle ETSI TS 119 615 za konzistentní nepovažuje a pro posouzení kvalifikovanosti k tomuto období
+  ho nepoužije.
+
+[QUAL_TL_SERV_CONS_ANS6]
+kratce = Zápis služby v důvěryhodném seznamu z doby před 1. 7. 2016 nese údaje, které se tehdy nepoužívaly.
+vyklad =
+  Nařízení eIDAS platí od 1. 7. 2016 a teprve od té doby se u služeb v důvěryhodných seznamech
+  uvádějí některé doplňující údaje (additional service information) a upřesnění (qualifiers). Zápis
+  platný před tím datem je tady přesto nese. Knihovna takový zápis podle ETSI TS 119 615 za
+  konzistentní nepovažuje a pro posouzení kvalifikovanosti k tomuto období ho nepoužije.
+
+[QUAL_TL_SERV_CONS_ANS7]
+kratce = Doplňující údaje o službě v důvěryhodném seznamu si odporují s jejími upřesněními.
+vyklad =
+  Zápis služby říká, k čemu jsou její certifikáty dvakrát: doplňujícím údajem o službě (additional
+  service information, například „pro elektronické pečetě“) a upřesněním u jednotlivých certifikátů
+  (qualifier, například QCForESig). Tady si ty dva údaje odporují. Knihovna takový zápis podle
+  ETSI TS 119 615 za konzistentní nepovažuje a pro posouzení kvalifikovanosti ho nepoužije.
+
+[QUAL_TL_SV_ANS]
+kratce = Důvěryhodný seznam neodpovídá předepsané struktuře.
+vyklad =
+  Důvěryhodné seznamy mají pevně danou strukturu podle ETSI TS 119 612. Použitý seznam jí plně
+  neodpovídá — obsahuje prvek navíc, nějaký mu chybí nebo stojí na nesprávném místě. Knihovna ho
+  přesto přečetla a kvalifikovanost podle něj posoudila; přísnější nástroj by ho ale mohl odmítnout.
+
+[QUAL_TL_WS_ANS]
+kratce = Podpis důvěryhodného seznamu se nepodařilo kladně ověřit.
+vyklad =
+  Každý důvěryhodný seznam je podepsaný svým vydavatelem a jeho podpis se ověřuje proti
+  certifikátům, které pro ten seznam oznámila Evropská komise. Tady se to nepodařilo — podpis
+  neodpovídá nebo jeho certifikát není mezi oznámenými. Obsahu seznamu proto nelze plně důvěřovat,
+  a posouzení kvalifikovanosti podle něj je jen orientační.
+
+[QUAL_TRUSTED_LIST_ACCEPT_ANS]
+kratce = Důvěryhodný seznam nebyl uznán za přijatelný.
+vyklad =
+  Knihovna posuzuje každý důvěryhodný seznam: zda je dost čerstvý, zda nevypršel, má-li platnou
+  strukturu a je-li řádně podepsaný. Některá z těch podmínek u použitého seznamu splněna nebyla
+  (podrobněji ji uvede další připomínka). Posouzení kvalifikovanosti se o seznam přesto opřelo;
+  jistota, že odpovídá skutečnému stavu, je ale menší.
+
+[QUAL_UNIQUE_CERT_ANS]
+kratce = Certifikát nemá sériové číslo, a nelze ho proto jednoznačně určit.
+vyklad =
+  Certifikát se jednoznačně určuje dvojicí jméno vydavatele a sériové číslo. Tenhle sériové číslo
+  neuvádí, což RFC 5280 nepřipouští. Bývá to známkou chybně vytvořeného certifikátu; jiné nástroje
+  ho mohou odmítnout nebo zaměnit s jiným certifikátem téhož vydavatele.
+
+[QUAL_IS_ADES_IND]
+kratce = Samotná knihovna DSS uzavřela ověření jako neprůkazné.
+vyklad =
+  Knihovna sama nedošla ke kladnému výsledku. Stojí-li tahle připomínka na kartě s platným
+  podpisem, znamená to, že se AnEP opřel o zjištění, které knihovna sama nedělá — typicky
+  o důkaz existence odvozený z jiného prvku téhož dokumentu. Čím to bylo, stojí v poznámce
+  k výsledku o kus výš a v bloku „Průběh ověřování“.
+
+[QUAL_IS_ADES_INV]
+kratce = Samotná knihovna DSS uzavřela ověření jako neplatné.
+vyklad =
+  Knihovna prohlásila podpis za neplatný. Vidíte-li tuhle připomínku na kartě, která hlásí něco
+  jiného, je to rozpor, který stojí za prozkoumání: podrobnosti jsou v záložce „Protokoly DSS“,
+  kterou zpřístupní expertní mód v Nastavení.

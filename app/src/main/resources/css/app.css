@@ -1,0 +1,21 @@
+.root {
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-size: 13px;
+}
+
+.table-view {
+    -fx-font-size: 12px;
+}
+
+.text-area {
+    -fx-font-size: 12px;
+}
+
+/* Bublinová nápověda si velikost písma dědí od prvku, na kterém visí: modena jí dává 0,85 em,
+   takže na tlačítku s -fx-font-size: 22px vyšla na 18,7 px a byla nečitelně velká, kdežto na
+   tlačítku bez vlastního písma na 11,1 px. Tady se to ustaluje napevno, aby velikost nápovědy
+   nezávisela na tom, jak velký je pod ní ovládací prvek. 11 px je zaokrouhlené 0,85 x 13 px,
+   tedy to, co modena spočítá nad výchozím písmem aplikace. */
+.tooltip {
+    -fx-font-size: 11px;
+}

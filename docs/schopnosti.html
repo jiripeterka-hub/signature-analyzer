@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Přehled vlastností a schopností aplikace AnEP.
+
+  Psáno pro čtenáře, ne pro překladač: říká, co aplikace umí a kde jsou její hranice.
+  Technické „jak“ patří do architecture.md, číselník důvodů do duvody-tisk.html.
+  Na rozdíl od nich se tenhle soubor negeneruje — udržuje se ručně.
+
+  Nemluví o situacích: jsou to vnitřní čísla aplikace a v UI zbyla jen v Detailním rozboru
+  mezi ladicími údaji. Čtenáře zajímají důvody, a těch je 35.
+
+  Souhlasí obsahem s wordovými dokumenty AnEP-schopnosti-s-obrazky.docx (gen-schopnosti-
+  -s-obrazky.py) a AnEP-manual-pokrocily.docx (gen-manual-pokrocily.py) — ty jsou zdrojem
+  pravdy o tom, co aplikace umí. Tahle stránka je jejich obrazovková, kratší podoba: souvislý
+  text bez obrázků. Její wordový převod vyrábí gen-schopnosti-docx.py.
+
+  Písma se stahují z Google Fonts; bez sítě se sází záložními rodinami ze stacku.
+
+  Táž stránka je publikovaná jako artefakt na claude.ai/code/artifact/d4515ec3-24a9-4b7e-abe1-40dd9d6fa46a
+-->
+<title>AnEP — vlastnosti a schopnosti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+</head>
+<body>
+<style>
+  /* ---- Světlá paleta: papír s nádechem do zelena, inkoust z loga aplikace ---- */
+  :root {
+    --paper:       #f6f8f3;
+    --surface:     #ffffff;
+    --surface-alt: #eef2e9;
+    --ink:         #14210d;
+    --ink-soft:    #495244;
+    --ink-faint:   #78826f;
+    --rule:        #d3dbcb;
+    --rule-strong: #b3bfa8;
+    --accent:      #4d8a19;
+    --accent-soft: #e2f0d9;
+    --link:        #003189;
+
+    --valid:   #1a7a1a;
+    --unknown: #9a6700;
+    --invalid: #cc0000;
+
+    --font-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", "Cascadia Mono", Consolas, monospace;
+
+    --measure: 68ch;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:       #101410;
+      --surface:     #171d16;
+      --surface-alt: #1d251b;
+      --ink:         #e7ece3;
+      --ink-soft:    #aab4a4;
+      --ink-faint:   #7f8a79;
+      --rule:        #2b3429;
+      --rule-strong: #3d4a3a;
+      --accent:      #8fd14a;
+      --accent-soft: #22301a;
+      --link:        #9db8ee;
+
+      --valid:   #6fc46f;
+      --unknown: #d9a437;
+      --invalid: #ef6b6b;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:       #101410;
+    --surface:     #171d16;
+    --surface-alt: #1d251b;
+    --ink:         #e7ece3;
+    --ink-soft:    #aab4a4;
+    --ink-faint:   #7f8a79;
+    --rule:        #2b3429;
+    --rule-strong: #3d4a3a;
+    --accent:      #8fd14a;
+    --accent-soft: #22301a;
+    --link:        #9db8ee;
+
+    --valid:   #6fc46f;
+    --unknown: #d9a437;
+    --invalid: #ef6b6b;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 20px 96px;
+  }
+
+  @media (min-width: 1080px) {
+    .wrap {
+      grid-template-columns: 220px minmax(0, 1fr);
+      column-gap: 56px;
+      padding-left: 32px;
+      padding-right: 32px;
+    }
+  }
+
+  /* ---- Záhlaví ---- */
+  header.masthead {
+    grid-column: 1 / -1;
+    border-bottom: 2px solid var(--ink);
+    padding: 56px 0 20px;
+    margin-bottom: 40px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.6rem, 6vw, 4.1rem);
+    line-height: 1.02;
+    letter-spacing: -0.015em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+
+  .subtitle {
+    font-family: var(--font-display);
+    font-size: clamp(1.05rem, 2.2vw, 1.4rem);
+    font-weight: 400;
+    color: var(--ink-soft);
+    max-width: 46ch;
+    margin: 0 0 28px;
+    text-wrap: balance;
+  }
+
+  .factbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+  .factbar b {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* ---- Rejstřík ---- */
+  nav.toc {
+    display: none;
+  }
+
+  @media (min-width: 1080px) {
+    nav.toc {
+      display: block;
+      position: sticky;
+      top: 32px;
+      align-self: start;
+      padding-top: 4px;
+    }
+    nav.toc p {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin: 0 0 12px;
+    }
+    nav.toc ol {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    nav.toc a {
+      color: var(--ink-soft);
+      text-decoration: none;
+      font-size: 13.5px;
+      line-height: 1.35;
+      display: block;
+      border-left: 2px solid transparent;
+      padding-left: 10px;
+    }
+    nav.toc a:hover,
+    nav.toc a:focus-visible {
+      color: var(--ink);
+      border-left-color: var(--accent);
+    }
+  }
+
+  main { grid-column: 1 / -1; min-width: 0; }
+  @media (min-width: 1080px) { main { grid-column: 2; } }
+
+  section {
+    max-width: var(--measure);
+    padding-top: 12px;
+    margin-bottom: 56px;
+  }
+  section + section {
+    border-top: 1px solid var(--rule);
+    padding-top: 40px;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, 1.95rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.005em;
+    margin: 30px 0 8px;
+  }
+
+  p { margin: 0 0 14px; }
+  p.lead {
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+  }
+
+  ul, ol { margin: 0 0 16px; padding-left: 20px; }
+  li { margin-bottom: 7px; }
+  li::marker { color: var(--ink-faint); }
+  /* Vyznačené změny k revizi (9. 10. 2026) — čitelné ve světlém i tmavém schématu. */
+  mark { background: #fff1a8; color: #1a1a1a; padding: 0 2px; border-radius: 2px; }
+
+  a { color: var(--link); }
+
+  strong { font-weight: 600; }
+
+  code, .mono {
+    font-family: var(--font-mono);
+    font-size: 0.87em;
+    background: var(--surface-alt);
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+
+  /* ---- Tabulky ---- */
+  .table-scroll {
+    overflow-x: auto;
+    margin: 0 0 20px;
+    border-top: 1px solid var(--rule-strong);
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+  }
+  th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--ink-faint);
+    padding: 9px 14px 9px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: bottom;
+  }
+  td {
+    padding: 10px 14px 10px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: 0; }
+  td:first-child, th:first-child { padding-left: 0; }
+  td.key {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  td.num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* ---- Popisné dvojice ---- */
+  .defs {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    margin: 0 0 24px;
+  }
+  .def {
+    display: grid;
+    gap: 4px;
+    padding-left: 16px;
+    border-left: 2px solid var(--rule-strong);
+  }
+  .def h3 {
+    margin: 0;
+  }
+  .def p { margin: 0; color: var(--ink-soft); }
+
+  /* ---- Odznaky výsledku: přesně ty barvy, jaké nese aplikace ---- */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 0 20px;
+    padding: 0;
+    list-style: none;
+  }
+  .chip {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .chip::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    background: currentColor;
+    border-radius: 50%;
+    flex: none;
+  }
+  .chip.valid   { color: var(--valid); }
+  .chip.unknown { color: var(--unknown); }
+  .chip.invalid { color: var(--invalid); }
+
+  /* ---- Vytažená poznámka ---- */
+  .aside {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 16px 18px;
+    margin: 0 0 22px;
+    font-size: 14.5px;
+  }
+  .aside p:last-child { margin-bottom: 0; }
+  .aside .label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  footer {
+    grid-column: 1 / -1;
+    max-width: var(--measure);
+    border-top: 2px solid var(--ink);
+    padding-top: 16px;
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+  @media (min-width: 1080px) { footer { grid-column: 2; } }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Analyzátor elektronických podpisů</p>
+    <h1>AnEP</h1>
+    <p class="subtitle">Co aplikace umí přečíst, co o tom řekne a co s tím dokáže udělat.</p>
+    <div class="factbar">
+      <span><b>Windows</b> · desktopová aplikace (JavaFX)</span>
+      <span>jádro ověřování <b>DSS</b> (EU)</span>
+      <span>rozhraní <b>česky</b></span>
+      <span>licence <b>EUPL-1.2</b></span>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Obsah dokumentu">
+    <p>Obsah</p>
+    <ol>
+      <li><a href="#k-cemu">K čemu je</a></li>
+      <li><a href="#cte">Co přečte</a></li>
+      <li><a href="#zalozky">Šest záložek</a></li>
+      <li><a href="#duvody">Důvody a doporučení</a></li>
+      <li><a href="#prohlizece">Vlastní prohlížeče</a></li>
+      <li><a href="#duvera">Důvěra a revokace</a></li>
+      <li><a href="#ustupky">Přísnost a ústupky</a></li>
+      <li><a href="#ukony">Co udělá s dokumentem</a></li>
+      <li><a href="#kontinuita">Digitální kontinuita</a></li>
+      <li><a href="#protokoly">Protokoly a export</a></li>
+      <li><a href="#zvlastni">Zvláštní obsahy</a></li>
+      <li><a href="#nastaveni">Nastavení a úložiště</a></li>
+      <li><a href="#provoz">Provoz a měření</a></li>
+      <li><a href="#hranice">Kde jsou hranice</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section id="k-cemu">
+      <h2>K čemu je</h2>
+      <p class="lead">AnEP ověřuje elektronické podpisy, pečeti a časová razítka podle nařízení eIDAS a standardů ETSI — a hlavně vysvětlí výsledek česky někomu, kdo není odborník na PKI.</p>
+      <p>Vlastní ověřování obstarává otevřená knihovna <strong>DSS</strong> Evropské komise, tedy referenční implementace ETSI EN 319 102-1. Aplikace nad ní staví to, co DSS záměrně nedělá: mění <span class="mono">INDETERMINATE/REVOKED_NO_POE</span> ve větu, která říká, co se stalo, proč, a co se s tím dá dělat.</p>
+      <p>Výsledek má tři podoby a každá nese svou barvu, kterou pak protokol i záložky drží jednotně:</p>
+      <ul class="chips">
+        <li class="chip valid">platný</li>
+        <li class="chip unknown">stav platnosti neznámý</li>
+        <li class="chip invalid">neplatný</li>
+      </ul>
+      <p>Prostřední případ je ten podstatný. „Neznámý“ není závěr o neplatnosti — je to konstatování, že se platnost nepodařilo prokázat, a aplikace u něj vždycky říká, co konkrétně chybělo a jestli to jde ještě opatřit. Většina nesnází s elektronickými podpisy totiž nekončí slovem „neplatný“, nýbrž tím, že chybí důkaz.</p>
+      <p>Vedle odpovědi slouží aplikace i k seznámení s problematikou: u každého pojmu, který použije, řekne, co znamená. Své výstupy přitom vydává <strong>bez záruky</strong>.</p>
+    </section>
+
+    <section id="cte">
+      <h2>Co přečte</h2>
+      <p>Formát se pozná podle obsahu souboru, ne podle přípony. Přejmenovaný soubor tedy aplikaci nezmate a kontejner uvnitř kontejneru se otevře také.</p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th scope="col">Nosič</th><th scope="col">Co v něm aplikace ověří</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">PDF</td><td>PAdES všech úrovní (B-B až B-LTA), včetně podpisů PDF-NOT-ETSI z doby před eIDAS, podpisů PKCS&nbsp;#7 a dokumentových časových razítek</td></tr>
+            <tr><td class="key">ASiC-S / ASiC-E</td><td><span class="mono">.asice</span>, <span class="mono">.asics</span>, <span class="mono">.sce</span>, <span class="mono">.scs</span> i kontejner ASiC uložený s příponou <span class="mono">.zip</span></td></tr>
+            <tr><td class="key">Archiv ZIP</td><td>obyčejný archiv, který není kontejnerem ASiC, se otevře v prohlížeči obsahu; soubory v něm lze předat k ověření jednotlivě</td></tr>
+            <tr><td class="key">Odloučené a samostatné</td><td>CAdES (<span class="mono">.p7s</span>, <span class="mono">.p7m</span>, <span class="mono">.cms</span>), XAdES (<span class="mono">.xml</span>), JAdES (<span class="mono">.json</span>, <span class="mono">.jose</span>, <span class="mono">.jws</span>)</td></tr>
+            <tr><td class="key">Datové zprávy</td><td><span class="mono">.zfo</span> — zprávy ISDS i doručenky, ověřené přes kvalifikované časové razítko nad zprávou</td></tr>
+            <tr><td class="key">ODF</td><td>ODT, ODS, ODP — podpisy XAdES v <span class="mono">META-INF/documentsignatures.xml</span></td></tr>
+            <tr><td class="key">Kancelářské OOXML</td><td>DOCX, XLSX, PPTX — podpis se <b>neověřuje</b>; aplikace dovnitř nahlédne a ukáže zvlášť to, co podpis o sobě tvrdí, a to, co se ověřit dá i tak</td></tr>
+            <tr><td class="key">Evidenční záznamy</td><td>RFC 4998 (<span class="mono">.ers</span>, <span class="mono">.er</span>) a XMLERS, samostatné i vložené</td></tr>
+            <tr><td class="key">Holý certifikát, CRL, OCSP</td><td>nejsou to podepsané dokumenty, a tak se neověřují — otevřou se rovnou ve vlastním prohlížeči</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Zvláštní případy při čtení</h3>
+      <ul>
+        <li><strong>Odloučený podpis</strong> — podepsaný obsah se přikládá jako druhý soubor; týmž tlačítkem se přikládá i evidenční záznam k dokumentu.</li>
+        <li><strong>Heslem chráněné PDF</strong> — aplikace si o heslo řekne, ale až tehdy, když bez něj dokument opravdu neotevře. U souboru, který nese jen vlastnické heslo a čtení nebrání, se tedy neptá vůbec.</li>
+        <li><strong>Osiřelý podpis</strong> — podpis, který se nepodařilo zpracovat, se v přehledu neztratí: ohlásí se jako nerozpoznaný druh prvku, ne jako by tam nebyl.</li>
+        <li><strong>Prázdné podpisové pole</strong> — pole připravené k podpisu se vypíše také, včetně toho, jestli by byl podpis v něm vidět a co by po podpisu uzamklo.</li>
+      </ul>
+    </section>
+
+    <section id="zalozky">
+      <h2>Šest záložek</h2>
+      <p>Řazené podle hloubky. První čtyři vidí každý, poslední dvě se ukazují jen v expertním módu.</p>
+      <div class="defs">
+        <div class="def">
+          <h3>Zjednodušený přehled</h3>
+          <p>Verdikt, druh prvku i s výkladem pojmu, podepsaná osoba, vydavatel certifikátu, čas podpisu a vizualizace podpisu, jak ji nese PDF. Kdo chce jen odpověď, dál už jít nemusí. Změnil-li se po podpisu obsah dokumentu, upozorní na to hnědožlutým řádkem s čísly dotčených stran a odkazem na Rozšířený přehled — jinak by zelené „platný“ svádělo k domněnce, že dokument je ten podepsaný.</p>
+        </div>
+        <div class="def">
+          <h3>Rozšířený přehled</h3>
+          <p>Totéž v devíti pojmenovaných rozbalovacích blocích: podepsaná osoba, vizualizace, důvody podpisu, certifikát, časová razítka i s vydavatelem a koncem platnosti jeho certifikátu, evidenční záznamy, rozhodný okamžik, kontrola revokace a použité kryptografické algoritmy — u podpisu i u každého časového razítka, které ho kryje, s délkou klíče a u razítek zvlášť s hašovací funkcí jejich podpisu a otisku orazítkovaných dat, prvky oddělené čarou; blok se vyplní i u samostatného časového razítka. U dokumentu, na který odkazuje příloha z eLegalizace, přibývá za kartami prvků rámeček s odkazovanými dokumenty; je vedle karet, ne v nich, protože odkaz nese soubor, a ne ten který podpis. Nad kartami prvků stojí blok o prázdných podpisových polích a — změnil-li se po podpisu obsah stránek — rozbalený blok s hnědožlutým záhlavím „Po podepsání se v dokumentu změnil obsah“: uvede dotčené strany, upozorní, že jiné validátory mohou takovou změnu hodnotit jinak (například neplatností posledního podpisu nebo neznámým stavem jeho platnosti), a nabídne náhled dokumentu v podobě kryté podpisem i v dnešní podobě.</p>
+        </div>
+        <div class="def">
+          <h3>Analýza</h3>
+          <p>Proč to dopadlo takhle. Pro každý prvek jedna karta a v ní bloky, které se řídí verdiktem a tím, o čem je u konkrétního dokumentu co říct:</p>
+          <ul>
+            <li><strong>Formát podpisu</strong> — druh, zapouzdření, úroveň a odpověď na otázku, jde-li o referenční formát podle prováděcího rozhodnutí Komise (EU) 2015/1506;</li>
+            <li><strong>Zjištěné důvody a doporučení</strong> — očíslované důvody: co se stalo a co pomůže;</li>
+            <li><strong>Průběh ověřování</strong> — za jakých pravidel se ověřovalo, jak aplikace postupovala a čím to skončilo; uvnitř složený podrobný výčet revokačních údajů s odkazy „Ukaž“ a „Ulož“ u každého;</li>
+            <li><strong>Poznámky k výsledku</strong> — co verdikt nezměnilo, ale čtenář to má znát; uvnitř podblok s připomínkami, které si postěžovala sama knihovna DSS;</li>
+            <li><strong>Možné právní účinky</strong> — jen tam, kde plynou přímo z výsledku a z textu předpisu; zapsaný osobní doklad se hledá ve všech položkách serialNumber předmětu certifikátu, nejen v první;</li>
+            <li><strong>Certifikační podpis</strong>, <strong>Zámek dokumentu</strong> a <strong>Protipodpis (kontrasignatura)</strong> — je-li čím je naplnit;</li>
+            <li><strong>Kde je šance na úspěšné ověření</strong> a jeho zrcadlo <strong>Kde ověření nebude úspěšné</strong> — odhad chování jiných nástrojů, vždy v možnosti, ne v jistotě.</li>
+          </ul>
+          <p>V expertním módu stojí nad kartami ještě bloky o dokumentu jako celku: <strong>Shoda s normou PDF/A</strong>, <strong>Co v souboru přibylo po podpisu</strong> (přibyla-li jen validační data a obsah se nezměnil) a <strong>Požadavky na vkladovou listinu</strong>. Ten u každého PDF s vnitřními podpisy posoudí technické požadavky ČÚZK — splňuje, nesplňuje, nebo nelze posoudit — podle postupu podatelny katastru, která ověřuje nejprve podle standardů a jinak může využít službu SecuSign Validation: podpis platný s ústupky kromě SHA-1 požadavek splňuje, SHA-1 vede k „nesplňuje“, podpis neznámé platnosti k „nelze posoudit“ s odkazem „Ověřit s ústupky podatelny katastru“, a u nereferenčního formátu blok upozorní, že podatelna jeho přijímání chystá omezit. Běžnému uživateli se tyto bloky neukazují, aby Analýzu nezahlcovaly.</p>
+        </div>
+        <div class="def">
+          <h3>Digitální kontinuita</h3>
+          <p>Jak dlouho dokument zůstane ověřitelný, kdo ho ještě ověří, a co a do kdy je proto potřeba udělat. Tady stojí i tlačítka úkonů.</p>
+        </div>
+        <div class="def">
+          <h3>Detailní rozbor</h3>
+          <p>Vše, co o dokumentu vydá diagnostika DSS: certifikační cesty, důvěryhodná služba a její stav v seznamech, časová razítka, algoritmy a časy, rozsah podpisu, podpisový slovník PDF, detekce změn po podpisu, záznamy VRI a globální validační data, struktura podpisů CMS a kryté objekty. U certifikátů, seznamů CRL i odpovědí OCSP jsou odkazy „Ukaž“ a „Ulož“, u nedůvěryhodného kořene i „Přidat do důvěryhodných“. <mark>Na začátku záložky stojí tlačítko <strong>Inspektor</strong> podpisové struktury — podle formátu Inspektor PDF, CAdES, ASiC, XAdES nebo JAdES (viz Vlastní prohlížeče). Karty prvků se jmenují stejně jako v Rozšířeném přehledu a nesou jméno podepsané osoby; označení, pod kterým prvek vede knihovna DSS, je v kartě jako řádek „Identifikátor DSS“, podle kterého se prvek dohledá v Protokolech DSS.</mark></p>
+        </div>
+        <div class="def">
+          <h3>Protokoly DSS</h3>
+          <p>Surové zprávy knihovny DSS, jednoduchá i podrobná, ke stažení jako XML nebo PDF — pro toho, kdo potřebuje ukázat, co přesně řekla referenční implementace, bez jakéhokoli výkladu.</p>
+        </div>
+      </div>
+      <p>Každou záložku kromě Zjednodušeného přehledu lze odpojit do vlastního okna a mít tak dvě části výsledku vedle sebe. Ověření běží na pozadí a okno zůstává ovladatelné; chybí-li důvěryhodné seznamy některé země nebo jsou-li ty uložené staré, řekne to aplikace v hlavičce nad kartami — je to údaj o tom, co mohla mít k dispozici, a bez něj by chybějící kotva vypadala jako vlastnost dokumentu.</p>
+    </section>
+
+    <section id="duvody">
+      <h2>Důvody a doporučení</h2>
+      <p>Když ověření nedopadne kladně, nestačí to oznámit. <strong>Důvod</strong> je výklad pro čtenáře: co se stalo, co to znamená a co se s tím dá dělat. Důvodů je <mark><strong>35</strong></mark> a jeden shrnuje i několik různých zjištění pod jedno vysvětlení a jedno doporučení — čtenáře nezajímá výčet nálezů, ale odpověď.</p>
+      <p>Každý důvod má stejnou stavbu a hlavně <strong>stejné pořadí částí: nejprve popis problému, pak jeho řešení</strong>.</p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th scope="col">Část</th><th scope="col">Co obsahuje</th><th scope="col">Povinná</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">Popis problému</td><td>co se stalo, běžnou řečí a bez zkratek</td><td>ano</td></tr>
+            <tr><td class="key">Technicky</td><td>totéž jazykem standardů — jména polí, mezní hodnoty, důvod zákazu; pod odkazem „Podrobněji …“</td><td>ne</td></tr>
+            <tr><td class="key">Co pomůže</td><td>co může udělat běžný uživatel: které nastavení přepnout, co doplnit, kdy to zkusit znovu</td><td>ano</td></tr>
+            <tr><td class="key">Pro zkušenější</td><td>rada předpokládající pokročilé nastavení — typicky vlastní CRL seznam nebo vlastní kotvu důvěry</td><td>ne</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Tam, kde žádné řešení není, se žádné nepředstírá: u ztracené digitální kontinuity se místo rady řekne, že vadu už napravit nelze. Některé důvody mají navíc <strong>náhradní znění</strong> a aplikace vybírá podle toho, co o prvku ví — jinak zní věta o razítku, jehož autorita mezitím expirovala, a jinak o razítku, které neobstálo z jiné příčiny; údaje z dokumentu se do vět doplňují.</p>
+      <p>Silnější nález ten slabší <strong>umlčí</strong>. U podpisu s porušenou integritou nemá smysl radit, ať se povolí tolerance k revokačním údajům — dokument je změněný a žádné nastavení s tím nehne. A nemá-li aplikace čím naplnit výčet, nenabídne ani jeho nadpis. Úplný číselník důvodů se generuje přímo ze zdrojového kódu, takže nemůže tvrdit něco jiného než aplikace; dá se vytisknout a rozdávat.</p>
+      <div class="aside">
+        <span class="label">Pozor na jmennou shodu</span>
+        <p>Blok „Důvody podpisu“ v Rozšířeném přehledu je něco jiného: tam jde o důvod, který uvedla podepsaná osoba. Důvody v tomto smyslu jsou jen v Analýze, v bloku „Zjištěné důvody a doporučení“.</p>
+      </div>
+    </section>
+
+    <section id="prohlizece">
+      <h2>Vlastní prohlížeče</h2>
+      <p>Ověření odpoví na otázku „platí to?“. Vedle ní ale stojí druhá, stejně častá: <strong>co v tom souboru vlastně je?</strong> Na tu odpovídají vlastní prohlížeče, a jsou to plnohodnotné nástroje, ne náhledy — systémový prohlížeč certifikátů o odpovědi OCSP neví vůbec, kontejner není dokument a jinak než otevřením se nedá zjistit, co je uvnitř. Prohlížeče navíc čtou soubor tak, jak je uložen, včetně toho, čeho si DSS nevšímá. Okna jsou nemodální, takže se čtenář může dál pohybovat po záložkách nebo si položit dva prvky vedle sebe.</p>
+      <div class="defs">
+        <div class="def">
+          <h3>Prohlížeč kontejnerů</h3>
+          <p>Zvládne víc nosičů, než napovídá jméno: ZIP (ASiC, ODF, OOXML i prostý archiv) se stromem položek a rolí u známých jmen, CMS a PKCS&nbsp;#7, XML, JAdES s vloženým dokumentem a s nepodepsanými vlastnostmi v tom pořadí, ve kterém opravdu leží, datovou zprávu ISDS i přílohy PDF. U vybraného prvku se vypíšou jeho údaje a náhled (text, obrázek, jinak šestnáctkový výpis; XML se pro čtení zformátuje) a prvek jde uložit samostatně, rozbalit s celým kontejnerem, otevřít v přidružené aplikaci, otevřít jako vnořený kontejner, poslat zpět k plnému ověření v AnEP nebo z něj zkopírovat otisk SHA-256. Nad stromem je filtr podle názvu; validační data se strojovým jménem dostanou ve stromu čitelné jméno, kdežto skutečné jméno položky zůstává na kartě a hledá se v obou.</p>
+        </div>
+        <div class="def">
+          <h3>Inspektor podpisové struktury</h3>
+          <p><mark>Jen v expertním módu, tlačítkem na začátku Detailního rozboru; podle formátu se jmenuje Inspektor PDF, CAdES, ASiC, XAdES nebo JAdES, a je-li k dokumentu předložen externí podpis, rozebírá ten. Ukazuje podpisovou strukturu tak, jak je v souboru uložena, ve stromu, který začíná sbalený: podpisy a pečetě, všechna časová razítka včetně vnořených v podpisech, u PDF slovník /DSS, záznamy /VRI a revize dokumentu — /DSS ve výsledné podobě s údajem, ve které revizi položka přibyla, i v podobě každé revize zvlášť; revizi bez jediného objektu pozná. Rozkládá podepisující, atributy a vlastnosti podpisu, razítka, certifikáty, seznamy CRL a odpovědi OCSP a přepočítává otisky podepsaných dat, razítek i podpisového certifikátu. Pruh nad stromem ukazuje revize PDF a rozsah, který vybraný podpis kryje. U prvků spárovaných s výsledkem ověření uvede odděleně od zjištění o souboru, co s nimi udělal DSS — výsledek podpisu či razítka, roli certifikátu v řetězu, který revokační údaj rozhodl a který nebyl přijat nebo použit. Odkazy vedou mezi souvisejícími prvky a ke všem výskytům téhož prvku; každý prvek jde uložit. O výsledku ověření Inspektor nerozhoduje.</mark></p>
+        </div>
+        <div class="def">
+          <h3>Prohlížeč certifikátů</h3>
+          <p>Certifikát vypsaný ve slovech: kromě subjektu, vydavatele, sériového čísla, doby platnosti a algoritmů i klíčová a rozšířená užití česky, základní omezení, přístupový bod OCSP a distribuční body CRL, prohlášení podle QcStatements (kvalifikovanost, účel, prostředek QSCD, limit transakce, role podle PSD2) a zapsaný osobní doklad, nese-li certifikát číslo občanského průkazu nebo pasu — i když předmět nese víc položek serialNumber, třeba číslo dokladu vedle klientského čísla vydavatele.</p>
+        </div>
+        <div class="def">
+          <h3>Prohlížeč seznamu CRL</h3>
+          <p>Reálný seznam má tisíce záznamů a otázka se týká jediného, proto se okno <strong>otevře rovnou na tom certifikátu, o který jde</strong> — a není-li na seznamu, řekne to nad tabulkou. Nad ní stojí hlavička seznamu (vydavatel s odkazem na jeho certifikát, datum vydání i příštího, číslo seznamu, jde-li o deltu, počet záznamů), tabulka se dá řadit podle sloupců a hledat se v ní dá sériové číslo šestnáctkově i desítkově.</p>
+        </div>
+        <div class="def">
+          <h3>Prohlížeč odpovědi OCSP</h3>
+          <p>Stav odpovědi jako takové, kdo odpověděl a kdy, jaké certifikáty v sobě nese — a pro každý dotázaný certifikát sériové číslo, použitou hashovací funkci, stav, datum a důvod odvolání pojmenovaný slovem, a doby platnosti odpovědi.</p>
+        </div>
+        <div class="def">
+          <h3>Přílohy dokumentu</h3>
+          <p>Sbírají se ze tří různých míst — ze jmenného stromu vložených souborů, z anotací na stránce a z polí přidružených souborů, kterými nosí data dokumenty typu PDF/A-3 — a ukazují se pohromadě, protože uživatel mezi tím nerozlišuje. Příloha bývá sama podepsaným dokumentem, takže „Ověřit v AnEP“ je u ní ta nejužitečnější možnost. U heslem chráněného dokumentu se vytahují už dešifrované.</p>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th scope="col">Odkud</th><th scope="col">Co se otevře</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">Stavový řádek</td><td>kontejner právě ověřeného souboru, nebo sponkou jeho přílohy i s jejich počtem</td></tr>
+            <tr><td class="key">Analýza → Podrobný výčet</td><td>odkazem „Ukaž“ seznam CRL otevřený na dotčeném certifikátu, nebo odpověď OCSP</td></tr>
+            <tr><td class="key">Detailní rozbor</td><td>certifikát, seznam CRL nebo odpověď OCSP z kterékoli cesty či slovníku</td></tr>
+            <tr><td class="key"><mark>Detailní rozbor → Inspektor</mark></td><td><mark>podpisová struktura dokumentu, nebo externího podpisu, byl-li předložen</mark></td></tr>
+            <tr><td class="key">Prohlížeč kontejnerů</td><td>kterýkoli prvek uvnitř — i vnořený kontejner ve vlastním okně</td></tr>
+            <tr><td class="key">Vložení holého souboru</td><td>certifikát, seznam CRL nebo odpověď OCSP rovnou v prohlížeči; poznají se podle obsahu, ne podle přípony</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="duvera">
+      <h2>Důvěra a revokace</h2>
+      <p>Kotvy důvěry pocházejí z <strong>evropských důvěryhodných seznamů</strong> (LOTL) — kolem třiceti národních seznamů a několika tisíc certifikátů. Uloží se do místní mezipaměti, takže start aplikace nečeká na síť; čerstvost se dokontroluje na pozadí a seznam jde kdykoli načíst znovu ručně. Vedle toho se čte i kořenové úložiště Windows.</p>
+      <p>Aplikace si přitom pamatuje, <strong>co ze seznamu plyne</strong>: nejen že je certifikát důvěryhodný, ale i jakou službu poskytuje, pod jakým poskytovatelem a do kdy byla ta služba v seznamu vedena. Bez toho by se nedalo posoudit časové razítko od služby, která mezitím ze seznamu zmizela.</p>
+      <p>Revokační údaje se zjišťují živě, <strong>napřed OCSP, pak CRL</strong> jako záloha, a doplňují se o to, co dokument nese sám. U každého údaje aplikace sleduje, odkud pochází — z dokumentu, z vlastního úložiště, nebo ze sítě — protože právě to rozhoduje, jestli půjde závěr zopakovat i jinde a později. Údaje se pak dělí do tří skupin, neboť „přípustný“ a „využitý“ není totéž: o které se závěr opřel, které standardy připouštějí, ale závěr na nich nestojí, a které použít nešlo — u každého i proč. Tam, kde se na stav revokace správně vůbec nikdo neptal, protože certifikát je sám kotvou důvěry, řekne se i to.</p>
+      <h3>Vlastní zásoby</h3>
+      <ul>
+        <li><strong>Vlastní úložiště CRL</strong> — seznamy, které si uživatel nashromáždil; hodí se u starých podpisů, kde už vydavatel nic nezveřejňuje. Je to záložní zdroj a aplikace si z něj vybírá ten seznam, který o certifikátu skutečně může vypovídat.</li>
+        <li><strong>Vlastní kotvy důvěry</strong> — certifikáty, které evropské seznamy neuvádějí, například interní firemní autorita. Jedním tlačítkem se vloží vydávající autority tuzemských komerčních linek (I.CA, PostSignum, eIdentity, NCA, KB). Aplikace vždy přizná, že závěr stojí na kotvě, kterou jiný nástroj nemá odkud vzít.</li>
+      </ul>
+      <p>Co ověření z vlastních zásob opravdu použilo, se při zachování ověřitelnosti <strong>zapíše do dokumentu</strong> — jinak by uchovaný soubor postrádal právě ten důkaz, na kterém jeho verdikt stál.</p>
+    </section>
+
+    <section id="ustupky">
+      <h2>Přísnost a ústupky</h2>
+      <p>Ve výchozím stavu se ověřuje <strong>striktně podle standardů</strong>; v základním nastavení to drží jediná volba „Ověřování podpisů a pečetí dle standardů“. Kdo ji zruší, povolí všechny ústupky naráz, v pokročilém nastavení se dají povolit jednotlivě:</p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th scope="col">Ústupek</th><th scope="col">Co povolí</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">Po expiraci</td><td>revokační informaci vydanou až po skončení platnosti certifikátu, o kterém vypovídá</td></tr>
+            <tr><td class="key">Expirovaný vydavatel</td><td>revokační informaci od vydavatele, jemuž mezitím vypršel vlastní certifikát</td></tr>
+            <tr><td class="key">SHA-1</td><td>ignorovat zastaralost algoritmu SHA-1</td></tr>
+            <tr><td class="key">PDF-NOT-ETSI</td><td>ověřovat i podpisy v nereferenčním formátu z doby před eIDAS</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>K tomu dvě samostatná nastavení: ověřování <strong>k zadanému okamžiku v minulosti</strong>, což je jediný způsob, jak se dozvědět, jak by dokument dopadl tehdy, a přísnější posuzování časových razítek podle řádné platnosti certifikátů razítkovacích autorit namísto data, kdy byla služba vyřazena z důvěryhodných seznamů. To druhé je přísnější čtení, ne ústupek.</p>
+      <div class="aside">
+        <span class="label">Jednorázová politika</span>
+        <p>Každý ústupek platí jen na <strong>jedno</strong> ověření. Po něm se nastavení vrací do výchozího stavu, takže se kladný verdikt nemůže tiše opřít o volbu, kterou uživatel zapnul před měsícem a dávno na ni zapomněl. Vlastních zásob se to netýká — ty platí, dokud je uživatel neodebere.</p>
+      </div>
+      <p>Pro jedno ověření zapne tři z ústupků — všechny kromě SHA-1 — i odkaz „Ověřit s ústupky podatelny katastru“ v posouzení vkladové listiny; tak se zjistí, zda by podpis obstál u podatelny katastru, která SHA-1 nepřijímá.</p>
+      <p>A hlavně: aplikace měří, jestli se ústupek na výsledku opravdu <em>podílel</em> — ověření proběhne znovu bez něj a porovná se. U kladného verdiktu se proto vypíšou jen ty ústupky, bez kterých by závěr nevznikl, ne ty, které byly jen zapnuté. Totéž platí pro vlastní zásoby i pro zadaný čas ověření a do protokolu jde týž výčet.</p>
+    </section>
+
+    <section id="ukony">
+      <h2>Co udělá s dokumentem</h2>
+      <p>Žádný z úkonů nesahá na podepsané bajty. Každý zapisuje nový soubor a původní nechává být; tlačítka jsou v záložce Digitální kontinuita, hned pod textem, který říká, co udělají.</p>
+      <div class="defs">
+        <div class="def">
+          <h3>Zachovat ověřitelnost</h3>
+          <p>Doplní chybějící revokační informace a zafixuje je dalším časovým razítkem, aby dokument přežil expiraci podpisového certifikátu i certifikátů dosavadních razítek. Podle stavu dokumentu se nabízí jedna ze tří variant, které se na tlačítku jmenují: <strong>Uchovat</strong> (ověření podle standardů obstálo bez ústupků a řada razítek je nepřerušená a krytá platným certifikátem; doplní, co chybí, a přidá archivní razítko, výsledek by měl ověřit kterýkoli validátor), <strong>Přerazítkovat</strong> (jen u PDF, kde platnost obstojí jen při mírnějším posuzování; přidá razítko nad dnešním stavem pro validátory, které razítka posuzují podle platnosti jejich certifikátů) a <strong>Prodloužit</strong> (ověření obstálo jen díky tomu, že služba posledního razítka si dosud drží kvalifikovaný status, ačkoli certifikát toho razítka už vypršel nebo je řada přerušená; nové razítko doloží existenci dokumentu, dokud to ještě platí). Tlačítko je vždy jen jedno: varianty se vylučují a aplikace nabídne nejsilnější, na kterou dosáhne. Úkon je opakovatelný.</p>
+        </div>
+        <div class="def">
+          <h3>Vytvořit forenzní balíček</h3>
+          <p>Pro dokumenty, které zachovat nelze, i pro soubory, jejichž formát aplikace vůbec nepřečte. Zabalí <strong>nedotčený</strong> originál do kontejneru ASiC-E spolu se vším ověřovacím materiálem, který se podařilo sehnat, a se soupisem toho, odkud co pochází — a opatří to časovým razítkem. Znalec pak má jistotu, že v okamžiku zafixování všechny podklady existovaly. Přidat se dají i další soubory: zarazítkovat je zvlášť by každý zafixovalo v jiném okamžiku a neřeklo by to nic o tom, že patří k sobě.</p>
+        </div>
+      </div>
+      <p>Nové razítko kryje <strong>celý soubor</strong>, takže se nedá přidat pro jeden podpis a pro druhý ne. U dokumentu s více podpisy je proto úkon jeden a jeho účinek se vypíše po prvcích: kterému podpisu pomůže, kterému ne a proč. Prvku, na který úkon nedosáhne, přitom neuškodí.</p>
+      <p>Výsledný soubor si nese v názvu značku úkonu a datum, do kdy vydrží — například <span class="mono">smlouva_Uchovano_do_06_03_2029.pdf</span>. Značka je bez diakritiky a bez mezer záměrně, protože jméno putuje e-mailem i do spisových služeb, a značky se nevrství: opakovaný úkon tu předchozí nahradí. Datum na konci není vlastností dokumentu, nýbrž důsledkem volby zdroje razítek — sahá tak daleko, kam sahá platnost certifikátu vybrané autority.</p>
+      <p>Úkon se nabídne jen tam, kde je možný <em>a zároveň poctivý</em>. Dokument, jehož certifikát byl odvolán dřív, než se dá prokázat existence podpisu, uchovat nelze — a aplikace to řekne, místo aby nabídla tlačítko, které nic nespraví. Řekne také, když vybraný zdroj razítek ověřitelnost prakticky neposune, protože jeho vlastní certifikát končí sotva později než dokument sám.</p>
+    </section>
+
+    <section id="kontinuita">
+      <h2>Digitální kontinuita</h2>
+      <p>Otázka „do kdy je dokument ověřitelný“ nemá jednu odpověď, protože to není vlastnost dokumentu, nýbrž vztah mezi dokumentem a tím, kdo ho ověřuje. Aplikace ji proto zodpovídá <strong>třema očima</strong>:</p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th scope="col">Čtení</th><th scope="col">Za jakých podmínek</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">AnEP</td><td>tak, jak se právě ověřovalo — se zapnutými ústupky, vlastními zásobami a zadaným časem</td></tr>
+            <tr><td class="key">Podle standardů</td><td>validátor bez jakýchkoli odchylek; kde to dnes už nejde, řekne se, dokdy to šlo</td></tr>
+            <tr><td class="key">CzechPOINT a podatelny</td><td>nástroje s vlastní zásobou revokačních informací a shovívavostí k SHA-1, ale bez ohledu na vyřazení služby z důvěryhodných seznamů</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>O prvních dvou mluví aplikace v jistotě — jejich pravidla jsou známá a úplná. O třetím okruhu vždy v možnosti: nezná jejich verzi, nastavení ani obsah jejich zásob.</p>
+      <h3>Co určuje datum</h3>
+      <p>Prvek visí v čase na posledním článku, který ho drží, a lhůtu určuje ten, který povolí nejdřív:</p>
+      <ul>
+        <li><strong>Důkaz existence</strong> — s platným časovým razítkem smí být podpisový certifikát dávno po expiraci; bez něj končí všechno s ním.</li>
+        <li><strong>Dostupnost revokačních informací</strong> — údaj v dokumentu ani ve vlastním úložišti nezvětrá, ten stahovaný ze sítě jen dokud ho vydavatel zveřejňuje.</li>
+        <li><strong>Uznatelnost vloženého údaje</strong> — že údaj v souboru zůstane, ještě neznamená, že půjde uznat: po expiraci svého vydavatele je to údaj s prošlým certifikátem. Vyváže z toho jen razítko nad celým souborem.</li>
+        <li><strong>Uznání razítka</strong> — kvalifikované drží do vyřazení služby z důvěryhodných seznamů, což je datum, které nikdo předem nezná; jinak končí s certifikátem razítkovací autority.</li>
+      </ul>
+      <p>U každého prvku stojí čtyři odpovědi — dokdy platnost ověří AnEP, dokdy validátor podle standardů, dokdy CzechPOINT a podatelny, a co a do kdy je třeba udělat. Má-li dokument prvků víc, stojí otázka po úkonu jednou pod jejich výčtem, protože úkon se provádí jednou pro celý soubor.</p>
+      <div class="aside">
+        <span class="label">Když lhůtu stanovit nelze</span>
+        <p>Zvláštní a poměrně častý případ: dnešní kladný závěr stojí na revokačním údaji staženém právě teď ze sítě a doba, po kterou se na jeho dostupnost dalo spoléhat, už uplynula. Aplikace pak <strong>žádné datum neuvede</strong> — v nadpisu zůstane holá otázka a u úkonu stojí „Nejlépe ihned“. Uvnitř bloku je vysvětlení a s ním i datum, kam by ověřitelnost sahala, kdyby údaj dostupný zůstal. Datum se tím neztrácí, jen přestává být slibem.</p>
+        <p>Druhý důvod pro „Nejlépe ihned“: nejnovější časové razítko prvku je podepsané algoritmem, který podle ETSI TS 119 312 přestane být spolehlivý dřív, než lhůta uplyne — dnes typicky klíč RSA o 2 048 bitech s datem 1. 1. 2027. Aplikace AnEP na to datum reaguje jen varováním, jiné validátory ale takové razítko mohou odmítnout; nové razítko se silnějším algoritmem je proto třeba přidat dřív. Podepisuje-li slabým klíčem i vybraný zdroj razítek, upozorní na to blok „Jak dlouho je možné zachovat ověřitelnost?“ — razítko od něj by problém nevyřešilo.</p>
+      </div>
+    </section>
+
+    <section id="protokoly">
+      <h2>Protokoly a export</h2>
+      <p>Ze Zjednodušeného přehledu, Rozšířeného přehledu i Detailního rozboru se generuje protokol jako <strong>PDF/A-2b</strong>, tedy v archivním formátu, který přijímají Formátová pravidla Národního archivu. Nese záhlaví s údaji o souboru a okamžikem ověření, vizualizaci podpisu v rámečku, výklad pojmů uvozený „tj.:“ a výčet toho, čím se ověřování řídilo. Do protokolu jde i to, co má čtenář na obrazovce sbalené — rozbalovací blok se exportuje celý.</p>
+      <p>Před generováním se aplikace ptá na dvě věci; obojí je ve výchozím stavu vypnuté:</p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th scope="col">Volba</th><th scope="col">Důsledek</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">Vložit ověřovaný soubor</td><td>protokol ponese i soubor, o kterém vypovídá, takže se dá ověřit znovu z jediného souboru — vysází se ale jako <strong>PDF/A-3</strong>, protože PDF/A-2 přílohu, která sama není PDF/A, nepřipouští</td></tr>
+            <tr><td class="key">Opatřit časovým razítkem</td><td>razítko doloží, kdy protokol vznikl a že se od té doby nezměnil; pořizuje se od zdroje vybraného v nastavení a nabídne se jen tehdy, když nějaký je</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Vedle toho jdou v expertním módu stáhnout původní zprávy DSS jako XML nebo PDF.</p>
+    </section>
+
+    <section id="zvlastni">
+      <h2>Zvláštní obsahy</h2>
+      <p>Věci, které se v českém prostředí potkávají a běžný validátor je nezná.</p>
+      <div class="defs">
+        <div class="def">
+          <h3>Datové zprávy ISDS</h3>
+          <p>Průkazný otisk je v kvalifikovaném razítku zprávy, ne v poli <span class="mono">dmHash</span>, které je jen jeho kopií — aplikace ho proto přepočítá ze syrových bajtů a porovná s tím, co kryje razítko. Zpráva se pak nečte jako obálka CMS s kilobajty XML uvnitř, nýbrž jako zpráva: kdo komu poslal, pod jakou značkou, kdy byla dodána a kdy doručena a co v ní bylo za písemnosti. Aplikace rozumí číselníkům ISDS, takže o zprávě řekne i to, čím byla.</p>
+        </div>
+        <div class="def">
+          <h3>Evidenční záznamy</h3>
+          <p>ERS i XMLERS se ověří a řekne se, jestli a k jakému okamžiku dokládají existenci předloženého souboru — a co z nich naopak neplyne. Kryje-li záznam víc souborů, otevře se okno, kde se ostatní přiloží a zkontrolují proti otiskům záznamu.</p>
+        </div>
+        <div class="def">
+          <h3>Odkaz z eLegalizace</h3>
+          <p>Příloha <span class="mono">legalisation-metadata.xml</span> odkazuje otisky na jiný dokument, který v souboru není a nikdy nebude. Aplikace tu vazbu rozpozná, po ověření sama otevře okno a nechá druhý dokument přiložit — a ověří <strong>všechny</strong> deklarované otisky, ne první, který umí spočítat. Potvrzený řetěz jde i do protokolu; nese-li odkázaný dokument odkaz na další, pokračuje se stejně.</p>
+        </div>
+        <div class="def">
+          <h3>Podpisy JAdES</h3>
+          <p>JSON s podpisem podle JWS se rozebere na součástky: vložený dokument, který odtud jinak nikdo nevydá, chráněná hlavička po parametrech, certifikáty podepisujícího a každá nepodepsaná vlastnost jako samostatný prvek v pořadí, ve kterém opravdu leží. To pořadí v JAdES něco znamená: archivní razítko kryje to, co mu předchází.</p>
+        </div>
+        <div class="def">
+          <h3>Vizualizace a původ podpisu</h3>
+          <p>Z PDF se vytáhne obrázek podpisu tak, jak ho vidí čtenář — včetně otočených stránek —, a z metadat i program, kterým byl dokument podepsán.</p>
+        </div>
+        <div class="def">
+          <h3>Zámek dokumentu a certifikační podpis</h3>
+          <p>PDF může být uzamčeno samotným podpisem, a není to certifikační podpis: takový dokument nemusí nést nic, čeho by si běžný nástroj všiml. Aplikace čte obě poloviny zápisu — rozsah i úroveň povolených změn — a řekne, co je uzamčeno. Zámek nic neříká o platnosti a nebrání zachování ověřitelnosti.</p>
+        </div>
+        <div class="def">
+          <h3>Protipodpis</h3>
+          <p>Podpis, který nepodepisuje dokument, nýbrž jiný podpis, se na kartě pozná a řekne se, čí podpis to podepisuje. Je to jiný vztah než dva podpisy vedle sebe a čtenáři, který to nerozliší, mění smysl celého dokumentu.</p>
+        </div>
+        <div class="def">
+          <h3>Podpisy v OOXML</h3>
+          <p>DOCX, XLSX a PPTX aplikace <strong>neověřuje</strong> — formát potřebuje transformaci, kterou DSS nezná, takže není doloženo, že podpis kryje obsah, který čtenář vidí. Karta proto nemá barvu výsledku, má vlastní „neověřeno“. Ukáže se, co podpis o sobě tvrdí (úroveň podle struktury B / T / LT / LTA, vložené revokační informace), a odděleně to, co se ověřit dá i tak: samotný token časového razítka a vlastnosti certifikátu, tedy doba platnosti, kvalifikovanost podle QcStatements a přítomnost vydavatele v evropských důvěryhodných seznamech. Nabídne se forenzní balíček.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="nastaveni">
+      <h2>Nastavení a úložiště</h2>
+      <p>Základní nastavení má čtyři věci: přepínač přísnosti, přísnější posuzování časových razítek, <strong>expertní mód</strong>, který zpřístupní Detailní rozbor a Protokoly DSS a bloky o dokumentu v Analýze, a okno „O aplikaci“ — k čemu aplikace slouží, že její výstupy jsou bez záruky, dále verze, autor, licence a složka s licencemi použitých knihoven. Změny se projeví ihned, bez restartu.</p>
+      <p>Pokročilé nastavení přidává jednotlivé ústupky, ověření k zadanému datu a času, správu vlastních důvěryhodných certifikátů a vlastních CRL seznamů, zdroje časových razítek a ruční obnovu důvěryhodných seznamů EU.</p>
+      <p><strong>Zdroje časových razítek</strong> se spravují jako pojmenované profily s adresou, přihlášením a algoritmem otisku; veřejný zdroj Sectigo Qualified umí aplikace předvyplnit. Při zadání se zdroj otestuje: zjistí se konec platnosti jeho certifikátu — právě podle něj se pak počítá, kam až úkon posune ověřitelnost — a výčet otisků, které autorita skutečně podporuje, aby se pak nevybíral algoritmus, který odmítne. Nedostupnost zdroje se přitom nezamění za odmítnutí. Zjistí se i algoritmus a délka klíče, kterým autorita razítka podepisuje; přestane-li klíč být podle ETSI TS 119 312 spolehlivý dřív, než skončí certifikát autority — dnes typicky RSA o 2 048 bitech s datem 1. 1. 2027 —, správa zdrojů na to upozorní a doporučí zdroj s delším klíčem.</p>
+      <p>Vše uživatelské leží v <span class="mono">%APPDATA%\SignatureAnalyzer</span>: nastavení a profily zdrojů razítek, vlastní úložiště CRL, vlastní důvěryhodné certifikáty a mezipaměť důvěryhodných seznamů. Do systému aplikace jinak nezasahuje.</p>
+    </section>
+
+    <section id="provoz">
+      <h2>Provoz a měření</h2>
+      <p>Aplikace se šíří pod <strong>Evropskou unijní veřejnou licencí (EUPL) verze 1.2</strong>, která má závazné české znění, a dodává se jako instalátor <span class="mono">.msi</span> i jako přenosná verze, obojí s vlastním běhovým prostředím — uživatel nemusí nic doinstalovávat. Start je zrychlený předehřátím ověřovací cesty a mezipamětí důvěryhodných seznamů, takže první ověření netrvá znatelně déle než druhé. Licence použitých knihoven se dodávají s každou distribucí a jejich seznam se generuje z těch souborů, které se opravdu balí.</p>
+      <p>Vedle běžných jednotkových testů má projekt desítky <strong>sond a skenů</strong>, které pouštějí skutečnou ověřovací cestu nad sbírkou podepsaných dokumentů a hlásí, co vyšlo. Existují proto, že většina otázek v téhle oblasti se přečtením kódu zodpovědět nedá: jestli změna nezhoršila jiné dokumenty, jestli lhůta vychází i tam, kde ji nikdo nečeká, co karta dokumentu opravdu řekne. Nejedno pravidlo v aplikaci vypadá, jak vypadá, jen proto, že měření odporovalo tomu, co se zdálo zřejmé.</p>
+    </section>
+
+    <section id="hranice">
+      <h2>Kde jsou hranice</h2>
+      <p>Co aplikace <strong>nedělá</strong>, a je to záměr:</p>
+      <ul>
+        <li><strong>Nepodepisuje.</strong> Umí přidat časové razítko a doplnit ověřovací materiál, ale podpis ani pečeť nevytváří.</li>
+        <li><strong>Nevydává právní stanoviska.</strong> Právní účinky uvádí jen tam, kde plynou přímo z výsledku ověření a z textu předpisu.</li>
+        <li><strong>Nepředvídá cizí validátory.</strong> O jiných nástrojích mluví v možnosti, ne v jistotě — nezná jejich verzi, nastavení ani obsah jejich zásob.</li>
+        <li><strong>Nevytváří evidenční záznamy.</strong> Ověřit je umí, vydat ne.</li>
+        <li><strong>Neověřuje podpisy v kancelářských formátech OOXML.</strong> Nahlédne do nich a řekne, co o sobě tvrdí, ale verdikt nevydá.</li>
+        <li><strong>Nezakrývá ústupky.</strong> Kladný verdikt, který stojí na povoleném ústupku, to má u sebe napsáno.</li>
+        <li><strong>Nedává záruku.</strong> Výstupy slouží k seznámení s problematikou a k vlastnímu posouzení, ne jako závazný posudek.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>AnEP — Analyzátor elektronických podpisů. Ověřování podle nařízení eIDAS (910/2014) a norem ETSI EN 319 102-1 a navazujících, nad knihovnou DSS Evropské komise.</p>
+  </footer>
+
+</div>
+</body>
+</html>

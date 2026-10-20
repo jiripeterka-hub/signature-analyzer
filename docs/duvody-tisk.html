@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Číselník důvodů AnEP</title>
+<style>
+  @page { size: A4 portrait; margin: 15mm 16mm 14mm 16mm; }
+  :root { --ink:#111; --muted:#666; --rule:#c9d2db; --band:#eef2f7; }
+  body { font-family: "Segoe UI", Calibri, system-ui, sans-serif; color: var(--ink);
+         font-size: 9.5pt; line-height: 1.36; background:#fff; margin:0; }
+  header { border-bottom: 2px solid var(--ink); padding-bottom: 6px; margin-bottom: 12px; }
+  h1 { font-size: 15pt; margin: 0 0 3px 0; }
+  .sub { font-size: 8.5pt; color: var(--muted); }
+  .intro { font-size: 8.8pt; color:#333; border:1px solid var(--rule); border-radius:3px;
+           padding: 7px 9px; margin-bottom: 12px; break-inside: avoid; }
+  .intro p { margin: 0 0 4px 0; }
+  .intro p:last-child { margin-bottom: 0; }
+  h2 { font-size: 10.5pt; margin: 0 0 4px 0; }
+  .rn { display:inline-block; min-width: 9mm; background: var(--ink); color:#fff;
+        border-radius: 2px; padding: 0 4px; margin-right: 5px;
+        font-variant-numeric: tabular-nums; text-align:center; }
+  article { break-inside: avoid; page-break-inside: avoid;
+            border-bottom: 1px solid var(--rule); padding: 7px 0 8px 0; }
+  .from { font-size: 8.6pt; color:#333; margin-bottom: 5px; }
+  .sit { display:block; padding-left: 10mm; text-indent: -10mm; }
+  p { margin: 0 0 4px 0; hyphens:auto; text-align: justify; }
+  .lbl { display:inline-block; font-size:7.5pt; text-transform:uppercase; letter-spacing:.04em;
+         color: var(--muted); border:1px solid var(--rule); border-radius:3px;
+         padding: 0 4px; margin-right: 5px; white-space:nowrap; }
+  .det, .sol { font-size: 8.8pt; color:#333; }
+  ul.links { margin: 5px 0 0 0; padding: 0; list-style:none; font-size:8.6pt; }
+  ul.links li { background: var(--band); border-radius:3px; padding: 2.5px 6px;
+                margin-bottom: 2.5px; }
+  .k { display:inline-block; min-width: 30mm; color: var(--muted);
+       text-transform: uppercase; font-size: 7.5pt; letter-spacing:.04em; }
+  h3 { font-size: 11pt; margin: 14px 0 6px 0; padding-top: 8px;
+       border-top: 2px solid var(--ink); break-after: avoid; }
+  table { border-collapse: collapse; width:100%; font-size:8.6pt; }
+  th, td { border-bottom:1px solid var(--rule); padding: 3px 5px; text-align:left;
+           vertical-align: top; }
+  th { font-size:7.5pt; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  td.c { text-align:center; font-variant-numeric: tabular-nums; white-space:nowrap; }
+  .sm { font-size:8pt; color:#444; }
+  footer { margin-top: 12px; font-size: 8pt; color: var(--muted);
+           border-top: 1px solid var(--rule); padding-top: 6px; break-inside: avoid; }
+  @media screen { body { max-width: 190mm; margin: 12mm auto; padding: 0 6mm; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Číselník důvodů &mdash; AnEP</h1>
+  <div class="sub">Analyzátor elektronických podpisů &middot; 35 důvodů &middot;
+     stav ke dni 04. 10. 2026 &middot; vygenerováno ze zdrojového kódu</div>
+</header>
+
+<div class="intro">
+  <p><b>Co je důvod.</b> Situace je pozorování o dokumentu; důvod je to, co se z něj řekne
+     uživateli — proč ověření nedopadlo, a co s tím. Jeden důvod shrnuje jednu či více situací
+     a číslování obou řad spolu nesouvisí.</p>
+  <p><b>Proč na sobě důvody závisí.</b> Vypsat všechna pozorování naráz by čtenáře poslalo hledat
+     příčinu tam, kde žádná není. Silnější nález proto ten slabší umlčí: u podpisu s porušenou
+     integritou nemá smysl radit, ať se zaškrtne tolerance k revokačním datům. Vazby níž jsou
+     přesně tahle pravidla.</p>
+  <p><b>Jak číst vazby.</b> <i>Potlačí</i> — vyskytnou-li se oba, vypíše se jen tenhle.
+     <i>Je potlačen</i> — opačný pohled na totéž. <i>Nevznikne, je-li</i> — podmínka, která
+     nestojí v tabulce potlačení, ale přímo v kódu, jenž důvody odvozuje; z tabulky se nevyčte.</p>
+</div>
+
+<article>
+<h2><span class="rn">R1</span> zastaralý formát (nereferenční)</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S17</b> Podpis je ve formátu PDF-NOT-ETSI, nikoli PAdES — nesplňuje ETSI EN 319 102-2; chybí povinný atribut signing-certificate. Jde typicky o starší podpis…</span></div>
+<p class="prob">Podpis či pečeť mají zastaralý (nereferenční) formát. V případě PDF dokumentů jde nejčastěji o podpisy, vytvořené v programu Adobe Acrobat Reader v jeho standardním nastavení (které požaduje vytváření podpisů v nereferenčním formátu). Ale může jít i o podpisy vytvořené v jiném nástroji, který také nevytváří podpisy či pečeti v referenčním formátu.</p>
+<p class="det"><span class="lbl">Technicky</span>Jde o neznámý SubFilter, nebo ve struktuře podpisu (CMS) chybí některé podepsané atributy</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Zvolit tolerantní režim ověřování: v Nastavení zrušit zaškrtnutí volby &quot;Ověřování podpisů a pečetí dle standardů&quot;. Případně v rámci pokročilého nastavení zapnout jen volbu &quot;Ověřovat i podpisy ve standardu PDF-NOT-ETSI&quot;</p>
+<ul class="links"><li><span class="k">Potlačí</span><b>R2</b>&nbsp;revokační informace vydané po expiraci certifikátu</li><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R2</span> revokační informace vydané po expiraci certifikátu</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S6</b> Dostupné revokační informace (OCSP nebo CRL) vydány po expiraci certifikátu; DSS je při ověřování dle standardů odmítá (lze změnit v Nastavení volbou…</span></div>
+<p class="prob">Aplikaci se podařilo získat (on-line) čerstvé revokační informace, prokazující stav revokace certifikátu k rozhodnému okamžiku. Tyto ale byly vydány až po expiraci (skončení řádné doby platnosti) certifikátu, ke kterému se vztahují (k ní došlo {konec}). Technické standardy však zakazují využití takovýchto revokačních informací (vydaných až po expiraci).</p>
+<p class="det"><span class="lbl">Technicky</span>Jde o CRL seznam či odpověď OCSP serveru s hodnotou thisUpdate, která následuje až po notAfter toho certifikátu, ke kterému se vztahuje.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Zvolit tolerantní režim ověřování: v Nastavení zrušit zaškrtnutí volby &quot;Ověřování podpisů a pečetí dle standardů&quot;, případně v rámci pokročilého nastavení zapnout jen volbu &quot;Využij i revokační informace, vydané po expiraci certifikátu&quot;, a opakovat ověření.</p>
+<p class="sol"><span class="lbl">Pro zkušenější</span>Pokud je možné získat použitelný CRL seznam z vhodné doby, lze jej (v Pokročilém nastavení) vložit do úložiště vlastních CRL seznamů</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R1</b>&nbsp;zastaralý formát (nereferenční), <b>R4</b>&nbsp;expirovaný podpisový certifikát, bez časového razítka, <b>R7</b>&nbsp;porušená integrita podpisu, <b>R10</b>&nbsp;neznámý stav revokace, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R20</b>&nbsp;podpis po expiraci certifikátu, <b>R21</b>&nbsp;některé časové razítko neslouží jako PoE, <b>R22</b>&nbsp;on-line revokační informace prokazující revokaci certifikátu; nelze je dle standardů použít, <b>R24</b>&nbsp;vydavatel revokačních dat mimo dobu své platnosti k rozhodnému okamžiku, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný, <b>R35</b>&nbsp;hashovací funkce, kterou standardy nepřipouštějí (SHA3-224)</li></ul>
+</article><article>
+<h2><span class="rn">R3</span> neznámý certifikát</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S12</b> Řetězec certifikátů nelze sestavit k důvěryhodné kotvě (může být přímou příčinou nebo důsledkem jiného selhání)</span></div>
+<p class="prob">Podpis (či pečeť) je založen na certifikátu, který není této aplikaci znám — vydala jej autorita „{vydavatel}“. Aplikace proto neví, zda může jeho obsahu důvěřovat a pracovat s ním.</p>
+<p class="det"><span class="lbl">Technicky</span>Certifikát sám, ani žádný z jeho nadřazených certifikátů, nejsou kotvou důvěry. Aplikace čerpá důvěru primárně ze seznamů LOTL (EUTL), a dále z vlastního úložiště důvěryhodných certifikátů, který je dostupný z pokročilého nastavení. Toto úložiště je defaultně předvyplněno certifikáty tuzemských certifikačních autorit, vydávajících komerční certifikáty. V případě potřeby je možné toto úložiště doplnit vlastními certifikáty. Každý vložený certifikát je považován za kotvu důvěry.</p>
+<p class="sol"><span class="lbl">Pro zkušenější</span>Explicitně vyjádřit důvěru příslušnému certifikátu či jeho vydavateli. Viz podrobnosti u popisu problému.</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R4</span> expirovaný podpisový certifikát, bez časového razítka</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S3</b> Podpisový certifikát expiroval; podpis není opatřen důvěryhodným časovým razítkem</span></div>
+<p class="prob">Podpis (či pečeť) není opatřen časovým razítkem a je založen na certifikátu, který již expiroval (tj. již skončila řádná doba jeho platnosti). K tomu došlo {konec}. To znamená ztrátu digitální kontinuity, kterou již nejde obnovit.</p>
+<p class="sol"><span class="lbl">Pro zkušenější</span>Lze využít možnost ověřování k zadanému datu a času (lze zvolit v pokročilém nastavení)</p>
+<ul class="links"><li><span class="k">Potlačí</span><b>R2</b>&nbsp;revokační informace vydané po expiraci certifikátu, <b>R6</b>&nbsp;vložená revokační data nejde použít — jejich vydavatel mezitím expiroval, <b>R10</b>&nbsp;neznámý stav revokace, <b>R11</b>&nbsp;revokační informace nelze využít, <b>R12</b>&nbsp;revokační informace nedostupné, <b>R24</b>&nbsp;vydavatel revokačních dat mimo dobu své platnosti k rozhodnému okamžiku, <b>R25</b>&nbsp;stažená revokační informace o certifikátu nic neříká</li><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R5</span> expirovaný certifikát posledního časového razítka, při ověřování dle certifikátů</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S4</b> Certifikáty TSA u přiložených časových razítek expirovaly <em>(jen mimo režim standardů)</em></span></div>
+<p class="prob">Certifikát naposledy přidaného časového razítka již expiroval. Při právě zapnutém striktním způsobu ověřování časových razítek (tj. podle expirace jejich certifikátů) tak již není možné ověřit platnost tohoto časového razítka, a kvůli tomu ani platnost samotného podpisu či pečeti.</p>
+<p class="det"><span class="lbl">Technicky</span>Pokud je certifikát, na kterém je časové razítko založeno, kotvou důvěry v důvěryhodných seznamech, může být při ověřování podle standardů razítko ověřeno jako platné i po expiraci jeho certifikátu — do tzv. sunsetu. Tím je okamžik, kdy služba, která razítko vydala, přestala mít v důvěryhodném seznamu kvalifikovaný status; ze seznamu přitom nemizí, zůstává v něm i se svou historií, jako služba s odebraným kvalifikovaný statusem. U řady starších služeb bylo tímto okamžikem datum 1. 7. 2016, kdy nabyly účinnosti relevantní pasáže nařízení eIDAS.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>V nastavení zapnout (zaškrtnout) volbu ověřování časových razítek podle standardů. Díky tomu je možné (nikoli jisté), že časové razítko bude ověřeno jako platné. Je-li vedle tohoto důvodu indikován i jiný důvod o časovém razítku, které neslouží jako důkaz existence podpisu (PoE), samotné přepnutí režimu nestačí: razítko neobstojí i z dalšího důvodu, který s expirací jeho certifikátu nesouvisí.</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li><li><span class="k">Nevznikne, je-li</span><b>S2</b>, <b>S3</b>, <b>S5</b>, <b>S6</b>, <b>S7</b>, <b>S8</b>, <b>S9</b>, <b>S10</b>, <b>S11</b>, <b>S12</b>, <b>S13</b>, <b>S14</b>, <b>S15</b>, <b>S17</b>, <b>S18</b>, <b>S19</b>, <b>S20</b>, <b>S21</b>, <b>S22</b>, <b>S23</b>, <b>S24</b>, <b>S25</b>, <b>S26</b>, <b>S27</b>, <b>S28</b>, <b>S29</b>, <b>S30</b>, <b>S31</b>, <b>S32</b>, <b>S33</b>, <b>S34</b>, <b>S35</b>, <b>S36</b>, <b>S37</b>, <b>S38</b>, <b>S39</b>, <b>S40</b>, <b>S41</b>, <b>S42</b>, <b>S43</b>, <b>S44</b>, <b>S45</b>, <b>S46</b>, <b>S47</b>, <b>S48</b>, <b>S49</b>, <b>S50</b> <em>— podmínka přímo v detectReasons(), není v tabulce potlačení</em></li></ul>
+</article><article>
+<h2><span class="rn">R6</span> vložená revokační data nejde použít — jejich vydavatel mezitím expiroval</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S5</b> Vložená revokační data jsou nedůvěryhodná — certifikát respondéru expiroval</span></div>
+<p class="prob">Aplikace našla přímo v podpisu (či dokumentu) vložené revokační informace, prokazující stav revokace certifikátu k rozhodnému okamžiku. Byly vydány v době, kdy certifikát jejich vydavatele byl platný. Jenže mezitím tento certifikát expiroval (jeho platnost skončila {konec}) — a tím skončila i možnost prokázat, že byl v době vydání revokačních informací důvěryhodný. Technické standardy zakazují využití takovýchto revokačních informací (od expirovaného vydavatele).</p>
+<p class="det"><span class="lbl">Technicky</span>Typicky jde o odpověď OCSP responderu, kterému mezitím expiroval certifikát. V knihovně DSS na tom padá kontrola LTV_ISCKNR: &quot;Current time is not in the validity range of the revocation data issuer&#x27;s certificate!&quot;</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Zvolit tolerantní režim ověřování: v Nastavení zrušit zaškrtnutí volby &quot;Ověřování podpisů a pečetí dle standardů&quot;. Případně v rámci pokročilého nastavení zapnout jen volbu &quot;Využij i revokační informace od již expirovaného vydavatele&quot;</p>
+<p class="sol"><span class="lbl">Pro zkušenější</span>Pokud je možné získat použitelný CRL seznam z vhodné doby, lze jej (v Pokročilém nastavení) vložit do úložiště vlastních CRL seznamů</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R4</b>&nbsp;expirovaný podpisový certifikát, bez časového razítka, <b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R20</b>&nbsp;podpis po expiraci certifikátu, <b>R21</b>&nbsp;některé časové razítko neslouží jako PoE, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný, <b>R30</b>&nbsp;chybí jen důkaz, že revokační informace v dokumentu byla vložena včas, <b>R35</b>&nbsp;hashovací funkce, kterou standardy nepřipouštějí (SHA3-224)</li></ul>
+</article><article>
+<h2><span class="rn">R7</span> porušená integrita podpisu</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S1</b> Porušení integrity — podepsaná data byla po podpisu pozměněna. Otisk podepsaných dat nesouhlasí s tím, který je uložen v podpisu. Od situace 53 se liší…</span></div>
+<p class="prob">Došlo ke změně podepsaného obsahu (porušení jeho integrity).</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Pro tento případ neexistuje řešení</p>
+<ul class="links"><li><span class="k">Potlačí</span><b>R1</b>&nbsp;zastaralý formát (nereferenční), <b>R2</b>&nbsp;revokační informace vydané po expiraci certifikátu, <b>R3</b>&nbsp;neznámý certifikát, <b>R4</b>&nbsp;expirovaný podpisový certifikát, bez časového razítka, <b>R5</b>&nbsp;expirovaný certifikát posledního časového razítka, při ověřování dle certifikátů, <b>R6</b>&nbsp;vložená revokační data nejde použít — jejich vydavatel mezitím expiroval, <b>R8</b>&nbsp;nesprávná dvojice soubor + podpis, <b>R9</b>&nbsp;revokovaný certifikát, <b>R10</b>&nbsp;neznámý stav revokace, <b>R11</b>&nbsp;revokační informace nelze využít, <b>R12</b>&nbsp;revokační informace nedostupné, <b>R13</b>&nbsp;podpis před začátkem platnosti certifikátu, <b>R14</b>&nbsp;revokovaný certifikát CA, <b>R15</b>&nbsp;zastaralá hashovací funkce SHA1, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R17</b>&nbsp;neznámý SubFilter, <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R19</b>&nbsp;nedůvěryhodné časové razítko — TSA není na EUTL, <b>R20</b>&nbsp;podpis po expiraci certifikátu, <b>R21</b>&nbsp;některé časové razítko neslouží jako PoE, <b>R22</b>&nbsp;on-line revokační informace prokazující revokaci certifikátu; nelze je dle standardů použít, <b>R23</b>&nbsp;porušená integrita časového razítka — vadu nelze napravit, <b>R25</b>&nbsp;stažená revokační informace o certifikátu nic neříká, <b>R26</b>&nbsp;revokovaný certifikát; chybí důkaz, kdy podpis vznikl, <b>R34</b>&nbsp;deklarovaný čas podpisu leží mimo platnost certifikátu, <b>R35</b>&nbsp;hashovací funkce, kterou standardy nepřipouštějí (SHA3-224)</li><li><span class="k">Nevznikne, je-li</span><b>S14</b> <em>— podmínka přímo v detectReasons(), není v tabulce potlačení</em></li></ul>
+</article><article>
+<h2><span class="rn">R8</span> nesprávná dvojice soubor + podpis</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S14</b> Nesouhlasí hash externího podpisu — pravděpodobně jde o nesprávnou dvojici soubor + podpis</span></div>
+<p class="prob">Nesouhlasí otisky mezi dokumentem a jeho externím podpisem — buď došlo ke změně podepsaného dokumentu, nebo jde o nesprávnou kombinaci podepsaného dokumentu a jeho externího podpisu.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Zadat správnou dvojici: podepsaný dokument a jeho externí podpis. Soubor s podepsaným dokumentem vložte do hlavního vstupního pole (vlevo), externí podpis do druhého vstupného pole (zcela vpravo).</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R9</span> revokovaný certifikát</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S2</b> Podpisový certifikát byl k rozhodnému okamžiku (BST) již revokován. Rozhodný okamžik určuje časové razítko, a to je horní mez okamžiku podpisu, ne…</span></div>
+<p class="prob">Certifikát, na kterém je podpis založen, byl k rozhodnému okamžiku již revokovaný (odvolaný, resp. předčasně zneplatněný). Rozhodný okamžik určilo časové razítko — jenže to je horní mez okamžiku podpisu, ne dolní: dokládá, že podpis v ten čas už existoval, nikoli že právě vznikl. Rozhodnout, zda podpis existoval ještě před revokací, proto nelze.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Řešení neexistuje a žádné nastavení na tom nic nezmění: chybějící věcí není revokační informace, ale důkaz o čase vzniku podpisu. Standardy proto nedovolují prohlásit takovýto podpis za neplatný (ani za platný). Jeho stav platnosti proto zůstává neznámý.</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li><li><span class="k">Nevznikne, je-li</span><b>S21</b> <em>— podmínka přímo v detectReasons(), není v tabulce potlačení</em></li></ul>
+</article><article>
+<h2><span class="rn">R10</span> neznámý stav revokace</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S7</b> Online OCSP odpověď uvádí stav certifikátu jako NEZNÁMÝ</span></div>
+<p class="prob">Aplikaci se podařilo získat (on-line) revokační informace, ale tyto neobsahují potřebné údaje o stavu revokace certifikátu (indikují, že stav revokace je neznámý).</p>
+<p class="det"><span class="lbl">Technicky</span>OCSP odpověď, kterou se podařilo získat, uvádí že stav revokace certifikátu je neznámý.</p>
+<p class="sol"><span class="lbl">Pro zkušenější</span>Pokud je možné získat použitelný CRL seznam z vhodné doby, lze jej (v Pokročilém nastavení) vložit do úložiště vlastních CRL seznamů</p>
+<ul class="links"><li><span class="k">Potlačí</span><b>R2</b>&nbsp;revokační informace vydané po expiraci certifikátu, <b>R25</b>&nbsp;stažená revokační informace o certifikátu nic neříká</li><li><span class="k">Je potlačen</span><b>R4</b>&nbsp;expirovaný podpisový certifikát, bez časového razítka, <b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R20</b>&nbsp;podpis po expiraci certifikátu, <b>R21</b>&nbsp;některé časové razítko neslouží jako PoE, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný, <b>R35</b>&nbsp;hashovací funkce, kterou standardy nepřipouštějí (SHA3-224)</li></ul>
+</article><article>
+<h2><span class="rn">R11</span> revokační informace nelze využít</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S8</b> Vložená revokační data jsou nepoužitelná (jiný důvod než expirace respondéru)</span></div>
+<p class="prob">Revokační informace, které má aplikace k dispozici, nelze využít.</p>
+<p class="sol"><span class="lbl">Pro zkušenější</span>Pokud je možné získat použitelný CRL seznam z vhodné doby, lze jej (v Pokročilém nastavení) vložit do úložiště vlastních CRL seznamů</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R4</b>&nbsp;expirovaný podpisový certifikát, bez časového razítka, <b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R20</b>&nbsp;podpis po expiraci certifikátu, <b>R21</b>&nbsp;některé časové razítko neslouží jako PoE, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný, <b>R35</b>&nbsp;hashovací funkce, kterou standardy nepřipouštějí (SHA3-224)</li></ul>
+</article><article>
+<h2><span class="rn">R12</span> revokační informace nedostupné</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S9</b> Online revokační informace se nepodařilo získat</span></div>
+<p class="prob">Aplikaci se nepodařilo získat revokační informace od jejich vydavatele.</p>
+<p class="sol"><span class="lbl">Pro zkušenější</span>Pokud je možné získat použitelný CRL seznam z vhodné doby, lze jej (v Pokročilém nastavení) vložit do úložiště vlastních CRL seznamů</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R4</b>&nbsp;expirovaný podpisový certifikát, bez časového razítka, <b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R20</b>&nbsp;podpis po expiraci certifikátu, <b>R21</b>&nbsp;některé časové razítko neslouží jako PoE, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný, <b>R35</b>&nbsp;hashovací funkce, kterou standardy nepřipouštějí (SHA3-224)</li></ul>
+</article><article>
+<h2><span class="rn">R13</span> podpis před začátkem platnosti certifikátu</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S10</b> Podpisový certifikát v době podpisu ještě nebyl platný</span> <span class="sit"><b>S26</b> Podpis (či pečeť) byl vytvořen ještě předtím, než začala řádná doba platnosti podpisového certifikátu (tj. před datem notBefore).</span></div>
+<p class="prob">Aplikace zjistila, že podpis vznikl (přesněji: již existoval) ještě předtím, než začala řádná doba platnosti podpisového certifikátu.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Pro tento případ neexistuje řešení</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R14</span> revokovaný certifikát CA</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S11</b> Certifikát certifikační autority v řetězu byl revokován</span></div>
+<p class="prob">Certifikát vydavatele (certifikační autority) byl revokován ještě před rozhodným okamžikem.</p>
+<p class="det"><span class="lbl">Technicky</span>K rozhodnému okamžiku musí být prokázáno, že ani podpisový certifikát, ani žádný jemu nadřazený certifikát na certifikační cestě, až ke kotvě důvěry, nebyl revokován. Zde bylo zjištěno, že byl revokován některý z nadřazených certifikátů.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Pro tento případ neexistuje řešení</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R15</span> zastaralá hashovací funkce SHA1</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S15</b> Zastaralá hashovací funkce SHA1 v podpisu nebo certifikátech řetězu — ověření lze v Nastavení zvolit tolerantní</span></div>
+<p class="prob">Při vytváření podpisu, pečeti či časového razítka byla využita dnes již zastaralá hashovací funkce SHA1.</p>
+<p class="det"><span class="lbl">Technicky</span>V ČR bylo rozhodnutím MV ČR ukončeno vydávání kvalifikovaných certifikátů s SHA1 k 31.12.2009, a od 1. 1. 2011 doporučeno nepoužívat SHA1 pro elektronické podpisy.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Pokud jste ochotni tolerovat zastaralost hashovací funkce SHA1, můžete v Nastavení zrušit zaškrtnutí volby &quot;Ověřování podpisů a pečetí dle standardů&quot;. Případně v rámci pokročilého nastavení zapnout jen volbu &quot;Ignorovat zastaralost SHA1&quot;</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R16</span> kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160)</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S16</b> Kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160) v podpisu nebo certifikátech řetězu — tolerantní režim tu nepomůže</span></div>
+<p class="prob">Při vytváření podpisu, pečeti či časového razítka byla využita dnes již zastaralá hashovací funkce MD5 nebo RIPEMD-160.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Pro tento případ neexistuje řešení, zastaralost těchto hashovacích funkcí není vhodné tolerovat.</p>
+<ul class="links"><li><span class="k">Potlačí</span><b>R1</b>&nbsp;zastaralý formát (nereferenční), <b>R2</b>&nbsp;revokační informace vydané po expiraci certifikátu, <b>R3</b>&nbsp;neznámý certifikát, <b>R4</b>&nbsp;expirovaný podpisový certifikát, bez časového razítka, <b>R5</b>&nbsp;expirovaný certifikát posledního časového razítka, při ověřování dle certifikátů, <b>R6</b>&nbsp;vložená revokační data nejde použít — jejich vydavatel mezitím expiroval, <b>R8</b>&nbsp;nesprávná dvojice soubor + podpis, <b>R9</b>&nbsp;revokovaný certifikát, <b>R10</b>&nbsp;neznámý stav revokace, <b>R11</b>&nbsp;revokační informace nelze využít, <b>R12</b>&nbsp;revokační informace nedostupné, <b>R13</b>&nbsp;podpis před začátkem platnosti certifikátu, <b>R14</b>&nbsp;revokovaný certifikát CA, <b>R15</b>&nbsp;zastaralá hashovací funkce SHA1, <b>R17</b>&nbsp;neznámý SubFilter, <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R19</b>&nbsp;nedůvěryhodné časové razítko — TSA není na EUTL, <b>R20</b>&nbsp;podpis po expiraci certifikátu, <b>R21</b>&nbsp;některé časové razítko neslouží jako PoE, <b>R22</b>&nbsp;on-line revokační informace prokazující revokaci certifikátu; nelze je dle standardů použít, <b>R25</b>&nbsp;stažená revokační informace o certifikátu nic neříká, <b>R26</b>&nbsp;revokovaný certifikát; chybí důkaz, kdy podpis vznikl, <b>R34</b>&nbsp;deklarovaný čas podpisu leží mimo platnost certifikátu</li><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R17</span> neznámý SubFilter</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S19</b> Podpis nebo pečeť je v technickém formátu, který tato aplikace nedokáže ověřit (SubFilter nepodporovaný validátorem DSS). Přítomnost autentizačního…</span></div>
+<p class="prob">Podpis (či pečeť) používá podpisový algoritmus, který aplikace nepodporuje.</p>
+<p class="det"><span class="lbl">Technicky</span>Podpis používá nepodporovaný SubFilter</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Pro tento případ neexistuje řešení.</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R18</span> chybí atribut signing-time v podpisu</h2>
+<div class="from">Vzniká ze situace: </div>
+<p class="prob">Podpis neobsahuje podepsaný atribut &#x27;signing-time&#x27; (deklarovaný čas podpisu). Validační politika, podle které aplikace ověřuje, jej vyžaduje jako povinnou součást podpisu, a bez něj proto ověření nedokončí — a to i tehdy, když dobu vzniku podpisu dokládá platné časové razítko. O době vzniku podpisu ani o jeho platnosti to nic nevypovídá; jde o formální požadavek na podobu podpisu.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Pro tento případ neexistuje nastavení, které by výsledek změnilo. Chybějící atribut je záležitostí softwaru, který podpis vytvořil.</p>
+<ul class="links"><li><span class="k">Potlačí</span><b>R1</b>&nbsp;zastaralý formát (nereferenční), <b>R2</b>&nbsp;revokační informace vydané po expiraci certifikátu, <b>R3</b>&nbsp;neznámý certifikát, <b>R4</b>&nbsp;expirovaný podpisový certifikát, bez časového razítka, <b>R5</b>&nbsp;expirovaný certifikát posledního časového razítka, při ověřování dle certifikátů, <b>R6</b>&nbsp;vložená revokační data nejde použít — jejich vydavatel mezitím expiroval, <b>R8</b>&nbsp;nesprávná dvojice soubor + podpis, <b>R9</b>&nbsp;revokovaný certifikát, <b>R10</b>&nbsp;neznámý stav revokace, <b>R11</b>&nbsp;revokační informace nelze využít, <b>R12</b>&nbsp;revokační informace nedostupné, <b>R13</b>&nbsp;podpis před začátkem platnosti certifikátu, <b>R14</b>&nbsp;revokovaný certifikát CA, <b>R15</b>&nbsp;zastaralá hashovací funkce SHA1, <b>R17</b>&nbsp;neznámý SubFilter, <b>R19</b>&nbsp;nedůvěryhodné časové razítko — TSA není na EUTL, <b>R21</b>&nbsp;některé časové razítko neslouží jako PoE, <b>R25</b>&nbsp;stažená revokační informace o certifikátu nic neříká</li><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R19</span> nedůvěryhodné časové razítko — TSA není na EUTL</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S23</b> Přiložené časové razítko pochází od TSA, která není zapsána v důvěryhodném seznamu EU (EUTL). DSS proto razítku nemůže důvěřovat a bez důvěryhodného…</span></div>
+<p class="prob">Podpis je opatřen časovým razítkem, jehož vydavatel (TSA) není uveden v důvěryhodném seznamu EU (EUTL). Aplikace tomuto razítku nemůže důvěřovat a použít jej jako důkaz o existenci podpisu v čase (tzv. PoE). Bez toho nelze posoudit, zda byl podpisový certifikát v době podpisu platný a nerevokovaný.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Pokud razítku důvěřujete, vložte certifikát příslušné TSA do vlastního úložiště důvěryhodných certifikátů (Nastavení → Pokročilé nastavení… → Vlastní důvěryhodné certifikáty → Spravovat). Po vložení ověřte podpis znovu — aplikace razítku začne důvěřovat a pokusí se stanovit rozhodný okamžik.</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R20</span> podpis po expiraci certifikátu</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S25</b> Rozhodný okamžik, ke kterému se platnost posuzovala, leží až za koncem řádné doby platnosti podpisového certifikátu (za datem notAfter). Buď podpis (či…</span></div>
+<p class="prob">Z dostupných údajů vychází, že podpis (či pečeť) byl vytvořen v době, kdy platnost podpisového certifikátu již skončila. Certifikát opravňoval podepisovat a zaručoval identitu podepisující osoby pouze v rámci vymezené doby platnosti (notBefore–notAfter).</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Pro tento případ neexistuje řešení — podpis vznikl v době, kdy certifikát již neplatil.</p>
+<ul class="links"><li><span class="k">Potlačí</span><b>R2</b>&nbsp;revokační informace vydané po expiraci certifikátu, <b>R6</b>&nbsp;vložená revokační data nejde použít — jejich vydavatel mezitím expiroval, <b>R10</b>&nbsp;neznámý stav revokace, <b>R11</b>&nbsp;revokační informace nelze využít, <b>R12</b>&nbsp;revokační informace nedostupné, <b>R24</b>&nbsp;vydavatel revokačních dat mimo dobu své platnosti k rozhodnému okamžiku, <b>R25</b>&nbsp;stažená revokační informace o certifikátu nic neříká</li><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li><li><span class="k">Nevznikne, je-li</span><b>S27</b> <em>— podmínka přímo v detectReasons(), není v tabulce potlačení</em></li></ul>
+</article><article>
+<h2><span class="rn">R21</span> některé časové razítko neslouží jako PoE</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S27</b> Přiložené časové razítko (razítka) se nepodařilo ověřit jako platné, a proto neslouží jako důkaz existence podpisu (PoE). Bez PoE nelze určit rozhodný…</span></div>
+<p class="prob">Přiložené časové razítko (razítka) se nepodařilo ověřit jako platné. Ověřovací knihovna DSS jim přidělila jinou indikaci než „platné“ (PASSED) a nelze je proto použít jako důkaz existence podpisu (PoE). Bez PoE nelze stanovit rozhodný okamžik (BST) a posoudit, zda byl podpisový certifikát v době podpisu platný a nerevokovaný.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Proč se razítko nepodařilo ověřit, říká podrobný protokol knihovny DSS — záložku &quot;Protokoly DSS&quot; zpřístupní volba &quot;Expertní mód&quot; v Nastavení. Pokud razítkovací autorita není v evropských důvěryhodných seznamech, lze její certifikát přidat do vlastního úložiště: Nastavení → Pokročilé nastavení… → Vlastní důvěryhodné certifikáty → Spravovat.</p>
+<ul class="links"><li><span class="k">Potlačí</span><b>R2</b>&nbsp;revokační informace vydané po expiraci certifikátu, <b>R6</b>&nbsp;vložená revokační data nejde použít — jejich vydavatel mezitím expiroval, <b>R10</b>&nbsp;neznámý stav revokace, <b>R11</b>&nbsp;revokační informace nelze využít, <b>R12</b>&nbsp;revokační informace nedostupné, <b>R24</b>&nbsp;vydavatel revokačních dat mimo dobu své platnosti k rozhodnému okamžiku, <b>R25</b>&nbsp;stažená revokační informace o certifikátu nic neříká</li><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R23</b>&nbsp;porušená integrita časového razítka — vadu nelze napravit, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R22</span> on-line revokační informace prokazující revokaci certifikátu; nelze je dle standardů použít</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S30</b> On-line revokační informace (OCSP nebo CRL) prokazují revokaci podpisového certifikátu k rozhodnému okamžiku (BST). V režimu ověřování dle standardů je…</span></div>
+<p class="prob">Aplikace získala on-line revokační informace (OCSP nebo CRL), které prokazují, že podpisový certifikát byl k rozhodnému okamžiku (BST) již revokován. Tato data byla ale vydána až po skončení řádné doby platnosti (notAfter) certifikátu a technické standardy jejich použití zakazují. Výsledek ověření proto zůstává neznámý.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Zaškrtnutím volby &quot;Využij i revokační informace, vydané po expiraci certifikátu&quot; se informace do ověření vpustí, ale platnost tím spolehlivě posouzena nebude: zůstane neznámá. K revokaci se ověření dopracuje, jenže nic nedokládá, zda podpis vznikl před ní, nebo až po ní, a to žádné nastavení nespraví. Stojí to za zaškrtnutí jen tehdy, chcete-li mít revokaci pojmenovanou přímo ve zjištěných důvodech.</p>
+<ul class="links"><li><span class="k">Potlačí</span><b>R2</b>&nbsp;revokační informace vydané po expiraci certifikátu, <b>R25</b>&nbsp;stažená revokační informace o certifikátu nic neříká</li><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R23</span> porušená integrita časového razítka — vadu nelze napravit</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S36</b> Porušená integrita časového razítka: otisk (message imprint), který razítko nese, neodpovídá datům, jež má krýt — případně nesouhlasí podpis samotného…</span></div>
+<p class="prob">Přiložené časové razítko je poškozené. Otisk (message imprint), který razítko nese, neodpovídá datům, jež má krýt — případně nesouhlasí podpis samotného razítka. Takové razítko nic neprokazuje a nemůže sloužit jako důkaz existence podpisu (PoE). Bez PoE nelze stanovit rozhodný okamžik (BST) a posoudit, zda byl podpisový certifikát v době podpisu platný a nerevokovaný.</p>
+<p class="det"><span class="lbl">Technicky</span>Typicky jde o dokument, který byl změněn až poté, co k němu bylo razítko připojeno. Poškození se týká vztahu razítka a podepsaného obsahu. V záložce Detailní rozbor je u dotčeného razítka vidět, že jeho otisk neodpovídá krytým datům.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Pro tento případ neexistuje řešení. Na rozdíl od ostatních příčin, proč razítko neslouží jako PoE (nedůvěryhodná TSA, zastaralá hashovací funkce, expirovaný řetěz certifikátů), nelze poškozené razítko opravit žádným nastavením ani doplněním certifikátu. Máte-li k dispozici původní, nezměněnou verzi dokumentu, ověřte ji.</p>
+<ul class="links"><li><span class="k">Potlačí</span><b>R21</b>&nbsp;některé časové razítko neslouží jako PoE</li><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R24</span> vydavatel revokačních dat mimo dobu své platnosti k rozhodnému okamžiku</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S46</b> Revokační informace nelze použít, protože certifikát jejich vydavatele (respondéra OCSP nebo vydavatele CRL) k rozhodnému okamžiku neplatil. Buď už…</span></div>
+<p class="prob">Aplikace má k dispozici revokační informace o {certifikat}, ale certifikát jejich vydavatele — respondéra OCSP nebo vydavatele CRL — k rozhodnému okamžiku neplatil. Technické standardy žádají, aby šlo vydavatele revokační informace k tomuto okamžiku ověřit, a proto takovou informaci nepovolují použít.</p>
+<p class="det"><span class="lbl">Technicky</span>Ověřuje-li se k okamžiku v minulosti, bývá důvodem to, že odpověď staženou dnes podepsal respondér zřízený až později — k tehdejšímu dni tedy ještě neplatil. Druhou možností je vydavatel, jemuž platnost mezitím skončila. Jde o dvě strany téhož požadavku: standardy neptají se, zda certifikát vydavatele vypršel, ale zda k rozhodnému okamžiku platil.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>V pokročilém nastavení zapnout volbu &quot;Využij i revokační informace od již expirovaného vydavatele&quot;. Volba &quot;Využij i revokační informace, vydané po expiraci certifikátu&quot; tuhle překážku neodstraní — týká se stáří samotné informace, ne jejího vydavatele.</p>
+<ul class="links"><li><span class="k">Potlačí</span><b>R2</b>&nbsp;revokační informace vydané po expiraci certifikátu</li><li><span class="k">Je potlačen</span><b>R4</b>&nbsp;expirovaný podpisový certifikát, bez časového razítka, <b>R20</b>&nbsp;podpis po expiraci certifikátu, <b>R21</b>&nbsp;některé časové razítko neslouží jako PoE, <b>R35</b>&nbsp;hashovací funkce, kterou standardy nepřipouštějí (SHA3-224)</li></ul>
+</article><article>
+<h2><span class="rn">R25</span> stažená revokační informace o certifikátu nic neříká</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S47</b> Stažená revokační informace o certifikátu nic neříká: seznam (CRL) vyšel až po skončení platnosti certifikátu a nenese příznak expiredCertsOnCRL s…</span></div>
+<p class="prob">Aplikaci se sice podařilo on-line revokační informaci získat, ale ta o {certifikat} nic neříká. Seznam odvolaných certifikátů (CRL) byl vydán až po skončení platnosti certifikátu a nenese příznak expiredCertsOnCRL s datem, které by do doby jeho platnosti sahalo. Vydavatel přitom smí záznam o certifikátu po jeho expiraci ze seznamu vypustit (RFC 5280, čl. 3.3), takže z toho, že v seznamu není, neplyne, že odvolán nebyl.</p>
+<p class="det"><span class="lbl">Technicky</span>Validátor DSS to hlásí jako BBB_XCV_REVOC_HAS_CERT_INFO_ANS (&quot;The revocation data is not known to contain information about the certificate!&quot;). Od případu, kdy se žádnou revokační informaci získat nepodařilo, se to liší tím, že informace k dispozici je — jen o tomto certifikátu mlčí. A od informace vydané po expiraci, kterou propustí tolerantní režim, se liší tím, že tato neprojde ani tak: tolerance mluví o stáří informace, ne o tom, že v ní certifikát vůbec nefiguruje.</p>
+<p class="sol"><span class="lbl">Pro zkušenější</span>Pokud je možné získat použitelný CRL seznam z vhodné doby, lze jej (v Pokročilém nastavení) vložit do úložiště vlastních CRL seznamů</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R4</b>&nbsp;expirovaný podpisový certifikát, bez časového razítka, <b>R7</b>&nbsp;porušená integrita podpisu, <b>R10</b>&nbsp;neznámý stav revokace, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R20</b>&nbsp;podpis po expiraci certifikátu, <b>R21</b>&nbsp;některé časové razítko neslouží jako PoE, <b>R22</b>&nbsp;on-line revokační informace prokazující revokaci certifikátu; nelze je dle standardů použít, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný, <b>R35</b>&nbsp;hashovací funkce, kterou standardy nepřipouštějí (SHA3-224)</li></ul>
+</article><article>
+<h2><span class="rn">R26</span> revokovaný certifikát; chybí důkaz, kdy podpis vznikl</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S48</b> Dostupné revokační informace prokazují, že podpisový certifikát byl revokován (předčasně zneplatněn). Ověřování tyto informace přijalo a opřelo se o…</span></div>
+<p class="prob">Certifikát, na kterém je podpis založen, byl revokován (předčasně zneplatněn). Revokační informace o tom má aplikace k dispozici a ověřování je použilo — nic jim nechybí. Není ale čím doložit, kdy podpis vznikl, a tak nelze rozhodnout, zda k tomu došlo ještě před revokací, nebo až po ní.</p>
+<p class="det"><span class="lbl">Technicky</span>Podpis není opatřen žádným časovým razítkem, které by mohlo doložit čas jeho vzniku, takže rozhodný okamžik ověření padá na přítomnost — a k dnešku je certifikát odvolaný. Deklarovaný čas podpisu zapsaný v dokumentu nic nedokládá: pochází z počítače podepisující osoby a lze ho nastavit libovolně. Standardy proto podpis neprohlásí za neplatný (mohl vzniknout dřív, než k revokaci došlo), ale ani za platný (mohl vzniknout až po ní).</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Chybějící důkaz už doplnit nelze — časové razítko připojené dnes by dokládalo jen dnešek, a to je doba, kdy je certifikát odvolaný. Znáte-li čas podpisu z jiného zdroje, můžete v Nastavení zapnout ověření k zadanému času; výsledek pak ale stojí na tomto údaji, ne na důkazu obsaženém v dokumentu.</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R27</span> razítko ve slovníku VRI nezakládá důkaz existence podpisu</h2>
+<div class="from">Vzniká ze situace: </div>
+<p class="prob">Dokument sice obsahuje časové razítko, ale takové, které nemůže doložit, kdy podpis vznikl. Je uloženo ve slovníku VRI dokumentu, nikoli v podpisu samotném, a nekryje je žádné dokumentové (archivní) časové razítko. Rozhodný okamžik ověření proto padá na přítomnost, přestože razítko v dokumentu vidíte. Nejčastěji jde o časové razítko, které k podpisu přidává program Adobe Acrobat Reader, když mu uživatel zadá pokyn &quot;Přidat informaci o ověření&quot;.</p>
+<p class="det"><span class="lbl">Technicky</span>Norma PAdES uznává pro úroveň T jen dvě konstrukce: atribut signature-time-stamp uvnitř podpisu a dokumentové časové razítko. Razítko ve VRI záznamu není ani jedno z nich a do dokumentu přibylo inkrementálním updatem — dokud je nekryje dokumentové razítko, může je kdokoli odstranit či nahradit, aniž by to šlo poznat. Důkaz, který lze beze stopy odstranit, nemůže nést závěr o platnosti. Samotné razítko je přitom kryptograficky v pořádku a čas, který uvádí, je nejspíš pravdivý; konformní validátory včetně online služby DSS s ním ale nepočítají a AnEP se chová stejně, aby nesliboval ověřitelnost, kterou jinde nepotvrdí.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Napravit to lze jedině dokumentovým (archivním) časovým razítkem, které VRI záznam kryje — tím se dostane pod ochranu a jeho čas se uplatní jako důkaz existence. Připojit je má smysl jen dokud je podpisový certifikát ještě platný; potom už razítko doloží pouze to, že podpis existoval v době, kdy bylo pozdě. Zda to u tohoto dokumentu ještě jde, říká záložka Digitální kontinuita.</p>
+<ul class="links"><li><span class="k">Vazby</span>žádné — nepotlačuje nic a nic ho nepotlačuje</li></ul>
+</article><article>
+<h2><span class="rn">R28</span> podpisová hodnota se neověřila, obsah je přitom nezměněný</h2>
+<div class="from">Vzniká ze situace: </div>
+<p class="prob">Podpisovou hodnotu se nepodařilo ověřit veřejným klíčem z podpisového certifikátu. Podepsaný obsah se přitom nezměnil: otisk podepsaných dat souhlasí, takže po podpisu do dokumentu nikdo nezasáhl. Vada je uvnitř samotného podpisu, nikoli v dokumentu.</p>
+<p class="det"><span class="lbl">Technicky</span>Validátor DSS to hlásí jako BBB_CV_ISI_ANS (&quot;The signature is not intact!&quot;) a výsledek uzavře jako TOTAL_FAILED/SIG_CRYPTO_FAILURE. Je to jiná vada než porušená integrita: tam nesouhlasí otisk podepsaných dat, tedy obsah se po podpisu změnil. Zde otisk souhlasí a selhává až ověření podpisové hodnoty. Nejčastější příčinou je rozpor v identifikátorech algoritmů uvnitř struktury CMS: pole signatureAlgorithm uvádí jiný algoritmus otisku, než jakým byl podpis skutečně vytvořen a než jaký uvádí pole digestAlgorithm. Takové podpisy vytvářely některé starší verze programu Adobe Acrobat. Validátory, které se řídí polem digestAlgorithm — Adobe Reader a nástroje z něj vycházející, ale i CzechPOINT či Signer — takový podpis ověří jako platný; validátory postavené na knihovně DSS (včetně online služby DSS a této aplikace) berou signatureAlgorithm doslova, a proto ověření selže.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Vada je v samotném podpisu a odstranit ji nelze — jinak už by to nebyl tentýž podpis. Záleží-li na jeho platnosti, je namístě porovnat výsledek s validátorem, který se řídí polem digestAlgorithm (Adobe Reader, Signer, CzechPOINT), a rozdíl doložit; do dokumentu zasahovat netřeba, ten je v pořádku.</p>
+<ul class="links"><li><span class="k">Potlačí</span><b>R1</b>&nbsp;zastaralý formát (nereferenční), <b>R2</b>&nbsp;revokační informace vydané po expiraci certifikátu, <b>R3</b>&nbsp;neznámý certifikát, <b>R4</b>&nbsp;expirovaný podpisový certifikát, bez časového razítka, <b>R5</b>&nbsp;expirovaný certifikát posledního časového razítka, při ověřování dle certifikátů, <b>R6</b>&nbsp;vložená revokační data nejde použít — jejich vydavatel mezitím expiroval, <b>R8</b>&nbsp;nesprávná dvojice soubor + podpis, <b>R9</b>&nbsp;revokovaný certifikát, <b>R10</b>&nbsp;neznámý stav revokace, <b>R11</b>&nbsp;revokační informace nelze využít, <b>R12</b>&nbsp;revokační informace nedostupné, <b>R13</b>&nbsp;podpis před začátkem platnosti certifikátu, <b>R14</b>&nbsp;revokovaný certifikát CA, <b>R15</b>&nbsp;zastaralá hashovací funkce SHA1, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R17</b>&nbsp;neznámý SubFilter, <b>R18</b>&nbsp;chybí atribut signing-time v podpisu, <b>R19</b>&nbsp;nedůvěryhodné časové razítko — TSA není na EUTL, <b>R20</b>&nbsp;podpis po expiraci certifikátu, <b>R21</b>&nbsp;některé časové razítko neslouží jako PoE, <b>R22</b>&nbsp;on-line revokační informace prokazující revokaci certifikátu; nelze je dle standardů použít, <b>R23</b>&nbsp;porušená integrita časového razítka — vadu nelze napravit, <b>R25</b>&nbsp;stažená revokační informace o certifikátu nic neříká, <b>R26</b>&nbsp;revokovaný certifikát; chybí důkaz, kdy podpis vznikl, <b>R34</b>&nbsp;deklarovaný čas podpisu leží mimo platnost certifikátu, <b>R35</b>&nbsp;hashovací funkce, kterou standardy nepřipouštějí (SHA3-224)</li></ul>
+</article><article>
+<h2><span class="rn">R29</span> vložená revokační data od vydavatele, který neplatil už při jejich vydání</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S29</b> Vložená OCSP odpověď pochází od respondéra, jehož certifikát byl v okamžiku vydání té odpovědi už po expiraci. Taková odpověď nevznikla v pořádku nikdy…</span></div>
+<p class="prob">Aplikace našla přímo v podpisu (či dokumentu) vložené revokační informace, prokazující stav revokace certifikátu k rozhodnému okamžiku. Jsou ale zastaralé (certifikát jejich vydavatele k rozhodnému okamžiku již expiroval), a technické standardy nepovolují jejich využití.</p>
+<p class="det"><span class="lbl">Technicky</span>Typicky jde o odpovědi OCSP serverů, vydané OCSP responderem, jehož certifikát k rozhodnému okamžiku již expiroval.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Zvolit tolerantní režim ověřování: v Nastavení zrušit zaškrtnutí volby &quot;Ověřování podpisů a pečetí dle standardů&quot;. Případně v rámci pokročilého nastavení zapnout jen volbu &quot;Využij i revokační informace od již expirovaného vydavatele&quot;</p>
+<p class="sol"><span class="lbl">Pro zkušenější</span>Pokud je možné získat použitelný CRL seznam z vhodné doby, lze jej (v Pokročilém nastavení) vložit do úložiště vlastních CRL seznamů</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R30</b>&nbsp;chybí jen důkaz, že revokační informace v dokumentu byla vložena včas</li></ul>
+</article><article>
+<h2><span class="rn">R30</span> chybí jen důkaz, že revokační informace v dokumentu byla vložena včas</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S35</b> Ověření dle standardů nenašlo použitelné revokační informace, ale data, která k tomu chybějí, už v dokumentu jsou — jenže posuzování na ně v této…</span></div>
+<p class="prob">Revokační informace, které ověření podle standardů postrádá, jsou v dokumentu vložené — jenže tam, kde leží, na ně posuzování nedosáhne.</p>
+<p class="det"><span class="lbl">Technicky</span>Rozhoduje, kterým procesem podle ETSI EN 319 102-1 podpis projde. Bez razítka nad celým souborem a bez validačního materiálu v dlouhodobém úložišti dokumentu skončí u klauzule 5.5, kde kontrola LTV_ISCKNR žádá, aby certifikát vydavatele revokační informace platil k okamžiku ověření. S nimi se podpis dostane do klauzule 5.6 (archivní data), kde se pracuje s důkazy existence — a ten důkaz už dokument zpravidla nese: je jím jeho stávající časové razítko. Nově přidané razítko tedy nedokládá nic o minulosti, jen přesouvá posuzování tam, kde se s důkazy pracuje.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Použít uchování: tlačítko &quot;Uchovat&quot; v záložce Digitální kontinuita. Vloží revokační informace do dlouhodobého úložiště dokumentu a přidá archivní časové razítko — tím se posuzování přesune tam, kde se ty informace uplatní. Případně, jen pro jedno ověření, zapnout v pokročilém nastavení volbu &quot;Využij i revokační informace od již expirovaného vydavatele&quot;; závěr pak ale stojí na ústupku, který jiný nástroj mít nemusí.</p>
+<ul class="links"><li><span class="k">Potlačí</span><b>R6</b>&nbsp;vložená revokační data nejde použít — jejich vydavatel mezitím expiroval, <b>R29</b>&nbsp;vložená revokační data od vydavatele, který neplatil už při jejich vydání</li></ul>
+</article><article>
+<h2><span class="rn">R31</span> samostatné časové razítko neobstálo</h2>
+<div class="from">Vzniká ze situace: </div>
+<p class="prob">Samostatné časové razítko nad dokumentem se nepodařilo ověřit jako platné.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Co s tím lze dělat, závisí na příčině; tu se u tohoto razítka nepodařilo zařadit. Podrobnosti nese podrobný protokol knihovny DSS — záložku &quot;Protokoly DSS&quot; zpřístupní volba &quot;Expertní mód&quot; v Nastavení.</p>
+<ul class="links"><li><span class="k">Vazby</span>žádné — nepotlačuje nic a nic ho nepotlačuje</li></ul>
+</article><article>
+<h2><span class="rn">R32</span> evidenčnímu záznamu něco schází</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S37</b> Evidenční záznam se odchyluje od schématu svého standardu (RFC 4998 pro ERS, RFC 6283 pro XMLERS). Není to vada důkazu: strom otisků i časové razítko…</span> <span class="sit"><b>S38</b> Evidenční záznam nekryje vše, co podpis podepisuje. Uchováno je tedy jen to, co záznam obsahuje; u zbytku podepsaných dat nedokládá nic, a jejich…</span> <span class="sit"><b>S39</b> Porušená integrita dat krytých evidenčním záznamem: otisk předloženého objektu neodpovídá hodnotě zaznamenané ve stromu otisků. Data byla po vytvoření…</span> <span class="sit"><b>S40</b> Žádné z časových razítek evidenčního záznamu se nepodařilo ověřit jako platné. Strom otisků tím není nijak ukotven v čase, takže záznam neslouží jako…</span></div>
+<p class="prob">Evidenčnímu záznamu přiloženému k dokumentu něco schází, takže neprokazuje to, co prokazovat má.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Vada je v samotném záznamu a opravit ji může jen ten, kdo záznam vytvořil.</p>
+<ul class="links"><li><span class="k">Vazby</span>žádné — nepotlačuje nic a nic ho nepotlačuje</li></ul>
+</article><article>
+<h2><span class="rn">R33</span> chybí podepsaný soubor (externí podpis)</h2>
+<div class="from">Vzniká ze situace: <span class="sit"><b>S13</b> Podepsaná data nebyla nalezena — soubor pravděpodobně nebyl přiložen k podpisu</span></div>
+<p class="prob">Tento podpis je externí, neboli je uložený zvlášť, mimo podepsaný soubor — a ten nebyl aplikaci předložen. Bez něj se nedá ověřit vůbec nic: podpis se porovnává právě s ním.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Předložte podpis společně se souborem, ke kterému patří. V aplikaci k tomu slouží hlavní vstupní pole (vlevo), zatímco externí podpis se vkládá do vstupního pole zcela vpravo.</p>
+<ul class="links"><li><span class="k">Vazby</span>žádné — nepotlačuje nic a nic ho nepotlačuje</li></ul>
+</article><article>
+<h2><span class="rn">R34</span> deklarovaný čas podpisu leží mimo platnost certifikátu</h2>
+<div class="from">Vzniká ze situace: </div>
+<p class="prob">Deklarovaný čas podpisu (atribut &#x27;signing-time&#x27;, u PDF také údaj ve slovníku podpisu) leží mimo dobu platnosti podpisového certifikátu. Validační politika, podle které aplikace ověřuje, to považuje za nesplnění požadavku na podpis a ověření nedokončí — a to i tehdy, když skutečnou dobu vzniku podpisu dokládá platné časové razítko. Deklarovaný čas zapisuje software podepisujícího podle hodin jeho počítače; o skutečné době vzniku podpisu ani o jeho platnosti sám nic nevypovídá.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Pro tento případ neexistuje nastavení, které by výsledek změnilo. Chybný deklarovaný čas je záležitostí softwaru či počítače, na kterém podpis vznikl.</p>
+<ul class="links"><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R16</b>&nbsp;kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160), <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article><article>
+<h2><span class="rn">R35</span> hashovací funkce, kterou standardy nepřipouštějí (SHA3-224)</h2>
+<div class="from">Vzniká ze situace: </div>
+<p class="prob">Při vytváření podpisu, pečeti či časového razítka byla využita hashovací funkce SHA3-224 (případně jiná, například MD2), kterou dokument ETSI TS 119 312 o kryptografických algoritmech pro elektronické podpisy neuvádí. Validační politika, podle které aplikace ověřuje, ji proto nepřipouští vůbec. Nejde o funkci prolomenou ani zastaralou — jen ji standardy pro elektronické podpisy nepočítají mezi použitelné, a ověřování podle nich ji tedy neuzná.</p>
+<p class="sol"><span class="lbl">Co pomůže</span>Pro tento případ neexistuje nastavení, které by výsledek změnilo. Validátory, které se řídí jinými pravidly, mohou podpis posoudit jinak.</p>
+<ul class="links"><li><span class="k">Potlačí</span><b>R2</b>&nbsp;revokační informace vydané po expiraci certifikátu, <b>R6</b>&nbsp;vložená revokační data nejde použít — jejich vydavatel mezitím expiroval, <b>R10</b>&nbsp;neznámý stav revokace, <b>R11</b>&nbsp;revokační informace nelze využít, <b>R12</b>&nbsp;revokační informace nedostupné, <b>R24</b>&nbsp;vydavatel revokačních dat mimo dobu své platnosti k rozhodnému okamžiku, <b>R25</b>&nbsp;stažená revokační informace o certifikátu nic neříká</li><li><span class="k">Je potlačen</span><b>R7</b>&nbsp;porušená integrita podpisu, <b>R28</b>&nbsp;podpisová hodnota se neověřila, obsah je přitom nezměněný</li></ul>
+</article>
+
+<h3>Žebříček přednosti</h3>
+<p class="det">Kolik dalších důvodů který umlčí. Čím výš, tím spíš je právě on tím, co čtenář
+   uvidí jako jediný.</p>
+<table>
+  <tr><th>Důvod</th><th>Název</th><th>Potlačí</th><th>Které</th></tr>
+  <tr><td class="c"><b>R7</b></td><td>porušená integrita podpisu</td><td class="c">26</td><td class="sm">R1, R2, R3, R4, R5, R6, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, R19, R20, R21, R22, R23, R25, R26, R34, R35</td></tr><tr><td class="c"><b>R28</b></td><td>podpisová hodnota se neověřila, obsah je přitom nezměněný</td><td class="c">26</td><td class="sm">R1, R2, R3, R4, R5, R6, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, R19, R20, R21, R22, R23, R25, R26, R34, R35</td></tr><tr><td class="c"><b>R16</b></td><td>kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160)</td><td class="c">23</td><td class="sm">R1, R2, R3, R4, R5, R6, R8, R9, R10, R11, R12, R13, R14, R15, R17, R18, R19, R20, R21, R22, R25, R26, R34</td></tr><tr><td class="c"><b>R18</b></td><td>chybí atribut signing-time v podpisu</td><td class="c">18</td><td class="sm">R1, R2, R3, R4, R5, R6, R8, R9, R10, R11, R12, R13, R14, R15, R17, R19, R21, R25</td></tr><tr><td class="c"><b>R4</b></td><td>expirovaný podpisový certifikát, bez časového razítka</td><td class="c">7</td><td class="sm">R2, R6, R10, R11, R12, R24, R25</td></tr><tr><td class="c"><b>R20</b></td><td>podpis po expiraci certifikátu</td><td class="c">7</td><td class="sm">R2, R6, R10, R11, R12, R24, R25</td></tr><tr><td class="c"><b>R21</b></td><td>některé časové razítko neslouží jako PoE</td><td class="c">7</td><td class="sm">R2, R6, R10, R11, R12, R24, R25</td></tr><tr><td class="c"><b>R35</b></td><td>hashovací funkce, kterou standardy nepřipouštějí (SHA3-224)</td><td class="c">7</td><td class="sm">R2, R6, R10, R11, R12, R24, R25</td></tr><tr><td class="c"><b>R10</b></td><td>neznámý stav revokace</td><td class="c">2</td><td class="sm">R2, R25</td></tr><tr><td class="c"><b>R22</b></td><td>on-line revokační informace prokazující revokaci certifikátu; nelze je dle standardů použít</td><td class="c">2</td><td class="sm">R2, R25</td></tr><tr><td class="c"><b>R30</b></td><td>chybí jen důkaz, že revokační informace v dokumentu byla vložena včas</td><td class="c">2</td><td class="sm">R6, R29</td></tr><tr><td class="c"><b>R1</b></td><td>zastaralý formát (nereferenční)</td><td class="c">1</td><td class="sm">R2</td></tr><tr><td class="c"><b>R23</b></td><td>porušená integrita časového razítka — vadu nelze napravit</td><td class="c">1</td><td class="sm">R21</td></tr><tr><td class="c"><b>R24</b></td><td>vydavatel revokačních dat mimo dobu své platnosti k rozhodnému okamžiku</td><td class="c">1</td><td class="sm">R2</td></tr>
+</table>
+<p class="det" style="margin-top:6px">Bez jakékoli vazby (nepotlačují nic a nic je nepotlačuje):
+   R27, R31, R32, R33.</p>
+
+<footer>
+  Vygenerováno z <code>ResultView.REASONS</code>, <code>ResultView.REASON_WORKING_LABELS</code>,
+  <code>ResultView.SITUATION_LABELS</code> a <code>ReportMapper.REASON_SUPPRESSIONS</code>;
+  vazba situace&nbsp;&rarr;&nbsp;důvod je změřena voláním <code>ReportMapper.detectReasons()</code>,
+  ne opsána z komentáře. Číselník situací je v samostatném listu
+  <code>docs/situace-tisk.html</code>.
+</footer>
+</body>
+</html>

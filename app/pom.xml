@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>cz.digitalnikontinuita</groupId>
+    <artifactId>signature-analyzer-parent</artifactId>
+    <version>1.0.0</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>signature-analyzer-app</artifactId>
+  <packaging>jar</packaging>
+
+  <dependencies>
+
+    <!-- ===== DSS: signature/container format coverage ===== -->
+
+    <!-- PAdES: PDF documents with embedded digital signatures -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-pades-pdfbox</artifactId>
+    </dependency>
+
+    <!-- CAdES: raw / detached PKCS#7 / CMS signature objects -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-cades</artifactId>
+    </dependency>
+
+    <!-- XAdES: detached or enveloped XML signature objects -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-xades</artifactId>
+    </dependency>
+
+    <!-- ASiC-S / ASiC-E containers, both signature flavors -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-asic-cades</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-asic-xades</artifactId>
+    </dependency>
+
+    <!-- JAdES: JSON Advanced Electronic Signatures (ETSI TS 119 182-1) -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-jades</artifactId>
+    </dependency>
+
+    <!-- Evidence records: RFC 6283 XMLERS and RFC 4998 ERS.
+         Validation only - DSS cannot create evidence records, only verify them and
+         compute the data-object digests a preservation service would need.
+         Both modules register their analyzer/validator factories via META-INF/services,
+         so they must be on the classpath rather than referenced from code. -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-evidence-record-xml</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-evidence-record-asn1</artifactId>
+    </dependency>
+
+    <!-- Required explicitly since DSS 6.3 for the default XML validation policy -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-policy-jaxb</artifactId>
+    </dependency>
+
+    <!-- Core validation engine (optional in format modules, must be explicit here) -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-validation</artifactId>
+    </dependency>
+
+    <!-- CMS/PKCS#7 implementation required at runtime by CAdES and PAdES validators -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-cms-object</artifactId>
+    </dependency>
+
+    <!-- CRL parser SPI implementation (IRCUtils); optional in format modules, must be explicit here -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-crl-parser-x509crl</artifactId>
+    </dependency>
+
+    <!-- EU Trusted Lists (LOTL) support for qualified signature determination -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-tsl-validation</artifactId>
+    </dependency>
+
+    <!-- SimpleReport JAXB bindings for the UI summary -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-simple-report-jaxb</artifactId>
+    </dependency>
+
+    <!-- Online OCSP / CRL sources for live revocation checking -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-service</artifactId>
+    </dependency>
+
+    <!-- DSS needs a concrete dss-utils implementation at runtime -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-utils-apache-commons</artifactId>
+    </dependency>
+
+    <!-- HTML/PDF rendering of DSS reports -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-detailed-report-jaxb</artifactId>
+    </dependency>
+
+    <!-- Apache FOP — required by DSS generatePdfReport().
+         fop:2.9 je prázdný shim (2KB); fop-core:2.11 obsahuje skutečný FOP
+         včetně GatherContextInfoFunction a všech SPI registrací. -->
+    <dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>fop-core</artifactId>
+      <version>2.11</version>
+    </dependency>
+
+    <!-- Saxon-HE — DSS PDF XSLT uses XSLT 2.0 (gatherContextInfo etc.);
+         JDK built-in Xalan supports only XSLT 1.0 and throws "Unknown function" -->
+    <dependency>
+      <groupId>net.sf.saxon</groupId>
+      <artifactId>Saxon-HE</artifactId>
+      <version>12.5</version>
+    </dependency>
+
+    <!-- ===== UI ===== -->
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-controls</artifactId>
+      <version>${javafx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-fxml</artifactId>
+      <version>${javafx.version}</version>
+    </dependency>
+    <!-- WebView for displaying HTML reports -->
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-web</artifactId>
+      <version>${javafx.version}</version>
+    </dependency>
+
+    <!-- Silence "No SLF4J providers found" from DSS logging — NOP discards all log output -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-nop</artifactId>
+      <version>2.0.17</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- ===== Tests ===== -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.11.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- veraPDF — referenční validátor PDF/A (dvojlicence GPLv3+ / MPLv2+; AnEP ho bere
+         pod MPL-2.0, která je souborový copyleft a je mezi licencemi slučitelnými s EUPL-1.2).
+         Ověřuje dvojí: konformitu protokolů, které AnEP sám vydává (ArchivalExportTest —
+         kontrola značek v souboru na to nestačila, takto vypadající soubor prošel a přitom mu
+         chyběl CIDSet vyžadovaný v PDF/A-1b), a nově i konformitu ověřovaných dokumentů.
+
+         Varianta -jakarta, ne obyčejná: ta táhne javax.xml.bind, kdežto DSS 6.5 je celé
+         v jakarta.xml.bind. Dvě JAXB v jednom fat jaru jsou zbytečná past. -->
+    <dependency>
+      <groupId>org.verapdf</groupId>
+      <artifactId>validation-model-jakarta</artifactId>
+      <version>1.30.2</version>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <finalName>signature-analyzer</finalName>
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+      </plugin>
+
+      <!-- `mvn javafx:run` for a fast interactive dev loop, no packaging needed -->
+      <plugin>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-maven-plugin</artifactId>
+        <version>0.0.8</version>
+        <configuration>
+          <mainClass>cz.digitalnikontinuita.anep.Main</mainClass>
+          <options>
+            <!-- JavaFX loads native libs via System::load; JDK 21+ requires this flag.
+                 javafx.graphics is not yet a known module at JVM launch, so ALL-UNNAMED
+                 is used to cover all classpath code. -->
+            <option>--enable-native-access=ALL-UNNAMED</option>
+          </options>
+        </configuration>
+      </plugin>
+
+      <!-- Builds the fat jar that packaging/windows/jpackage.ps1 consumes -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <!-- JavaFX must NOT end up inside the fat jar: the packaged app loads it from
+                   the module path (app/fx), and a second copy on the classpath makes the JVM
+                   refuse to start ("JavaFX runtime components are missing"). -->
+              <artifactSet>
+                <excludes>
+                  <exclude>org.openjfx:*</exclude>
+                </excludes>
+              </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                    <exclude>META-INF/*.EC</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>cz.digitalnikontinuita.anep.Main</mainClass>
+                  <!-- Verze do manifestu, aby ji okno „O aplikaci" mohlo přečíst
+                       z běžícího programu místo toho, aby si ji nesla v kódu.
+                       Číslo v kódu se dřív nebo později rozejde s tím, co je
+                       v POMu, a nikdo si toho nevšimne. -->
+                  <manifestEntries>
+                    <Implementation-Title>AnEP — Analyzátor elektronických podpisů</Implementation-Title>
+                    <Implementation-Version>${anep.release}</Implementation-Version>
+                    <Implementation-Vendor>Jiří Peterka</Implementation-Vendor>
+                  </manifestEntries>
+                </transformer>
+                <!-- Avoid duplicate-resource warnings from merged META-INF/services across DSS modules -->
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                <!-- Licenční soubory závislostí se slévají, ne přepisují.
+
+                     Shade zapisuje soubory téhož jména jeden přes druhý, a META-INF/NOTICE
+                     má 41 ze 117 balených JARů. Bez těchto dvou transformátorů jich do
+                     výsledného archivu doputovalo šest — a Apache License 2.0 čl. 4(d) žádá
+                     obsah NOTICE předat dál. Změřeno na postaveném JARu 1. 9. 2026.
+
+                     Vedle toho vzniká packaging/windows/licenses/THIRD-PARTY-LICENSES.txt
+                     (skript packaging/collect-licenses.py), který tytéž texty sesbírá do
+                     čitelného souboru vedle aplikace. Uvnitř archivu je najde nástroj,
+                     vedle aplikace člověk; obojí má svůj důvod. -->
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
+                  <projectName>AnEP — Analyzátor elektronických podpisů</projectName>
+                  <organizationName>Jiří Peterka</organizationName>
+                  <inceptionYear>2024</inceptionYear>
+                  <organizationURL>https://github.com/jiripeterka-hub/signature-analyzer</organizationURL>
+                  <!-- Údaje o autorovi se vyplňují všechny. S pouhým projectName vypsal
+                       transformátor „AnEP … Copyright 2006-2026 The Apache Software
+                       Foundation" — copyright první slučované knihovny přiřkl aplikaci.
+                       Nepravdivá věta o autorství v NOTICE je horší než žádná. -->
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer" />
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>dist</id>
+      <!-- Platform-specific JavaFX native JARs (classifier ${anep.fx.classifier}: win by
+           default, linux / linux-aarch64 from packaging/linux/dist.sh) — needed so the
+           jpackage app-image can load glass, prism, webkit, etc.  These are NOT
+           included in the base (no-classifier) JARs and must be present as
+           separate files on the classpath.  Only activated for -P dist so that
+           normal compile / javafx:run builds are unaffected. -->
+      <dependencies>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-base</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>${anep.fx.classifier}</classifier>
+        </dependency>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-graphics</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>${anep.fx.classifier}</classifier>
+        </dependency>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-controls</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>${anep.fx.classifier}</classifier>
+        </dependency>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-fxml</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>${anep.fx.classifier}</classifier>
+        </dependency>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-web</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>${anep.fx.classifier}</classifier>
+        </dependency>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-media</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>${anep.fx.classifier}</classifier>
+        </dependency>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-swing</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>${anep.fx.classifier}</classifier>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.3.0</version>
+            <executions>
+              <execution>
+                <id>dist-portable</id>
+                <phase>package</phase>
+                <goals><goal>exec</goal></goals>
+                <configuration>
+                  <executable>powershell</executable>
+                  <arguments>
+                    <argument>-ExecutionPolicy</argument>
+                    <argument>Bypass</argument>
+                    <argument>-File</argument>
+                    <argument>${project.basedir}/../packaging/windows/dist.ps1</argument>
+                    <argument>-AppVersion</argument>
+                    <argument>${project.version}</argument>
+                  </arguments>
+                  <workingDirectory>${project.basedir}/..</workingDirectory>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+</project>

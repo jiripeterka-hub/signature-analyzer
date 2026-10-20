@@ -1,0 +1,186 @@
+AnEP — Analyzátor elektronických podpisů
+Copyright (c) 2024-2026 Jiří Peterka
+
+Poskytovatel licence: Jiří Peterka, jiri@peterka.cz
+Domovská stránka: https://github.com/jiripeterka-hub/signature-analyzer
+
+Licencováno podle Evropské unijní veřejné licence (EUPL) verze 1.2.
+Plné znění: licenses\EUPL-1.2-cs.txt (české, závazné)
+            licenses\EUPL-1.2-en.txt (anglické)
+
+Aplikace slouží potřebám výuky a seznamování se s problematikou elektronických
+podpisů. Výsledek ověření i jakýkoli další výstup aplikace AnEP jsou poskytovány
+bez jakékoli záruky a nenahrazují ověření provedené k tomu určeným nástrojem
+či službou.
+
+Jméno „AnEP" a ikona aplikace se na odvozená díla nevztahují: šíříte-li upravenou
+verzi, pojmenujte ji jinak.
+
+
+════════════════════════════════════════════════════════════════════════
+POUŽITÉ KNIHOVNY
+════════════════════════════════════════════════════════════════════════
+
+Úplný výčet je v licenses\THIRD-PARTY-LICENSES.txt — obsahuje licenční texty
+tak, jak je dodávají jejich autoři, vytažené ze 129 balených archivů. Níže jsou
+jmenovitě licence, pod kterými ty knihovny stojí, a plná znění přiložená vedle.
+
+────────────────────────────────────────────────────────────────────────
+DSS — Digital Signature Services  (45 modulů)
+Copyright (c) European Commission / DIGIT
+Licence: GNU Lesser General Public License v2.1 nebo pozdější (LGPL-2.1+)
+Text licence: licenses\LGPL-2.1.txt
+Zdrojový kód: https://github.com/esig/dss  (značka pro verzi 6.5)
+
+DSS je do souboru signature-analyzer.jar zabalen spolu s aplikací, nikoli
+připojen jako samostatný archiv. Aby zůstalo možné jej vyměnit za jinou verzi,
+jak LGPL žádá, je součástí distribuce adresář relink\ se zdrojovým kódem
+aplikace a nezměněnými archivy DSS. Podrobnosti v relink\README.txt.
+
+────────────────────────────────────────────────────────────────────────
+veraPDF  (7 modulů)
+Copyright (c) 2015-2026 veraPDF Consortium (PDF Association a Open Preservation
+Foundation), info@verapdf.org
+Licence: dvojlicence — GNU General Public License v3 nebo pozdější (GPL-3.0+)
+         anebo Mozilla Public License 2.0 nebo pozdější (MPL-2.0+).
+         AnEP ji šíří pod MPL-2.0; volba náleží příjemci stejně jako jemu.
+Text licence: licenses\MPL-2.0.txt
+Zdrojový kód (značky pro verzi 1.30.2):
+  core, verapdf-xmp-core       https://github.com/veraPDF/veraPDF-library
+  feature-reporting, metadata-fixer, validation-model
+                               https://github.com/veraPDF/veraPDF-validation
+  parser                       https://github.com/veraPDF/veraPDF-parser
+  pdf-model                    https://github.com/veraPDF/veraPDF-model
+
+veraPDF je referenční validátor formátu PDF/A. AnEP jím ověřuje dvojí: zda
+předložený dokument dostál profilu PDF/A, ke kterému se v metadatech hlásí,
+a zda protokoly, které sám vydává, formátu PDF/A-2b opravdu vyhovují. Je do
+souboru signature-analyzer.jar zabalen nezměněný; MPL-2.0 se vztahuje na
+soubory veraPDF, nikoli na kód aplikace.
+
+────────────────────────────────────────────────────────────────────────
+Mozilla Rhino
+Copyright (c) Mozilla Foundation a přispěvatelé
+Licence: Mozilla Public License 2.0
+Text licence: licenses\MPL-2.0.txt
+Zdrojový kód: https://github.com/mozilla/rhino  (značka pro verzi 1.7.15.1)
+
+Rhino přichází s veraPDF: pravidla norem PDF/A jsou ve validačních profilech
+zapsána jako výrazy v JavaScriptu a Rhino je vyhodnocuje.
+
+────────────────────────────────────────────────────────────────────────
+stax-utils  (net.java.dev.stax-utils)
+Copyright (c) 2004-2007 Christian Niles, Ryan Shoemaker, Kohsuke Kawaguchi
+Licence: BSD License se třemi podmínkami
+Text licence: licenses\BSD-3-Clause.txt
+
+Přichází s veraPDF. Archiv sám licenční text nenese, proto je přiložen vedle.
+Původní projekt byl veden na java.net, jehož provoz byl ukončen; zdrojový kód
+poslední vydané verze (20070216) poskytneme na vyžádání — viz níže.
+
+────────────────────────────────────────────────────────────────────────
+Apache Software Foundation  (přibližně 45 artefaktů)
+  Apache PDFBox, Apache FOP, Apache Batik, Apache XML Graphics Commons,
+  Apache Santuario (XML Security), Apache HttpComponents, Apache Commons
+  (Codec, IO, Lang, Collections, Logging), Woodstox, snakeyaml, xmlresolver,
+  qdox, jose4j, Jackson (Core, Databind, Annotations), Kotlin Standard
+  Library, JetBrains Annotations
+Licence: Apache License, Version 2.0
+Text licence: licenses\Apache-2.0.txt
+Výslovná uvedení autorství (NOTICE) jsou v licenses\THIRD-PARTY-LICENSES.txt
+a rovněž uvnitř archivu jako META-INF/NOTICE.
+
+────────────────────────────────────────────────────────────────────────
+OpenJFX (JavaFX)  — 6 modulů
+Copyright (c) Oracle and/or its affiliates a přispěvatelé OpenJDK
+Licence: GNU General Public License v2 s výjimkou Classpath
+Text licence: licenses\GPL-2.0.txt + licenses\Classpath-Exception.txt
+Zdrojový kód: https://github.com/openjdk/jfx  (značka 21.0.4)
+
+────────────────────────────────────────────────────────────────────────
+Běhové prostředí Java — Eclipse Temurin (OpenJDK)
+Copyright (c) Oracle and/or its affiliates a přispěvatelé OpenJDK
+Licence: GNU General Public License v2 s výjimkou Classpath
+Licenční texty všech modulů jsou v adresáři runtime\legal\.
+Zdrojový kód: https://github.com/adoptium/temurin-build a
+              https://github.com/openjdk/jdk25u  (verze uvedená v runtime\release)
+
+────────────────────────────────────────────────────────────────────────
+Bouncy Castle  (bcprov, bcpkix, bcutil)
+Copyright (c) The Legion of the Bouncy Castle Inc.
+Licence: MIT License — plné znění včetně uvedení autorství
+         v licenses\THIRD-PARTY-LICENSES.txt
+
+────────────────────────────────────────────────────────────────────────
+Saxon-HE
+Copyright (c) Saxonica Limited
+Licence: Mozilla Public License 2.0
+Text licence: licenses\MPL-2.0.txt
+Zdrojový kód: https://www.saxonica.com/download/opensource.xml
+
+────────────────────────────────────────────────────────────────────────
+Jakarta XML Binding, Eclipse Implementation of JAXB, istack commons,
+Jakarta Activation  (6 artefaktů)
+Copyright (c) Oracle and/or its affiliates, Eclipse Foundation
+Licence: Eclipse Distribution License v1.0 (znění BSD se třemi podmínkami)
+Text licence: licenses\EDL-1.0.txt
+
+────────────────────────────────────────────────────────────────────────
+SLF4J (slf4j-api, slf4j-nop)
+Copyright (c) QOS.ch
+Licence: MIT License — text v licenses\MIT.txt
+
+────────────────────────────────────────────────────────────────────────
+jmail (com.sanctionco), json-sKema (com.github.erosb)
+Licence: MIT License — text v licenses\MIT.txt
+
+────────────────────────────────────────────────────────────────────────
+stax2-api (org.codehaus.woodstox)
+Licence: BSD License se dvěma podmínkami
+Text licence: licenses\BSD-2-Clause.txt
+
+────────────────────────────────────────────────────────────────────────
+xml-apis, xml-apis-ext
+Licence: Apache License 2.0; rozhraní DOM, SVG a SMIL navíc podléhají
+         licenci W3C Software Notice and License
+Text licence: licenses\Apache-2.0.txt + licenses\W3C-Software.txt
+
+────────────────────────────────────────────────────────────────────────
+Kořenové certifikáty certifikačních autorit
+Aplikace nese kořenové certifikáty tuzemských autorit (I.CA, PostSignum,
+eIdentity, Komerční banka) pro případ, že je uživatel chce připnout jako kotvu
+důvěry. Jsou to veřejně zveřejněné dokumenty vydané těmito autoritami.
+
+────────────────────────────────────────────────────────────────────────
+Ikony v hlavičce aplikace
+Copyright (c) 2013-2023 Cole Bemis — sada Feather (https://feathericons.com)
+Licence: MIT License
+Text licence: licenses\Feather-MIT.txt
+
+Ozubené kolo nastavení a list dokumentu jsou odvozeny z ikon „settings"
+a „file-text" ze sady Feather: tvar je týž, zápis cesty je převeden z relativních
+souřadnic na absolutní a rozměr doladěn. Ostatní ikony aplikace vlastní předlohu
+nemají.
+
+────────────────────────────────────────────────────────────────────────
+Zdrojové kódy použitých knihoven
+
+Licence LGPL, GPL a MPL žádají, aby byl příjemci dostupný odpovídající zdrojový
+kód. U každé knihovny výše je uveden odkaz na její veřejný repozitář. Pokud by
+některý z nich přestal být dostupný — a u knihoven vedených na zrušeném java.net
+se to už stalo — vyžádejte si zdrojový kód na adrese jiri@peterka.cz a bude
+poskytnut.
+
+Zdrojový kód samotné aplikace AnEP je součástí této distribuce: leží v adresáři
+relink\ spolu s nezměněnými archivy knihoven pod LGPL, aby je šlo vyměnit za
+jinou verzi. Vyžádat si ho lze také na adrese jiri@peterka.cz.
+
+Knihovny pod MPL-2.0 — veraPDF, Rhino a Saxon-HE — jsou do souboru
+signature-analyzer.jar zabaleny beze změny zdrojového kódu. Odkaz na něj je
+uveden u každé z nich výše a platí po celou dobu, po kterou je aplikace šířena;
+tím je naplněn čl. 3.2 licence MPL-2.0.
+
+────────────────────────────────────────────────────────────────────────
+Písma
+Aplikace žádné písmo nešíří. Do protokolu ve formátu PDF/A vkládá písmo
+nalezené v systému uživatele.

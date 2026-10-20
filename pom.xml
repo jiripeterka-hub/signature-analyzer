@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>cz.digitalnikontinuita</groupId>
+  <artifactId>signature-analyzer-parent</artifactId>
+  <version>1.0.0</version>
+  <packaging>pom</packaging>
+
+  <name>AnEP — Analyzátor elektronických podpisů</name>
+  <description>Nástroj pro ověřování elektronických podpisů, pečetí a časových
+    razítek podle eIDAS a norem ETSI, určený pro výuku a seznamování se
+    s problematikou elektronických podpisů.</description>
+  <url>https://github.com/jiripeterka-hub/signature-analyzer</url>
+  <inceptionYear>2024</inceptionYear>
+
+  <!-- Licence a autor patří sem, ne jen do NOTICE.txt: tohle je místo, kam se
+       dívají nástroje (a lidé) při zjišťování, pod čím dílo stojí a kdo je
+       poskytovatel licence. EUPL bez určitelného poskytovatele licence nedává
+       smysl — celá licence je udělením práv od něj. -->
+  <licenses>
+    <license>
+      <name>European Union Public Licence, version 1.2 (EUPL-1.2)</name>
+      <url>https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Jiří Peterka</name>
+      <email>jiri@peterka.cz</email>
+      <roles>
+        <role>autor</role>
+        <role>poskytovatel licence</role>
+      </roles>
+    </developer>
+  </developers>
+
+  <scm>
+    <url>https://github.com/jiripeterka-hub/signature-analyzer</url>
+  </scm>
+
+  <modules>
+    <module>app</module>
+  </modules>
+
+  <properties>
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <!-- Pin the DSS release here. Check https://github.com/esig/dss/releases
+         for the current version before building - this scaffold targets 6.5. -->
+    <!-- Jméno vydání, jak ho má vidět uživatel: v okně „O aplikaci" a v názvech
+         balíčků. Odděleno od <version> schválně — Windows Installer přijímá jen
+         číselnou verzi (major.minor.build), kdežto vydání se jmenuje slovem. -->
+    <anep.release>1.0</anep.release>
+
+    <dss.version>6.5</dss.version>
+    <javafx.version>21.0.4</javafx.version>
+    <!-- Nativní knihovny JavaFX, které profil dist přibalí: win, linux, linux-aarch64.
+         Výchozí win drží sestavení pro Windows beze změny; linuxový skript předá
+         -Danep.fx.classifier podle procesoru (19. 10. 2026).
+         Schválně NE javafx.platform: tak se jmenuje vlastnost v rodičovském POM JavaFX,
+         jejíž profil javafx.platform.custom ji nastavuje sama na sebe. Maven 3.10 pak při
+         -Djavafx.platform prohlásí POM JavaFX za neplatné („recursive expression cycle“),
+         stáhne jen prázdné jary bez tříd a překlad skončí „package javafx.application does
+         not exist“ — změřeno na runneru GitHub Actions; Maven 3.9 to snese. -->
+    <anep.fx.classifier>win</anep.fx.classifier>
+  </properties>
+
+  <!-- Importing the DSS BOM means individual DSS module dependencies in
+       app/pom.xml don't need explicit <version> tags - they all line up
+       with dss.version automatically. -->
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+        <artifactId>dss-bom</artifactId>
+        <version>${dss.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+</project>

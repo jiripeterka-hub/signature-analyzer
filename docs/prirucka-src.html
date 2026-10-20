@@ -1,0 +1,532 @@
+<title>Rychlý start AnEP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap&subset=latin,latin-ext">
+
+<style>
+:root {
+  --paper:      #faf8f5;
+  --paper-sunk: #f2eee7;
+  --card:       #ffffff;
+  --ink:        #232019;
+  --ink-soft:   #5c554a;
+  --rule:       #e4dfd6;
+  --accent:     #2f4f7a;
+  --accent-soft:#e8edf4;
+  --ok:         #1a7a33;
+  --bad:        #c1102b;
+  --unknown:    #8a6a1f;
+  --ok-bg:      #e6f2e8;
+  --bad-bg:     #fbe9ec;
+  --unknown-bg: #f6efdd;
+
+  --step: 1.0;
+  --f-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", "Cascadia Mono", Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:      #17150f;
+    --paper-sunk: #201d16;
+    --card:       #211e17;
+    --ink:        #ece6db;
+    --ink-soft:   #a49b8c;
+    --rule:       #362f24;
+    --accent:     #8fb2dd;
+    --accent-soft:#222934;
+    --ok:         #6dbd7f;
+    --bad:        #ec8a97;
+    --unknown:    #cfae62;
+    --ok-bg:      #1a2a1d;
+    --bad-bg:     #2e1a1e;
+    --unknown-bg: #2b2417;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper:      #17150f;
+  --paper-sunk: #201d16;
+  --card:       #211e17;
+  --ink:        #ece6db;
+  --ink-soft:   #a49b8c;
+  --rule:       #362f24;
+  --accent:     #8fb2dd;
+  --accent-soft:#222934;
+  --ok:         #6dbd7f;
+  --bad:        #ec8a97;
+  --unknown:    #cfae62;
+  --ok-bg:      #1a2a1d;
+  --bad-bg:     #2e1a1e;
+  --unknown-bg: #2b2417;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 17px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 24px 96px;
+}
+
+/* prose column sits narrower than the figures */
+.col { max-width: 660px; }
+
+/* ── hlavička ───────────────────────────────────────────────── */
+header.mast {
+  padding: 56px 0 28px;
+  border-bottom: 2px solid var(--ink);
+  margin-bottom: 40px;
+}
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 14px;
+}
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(34px, 5.4vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -.015em;
+  margin: 0 0 16px;
+  text-wrap: balance;
+}
+.standfirst {
+  font-family: var(--f-display);
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  max-width: 620px;
+  margin: 0;
+}
+
+/* ── obsah ──────────────────────────────────────────────────── */
+nav.toc {
+  margin: 0 0 56px;
+  padding: 20px 24px;
+  background: var(--paper-sunk);
+  border-left: 3px solid var(--accent);
+}
+nav.toc h2 {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 12px;
+  font-weight: 500;
+}
+nav.toc ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 4px 28px;
+}
+nav.toc a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+nav.toc a:hover, nav.toc a:focus-visible { border-bottom-color: var(--accent); }
+
+/* ── sekce ──────────────────────────────────────────────────── */
+section { margin-bottom: 64px; }
+h2 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 30px;
+  line-height: 1.2;
+  letter-spacing: -.01em;
+  margin: 0 0 18px;
+  text-wrap: balance;
+}
+h3 {
+  font-family: var(--f-body);
+  font-weight: 700;
+  font-size: 17px;
+  margin: 32px 0 8px;
+}
+p { margin: 0 0 16px; }
+ul, ol { margin: 0 0 16px; padding-left: 22px; }
+li { margin-bottom: 7px; }
+a { color: var(--accent); }
+strong { font-weight: 700; }
+code, .ui {
+  font-family: var(--f-mono);
+  font-size: .88em;
+  background: var(--paper-sunk);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+/* ── obrázky ────────────────────────────────────────────────── */
+figure {
+  margin: 28px 0 32px;
+  max-width: 100%;
+}
+figure img {
+  display: block;
+  width: 100%;
+  max-width: 980px;
+  height: auto;
+  border: 1px solid var(--rule);
+  background: var(--card);
+}
+figcaption {
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  margin-top: 10px;
+  max-width: 700px;
+  line-height: 1.5;
+}
+figcaption b { color: var(--ink); font-weight: 600; }
+
+/* ── kroky ──────────────────────────────────────────────────── */
+ol.steps { list-style: none; padding: 0; counter-reset: krok; }
+ol.steps > li {
+  counter-increment: krok;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 0 16px;
+  margin-bottom: 22px;
+  align-items: start;
+}
+ol.steps > li::before {
+  content: counter(krok);
+  font-family: var(--f-display);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 1.15;
+}
+ol.steps h3 { margin: 0 0 4px; }
+ol.steps p { margin: 0; }
+
+/* ── klíč k verdiktům ───────────────────────────────────────── */
+.verdicts { display: grid; gap: 14px; margin: 24px 0 8px; max-width: 760px; }
+.verdict {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 0 20px;
+  align-items: start;
+}
+.verdict .bar {
+  font-family: var(--f-body);
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  padding: 7px 12px;
+  letter-spacing: .01em;
+}
+.verdict.ok   .bar { background: var(--ok); }
+.verdict.bad  .bar { background: var(--bad); }
+.verdict.unk  .bar { background: var(--unknown); }
+.verdict p { margin: 3px 0 0; font-size: 16px; }
+@media (max-width: 620px) {
+  .verdict { grid-template-columns: 1fr; gap: 6px; }
+}
+
+/* ── poznámka ───────────────────────────────────────────────── */
+.note {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  padding: 14px 18px;
+  margin: 22px 0;
+  max-width: 700px;
+}
+.note p:last-child { margin-bottom: 0; }
+.note .lab {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* ── slovníček ──────────────────────────────────────────────── */
+dl.gloss { margin: 0; max-width: 720px; }
+dl.gloss div {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: 0 24px;
+  padding: 13px 0;
+  border-top: 1px solid var(--rule);
+  align-items: baseline;
+}
+dl.gloss div:last-child { border-bottom: 1px solid var(--rule); }
+dl.gloss dt { font-weight: 700; }
+dl.gloss dd { margin: 0; color: var(--ink-soft); }
+@media (max-width: 620px) {
+  dl.gloss div { grid-template-columns: 1fr; gap: 2px; }
+}
+
+footer.end {
+  border-top: 1px solid var(--rule);
+  padding-top: 20px;
+  color: var(--ink-soft);
+  font-size: 14.5px;
+  max-width: 700px;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">Uživatelská příručka · rychlý start</p>
+  <h1>AnEP — Analyzátor elektronických podpisů</h1>
+  <p class="standfirst">Jak zjistit, jestli je dokument podepsaný platně, co znamená barevný pruh s výsledkem a co dělat, když ověření nevyjde.</p>
+</header>
+
+<nav class="toc">
+  <h2>Obsah</h2>
+  <ol>
+    <li><a href="#k-cemu">K čemu aplikace je</a></li>
+    <li><a href="#spusteni">První spuštění</a></li>
+    <li><a href="#overeni">Jak ověřit dokument</a></li>
+    <li><a href="#vysledek">Tři možné výsledky</a></li>
+    <li><a href="#druhy">Zaručený, uznávaný, kvalifikovaný</a></li>
+    <li><a href="#nevyslo">Když platnost nevyšla</a></li>
+    <li><a href="#podrobnosti">Kde jsou podrobnosti</a></li>
+    <li><a href="#kontinuita">Digitální kontinuita</a></li>
+    <li><a href="#protokol">Protokol o ověření</a></li>
+    <li><a href="#slovnicek">Slovníček</a></li>
+  </ol>
+</nav>
+
+<section id="k-cemu">
+  <div class="col">
+    <h2>K čemu aplikace je</h2>
+    <p>AnEP odpovídá na jedinou otázku: <strong>je tenhle dokument platně podepsaný?</strong> Přetáhnete do ní soubor, ona ho ověří proti evropským důvěryhodným seznamům a řekne výsledek — a hlavně ho vysvětlí česky, ne hláškou technického nástroje.</p>
+    <p>Umí PDF (podpisy PAdES), kontejnery ASiC, samostatné podpisy CAdES, XAdES a JAdES, datové zprávy ISDS ve formátu <code>.zfo</code> a evidenční záznamy. Vedle podpisů rozezná i pečeti a samostatná časová razítka.</p>
+    <p>Co nedělá: <strong>nepodepisuje</strong> a do dokumentu nezasahuje. Jediné, co s ním umí udělat, jsou úkony popsané v kapitole o digitální kontinuitě — a i ty vždy vytvoří nový soubor, původní nechají být.</p>
+  </div>
+</section>
+
+<section id="spusteni">
+  <div class="col">
+    <h2>První spuštění</h2>
+    <p>Po startu aplikace chvíli hlásí <span class="ui">Načítám důvěryhodné seznamy EU…</span> Stahuje si seznamy důvěryhodných poskytovatelů z celé Evropské unie — bez nich by nevěděla, komu věřit. Trvá to několik vteřin a zelené tlačítko je do té doby nečinné.</p>
+  </div>
+  <figure>
+    <img src="{{IMG:01-prazdne.png}}" alt="Okno aplikace AnEP po spuštění, s prázdnou zónou pro vložení dokumentu a čtyřmi tlačítky vpravo nahoře">
+    <figcaption>Úvodní obrazovka. Velká plocha vlevo je místo, kam se dokument vkládá. Vpravo od ní jsou čtyři tlačítka: <b>↺</b> vrátí naposledy zadaný soubor, <b>zelená fajfka</b> spustí ověření, <b>ozubené kolo</b> otevře nastavení a <b>poslední</b> slouží k volitelnému přidání externího podpisu nebo evidenčního záznamu.</figcaption>
+  </figure>
+</section>
+
+<section id="overeni">
+  <div class="col">
+    <h2>Jak ověřit dokument</h2>
+    <ol class="steps">
+      <li>
+        <div>
+          <h3>Vložte soubor</h3>
+          <p>Přetáhněte ho myší do plochy <span class="ui">Dokument/soubor s podepisovaným obsahem</span>, nebo do ní klepněte a soubor vyberte.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>Klepněte na zelenou fajfku</h3>
+          <p>Ověření trvá několik vteřin — aplikace si mezitím ze sítě stahuje, co k posouzení potřebuje.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>Přečtěte si Zjednodušený přehled</h3>
+          <p>Otevře se sám. Řádek <span class="ui">Stav platnosti</span> je barevný pruh s odpovědí; všechno ostatní jsou podrobnosti k němu.</p>
+        </div>
+      </li>
+    </ol>
+    <div class="note">
+      <span class="lab">Odděleně podepsaný dokument</span>
+      <p>Má-li podpis podobu samostatného souboru (<code>.p7s</code>, <code>.xml</code>), vložte do hlavní plochy <em>podpis</em> a podepsaný dokument přidejte posledním tlačítkem vpravo. Na pořadí nezáleží.</p>
+    </div>
+  </div>
+</section>
+
+<section id="vysledek">
+  <div class="col">
+    <h2>Tři možné výsledky</h2>
+    <p>Barva pruhu nese odpověď. Nejsou dvě, ale tři — a ten třetí případ je nejčastější zdroj nedorozumění.</p>
+  </div>
+
+  <div class="verdicts">
+    <div class="verdict ok">
+      <div class="bar">Stav platnosti: platný</div>
+      <p>Podpis obstál. Dokument se od podepsání nezměnil a certifikát byl v rozhodném okamžiku v pořádku.</p>
+    </div>
+    <div class="verdict bad">
+      <div class="bar">Stav platnosti: neplatný</div>
+      <p>Prokázaná vada — nejčastěji porušená integrita, tedy že se obsah po podepsání změnil.</p>
+    </div>
+    <div class="verdict unk">
+      <div class="bar">Platnost se nepodařilo prokázat</div>
+      <p><strong>Není to závěr o neplatnosti.</strong> Znamená to, že něco k posouzení chybí — typicky revokační informace, které už nejsou k dispozici. Podpis může být v pořádku i vadný; aplikace to neví.</p>
+    </div>
+  </div>
+
+  <figure>
+    <img src="{{IMG:02-vysledek.png}}" alt="Zjednodušený přehled se zeleným pruhem „platný“, jménem podepsané osoby, vydavatelem certifikátu, časem podpisu a obrázkem podpisové doložky">
+    <figcaption>Platný uznávaný podpis. Pod pruhem stojí <b>kdo</b> podepsal, <b>kdo vydal certifikát</b> a <b>kdy</b> se podepsalo — a je-li podpis v dokumentu vidět, ukáže se i jeho vizualizace.</figcaption>
+  </figure>
+
+  <div class="col">
+    <div class="note">
+      <span class="lab">Pozor na vizualizaci</span>
+      <p>Obrázek podpisu v dokumentu je jen kresba. O platnosti nevypovídá nic — nakreslit se dá cokoli. Rozhoduje pruh se stavem platnosti, ne to, jak podpis vypadá.</p>
+    </div>
+  </div>
+
+  <figure>
+    <img src="{{IMG:03-neplatny.png}}" alt="Zjednodušený přehled s červeným pruhem „neplatný (porušení integrity)“">
+    <figcaption>Neplatný podpis. V závorce stojí důvod — tady <b>porušení integrity</b>: obsah dokumentu neodpovídá tomu, co bylo podepsáno.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="{{IMG:04-neznamy.png}}" alt="Zjednodušený přehled s hnědým pruhem „neznámý“ u zaručeného elektronického podpisu">
+    <figcaption>Hnědý pruh, tedy třetí případ: <b>neznámý</b>. Dokument je v pořádku, jen se jeho platnost nepodařilo prokázat — proč, na to odpovídá záložka Analýza. Všimněte si i řádku <b>Jde o:</b> nahoře; o tom je následující kapitola.</figcaption>
+  </figure>
+</section>
+
+<section id="druhy">
+  <div class="col">
+    <h2>Zaručený, uznávaný, kvalifikovaný</h2>
+    <p>Řádek <span class="ui">Jde o:</span> nahoře v přehledu říká, s jakým druhem podpisu máte tu čest. Ten rozdíl je právní, ne technický, a je podstatný:</p>
+    <ul>
+      <li><strong>Zaručený</strong> elektronický podpis zaručuje jen to, že se obsah po podepsání nezměnil. <em>Identitu podepsané osoby zaručovat nemusí</em> — ta odpovídat může, ale nemusí.</li>
+      <li><strong>Uznávaný</strong> je zaručený podpis založený na kvalifikovaném certifikátu. Ten už identitu podepsané osoby dokládá.</li>
+      <li><strong>Kvalifikovaný</strong> je uznávaný podpis vytvořený kvalifikovaným prostředkem. Podle nařízení eIDAS má stejné právní účinky jako podpis vlastnoruční.</li>
+    </ul>
+    <p>Zeleného pruhu se tenhle rozdíl netýká: „platný“ znamená technicky obstál, ať jde o kterýkoli z nich. U zaručeného podpisu proto aplikace přidává výslovné upozornění, ať si z platnosti nikdo nevyvodí víc, než co znamená.</p>
+  </div>
+</section>
+
+<section id="nevyslo">
+  <div class="col">
+    <h2>Když platnost nevyšla</h2>
+    <p>Tady začíná záložka <strong>Analýza</strong>. Neopakuje výsledek — vysvětluje ho a říká, co s tím.</p>
+  </div>
+  <figure>
+    <img src="{{IMG:06-analyza.png}}" alt="Záložka Analýza s hnědým pruhem o nedokončeném ověření a s bloky V čem je problém, Co může pomoci a Pro zkušenější uživatele">
+    <figcaption>Blok <b>Zjištěné důvody a doporučení</b> má tři řádky: <b>V čem je problém</b> pojmenuje překážku, <b>Co může pomoci</b> je návod, který se dá provést hned, a <b>Pro zkušenější uživatele</b> nabízí cestu pro toho, kdo si troufne.</figcaption>
+  </figure>
+  <div class="col">
+    <p>Nejčastější dvě příčiny neznámé platnosti:</p>
+    <ul>
+      <li><strong>Chybějící revokační informace.</strong> Vydavatel certifikátu už nezveřejňuje údaje o tom, zda byl certifikát odvolán. Bez nich se platnost prokázat nedá.</li>
+      <li><strong>Údaje z pozdější doby.</strong> Informace sice existují, ale pocházejí až z doby po expiraci certifikátu, a technické standardy je nepřipouštějí.</li>
+    </ul>
+    <p>U druhého případu nabízí <span class="ui">Nastavení</span> tolerantnější způsob ověřování. Je to legitimní volba — takhle ověřuje řada tuzemských nástrojů — ale je to <strong>ústupek vůči standardům</strong> a aplikace ho pak u výsledku vždy přizná. Platí navíc jen na jedno ověření; pro další je nutné jej zadat znovu.</p>
+  </div>
+</section>
+
+<section id="podrobnosti">
+  <div class="col">
+    <h2>Kde jsou podrobnosti</h2>
+    <p>Záložka <strong>Rozšířený přehled</strong> je určena tomu, kdo chce vidět čísla za odpovědí. Devět rozbalovacích bloků: certifikát podepsané osoby, časová razítka, rozhodný okamžik, revokační kontrola, použité algoritmy, vizuální podoba podpisu a další.</p>
+  </div>
+  <figure>
+    <img src="{{IMG:05-rozsireny.png}}" alt="Záložka Rozšířený přehled s pojmenovanými rozbalovacími bloky">
+    <figcaption>Bloky jsou sbalené. Rozbalí se klepnutím na nadpis — čísla vidí jen ten, kdo o ně stojí.</figcaption>
+  </figure>
+  <div class="col">
+    <p>V <span class="ui">Nastavení</span> se dá zapnout <strong>expertní mód</strong>. Přibudou dvě záložky: <em>Detailní rozbor</em> s certifikačními cestami a strukturou souboru a <em>Protokoly DSS</em> se surovými protokoly z ověřovací knihovny. Na začátku Detailního rozboru stojí tlačítko <strong>Inspektor</strong>: ukáže podpisovou strukturu souboru tak, jak je uložena — podpisy, časová razítka, certifikáty a revokační údaje, u PDF i revize dokumentu — a u každého prvku řekne, co s ním udělalo ověření.</p>
+  </div>
+</section>
+
+<section id="kontinuita">
+  <div class="col">
+    <h2>Digitální kontinuita</h2>
+    <p>Elektronické podpisy stárnou. Certifikátům končí platnost, vydavatelé přestávají zveřejňovat revokační informace a kryptografické algoritmy slábnou — dokument, který se dnes ověří bez potíží, nemusí jít ověřit za pět let. Záložka <strong>Digitální kontinuita</strong> odpovídá na dvě otázky: <em>jak dlouho to ještě půjde</em> a <em>co s tím udělat, aby to šlo déle</em>.</p>
+  </div>
+  <figure>
+    <img src="{{IMG:07-kontinuita.png}}" alt="Záložka Digitální kontinuita s barevně odlišenými bloky a dvěma tlačítky dole">
+    <figcaption>Ke každému podpisu sada sbalených bloků. Nadpis každého z nich už nese odpověď, takže se nemusí rozbalovat nic, dokud vás nezajímá proč.</figcaption>
+  </figure>
+  <div class="col">
+    <p>Bloky odpovídají na tutéž otázku z různých stran, protože <strong>různé nástroje posuzují podpisy různě</strong>: co ověří AnEP, nemusí ověřit CzechPOINT, a naopak. Proto tu má každý okruh vlastní řádek s vlastním datem.</p>
+    <p>Dole pod záložkou pak svítí tlačítka s tím, co se dá udělat. Aplikace vždy nabízí jen tu variantu, která na daný dokument dosáhne:</p>
+    <ul>
+      <li><strong>Uchovat</strong> — plnohodnotné uchování: doplní chybějící informace potřebné pro pozdější ověření a zafixuje je dalším časovým razítkem. Výsledek by měl ověřit každý validátor.</li>
+      <li><strong>Prodloužit</strong> a <strong>Přerazítkovat</strong> — slabší varianty pro dokumenty, na které to plnohodnotné už nedosáhne. Výsledek ověří jen část nástrojů a aplikace u nich vždy řekne která.</li>
+      <li><strong>Vytvořit forenzní balíček</strong> — když ověřitelnost zachovat nelze. Sebere vše, co je o dokumentu dnes známo, zabalí to do kontejneru a opatří časovým razítkem. Ověřitelnost to neprodlouží, ale zachytí to dnešní stav pro pozdější posouzení.</li>
+    </ul>
+    <div class="note">
+      <span class="lab">Termín, který se nevrací</span>
+      <p>Nadpis posledního bloku nese datum, dokdy je potřeba zasáhnout. Po něm už úkon nepomůže — podklady, které dnes ještě existují, do té doby zmizí. Původní soubor zůstává vždy nedotčený, výsledek se ukládá jako nový.</p>
+    </div>
+  </div>
+</section>
+
+<section id="protokol">
+  <div class="col">
+    <h2>Protokol o ověření</h2>
+    <p>Tlačítko <span class="ui">Generovat protokol jako PDF</span> dole pod Zjednodušeným přehledem uloží výsledek do souboru ve formátu PDF/A-2b, tedy v podobě určené pro dlouhodobé uložení. Hodí se, když je potřeba doložit, jak ověření dopadlo — do spisu, protistraně nebo sobě pro pozdější srovnání.</p>
+  </div>
+</section>
+
+<section id="slovnicek">
+  <div class="col">
+    <h2>Slovníček</h2>
+  </div>
+  <dl class="gloss">
+    <div>
+      <dt>Integrita</dt>
+      <dd>Neměnnost obsahu. Porušená integrita znamená, že se dokument po podepsání změnil.</dd>
+    </div>
+    <div>
+      <dt>Certifikát</dt>
+      <dd>Elektronický průkaz podepisující osoby. Má omezenou dobu platnosti, obvykle rok až tři.</dd>
+    </div>
+    <div>
+      <dt>Revokace</dt>
+      <dd>Předčasné zneplatnění certifikátu, například po ztrátě. Ověření musí zjistit, zda k ní nedošlo dřív, než se podepisovalo.</dd>
+    </div>
+    <div>
+      <dt>Revokační informace</dt>
+      <dd>Údaje, ze kterých se revokace pozná — seznam CRL nebo odpověď OCSP. Vydavatel je zveřejňuje jen po určitou dobu.</dd>
+    </div>
+    <div>
+      <dt>Časové razítko</dt>
+      <dd>Doklad o tom, že dokument v určitý okamžik existoval v dané podobě. Bez něj se stáří podpisu prokázat nedá.</dd>
+    </div>
+    <div>
+      <dt>Rozhodný okamžik</dt>
+      <dd>Čas, ke kterému se platnost posuzuje. Není to čas, kdy ověřujete, ale okamžik, ke kterému lze existenci podpisu doložit.</dd>
+    </div>
+    <div>
+      <dt>Důvěryhodné seznamy</dt>
+      <dd>Evropské seznamy poskytovatelů, kterým se věří. Určují, koho aplikace uzná jako vydavatele kvalifikovaného certifikátu.</dd>
+    </div>
+    <div>
+      <dt>Digitální kontinuita</dt>
+      <dd>Průběžná péče o to, aby dokument zůstal ověřitelný i po letech.</dd>
+    </div>
+  </dl>
+</section>
+
+<footer class="end">
+  <p>Tato příručka pokrývá běžnou práci s aplikací. Nastavení zdrojů časových razítek, vlastní úložiště certifikátů a seznamů CRL a další pokročilé volby zde popsané nejsou.</p>
+</footer>
+
+</div>

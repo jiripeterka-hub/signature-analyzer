@@ -1,0 +1,60 @@
+# Přenosná verze AnEP pro Linux, pro oba procesory (19. 10. 2026).
+#
+# jpackage sestavuje jen pro systém a procesor, na kterém běží, proto dva běhy: x64 a aarch64.
+# Spouští se ručně (Actions → Linux portable → Run workflow, nebo `gh workflow run`), ne při
+# každém push — vydání se sestavuje na pokyn, stejně jako verze pro Windows.
+name: Linux portable
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Číselná verze (app-version)"
+        default: "1.0.0"
+      release:
+        description: "Jméno vydání v názvu archivu"
+        default: "1.0"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            arch: x64
+          - runner: ubuntu-22.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Totéž JDK jako u verze pro Windows (Temurin 25): jpackage z něj sestaví běhové prostředí.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - name: Sestavení
+        run: bash packaging/linux/dist.sh "${{ inputs.version }}" "${{ inputs.release }}"
+
+      # Kouřová zkouška: zabalená aplikace se spustí pod virtuálním displejem. Okno nikdo
+      # nezavře, takže úspěch je „běží ještě po 60 s“ (timeout vrátí 124) a v logu není výjimka.
+      - name: Zkouška spuštění
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q xvfb libgtk-3-0
+          set +e
+          timeout 60 xvfb-run -a app/target/dist-image/AnEP/bin/AnEP > anep-start.log 2>&1
+          rc=$?
+          set -e
+          cat anep-start.log
+          if [ "$rc" -ne 124 ]; then echo "Aplikace skončila sama (kód $rc)"; exit 1; fi
+          if grep -E "Exception|Error:" anep-start.log; then echo "V logu je výjimka"; exit 1; fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AnEP-${{ inputs.release }}-linux-${{ matrix.arch }}-portable
+          path: app/target/AnEP-*-linux-*-portable.tar.gz
+          if-no-files-found: error

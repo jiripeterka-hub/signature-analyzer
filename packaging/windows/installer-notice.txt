@@ -1,0 +1,7 @@
+AnEP — Analyzátor elektronických podpisů
+
+Aplikace slouží výhradně potřebám výuky a seznamování se s problematikou elektronických podpisů.
+
+Výsledek ověření i jakýkoli další výstup aplikace AnEP jsou poskytovány bez jakékoli záruky a nenahrazují ověření provedené k tomu určeným nástrojem či službou.
+
+Níže následuje úplné znění licence, pod kterou se aplikace šíří.

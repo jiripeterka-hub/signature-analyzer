@@ -1,0 +1,956 @@
+# ======================================================================================
+#  T E X T Y   D Ů V O D Ů
+#
+#  Tenhle soubor čte AnEP při spuštění. Co je tady, to uvidí uživatel — nikde v kódu
+#  už ta znění podruhé nejsou. Upravíte-li text zde, stačí projekt přeložit a je v aplikaci.
+#
+#  ---------------------------------------------------------------------------------
+#  J A K   S E   S O U B O R   P Í Š E
+#
+#  [7]                 začátek důvodu číslo 7
+#  kratce = ...        krátký popisek do seznamu „Zjištěné důvody“
+#  problem = ...       odstavec „V čem je problém“
+#  technicky = ...     rozvedení pod odkazem „Podrobněji …“
+#  pomoc = ...         odstavec „Co může pomoci“
+#  zkusenejsi = ...    odstavec „Pro zkušenější uživatele“
+#
+#  Řádek „Pro zkušenější uživatele“ se ukáže jen tam, kde je vyplněný. Napsat jej jde ke
+#  kterémukoli důvodu; v kódu se tím nemění nic.
+#
+#  Rozhoduje znění, ne počet důvodů: napíšete-li touž větu k několika důvodům (tak je to
+#  u rady o úložišti vlastních CRL), ukáže se na kartě jednou, pod spodním z nich — je to rada
+#  k ověření, ne k jedné jeho položce. Různé věty se naopak neslučují a každá stojí u svého
+#  důvodu. Chcete-li tedy dvě rady sloučit do jedné, musí být napsané úplně stejně; a naopak
+#  stačí jedno slovo navíc a řádky budou dva.
+#
+#  Text se píše za rovnítko, pod ně (odsazený dvěma mezerami), nebo obojí naráz — věta
+#  začatá za rovnítkem smí pokračovat na odsazených řádcích pod ním;
+#  odsazené řádky se spojí do jednoho odstavce, takže na zalomení řádků nezáleží.
+#  Prázdný řádek uvnitř odsazeného textu začíná nový odstavec.
+#
+#  Řádek začínající křížkem je poznámka. Zakomentovaný klíč znamená, že AnEP na tom
+#  místě nic neukazuje; chcete-li text doplnit, smažte křížek a napište jej.
+#
+#  Soubor je v kódování UTF-8. Uvozovky, pomlčky a šipky (→) se píšou přímo.
+#
+#  ---------------------------------------------------------------------------------
+#  N Á H R A D N Í   Z N Ě N Í
+#
+#  Některé důvody mají víc znění a aplikace vybírá podle toho, co o prvku ví. Poznají se
+#  podle lomítka v hlavičce, například [21/EXPIRED_NO_POE]. Znění bez lomítka je záložní —
+#  použije se tam, kde se okolnosti určit nepodařilo. U každé skupiny je poznámka, kdy
+#  která varianta platí; všechny jsou až za katalogem, na konci souboru.
+#
+#  Slova ve složených závorkách — {autorita}, {vydavatel}, {certifikat} a {konec} — doplňuje
+#  aplikace z dokumentu. Nechte je ve větě, jinak se údaj čtenáři neukáže.
+#
+#  ---------------------------------------------------------------------------------
+#  ČÍ S L A   D Ů V O D Ů
+#
+#  Čísla se nemění a nepřečíslují: odkazuje na ně kód, protokoly i dokumentace. Přidání
+#  nového důvodu vyžaduje zásah do kódu, takže sám nový oddíl tady nic neudělá.
+# ======================================================================================
+
+# ======================================================================================
+#  K A T A L O G   D Ů V O D Ů
+# ======================================================================================
+
+[1]
+kratce = zastaralý formát (nereferenční)
+problem =
+  Podpis či pečeť mají zastaralý (nereferenční) formát. V případě PDF dokumentů jde nejčastěji o
+  podpisy, vytvořené v programu Adobe Acrobat Reader v jeho standardním nastavení (které požaduje
+  vytváření podpisů v nereferenčním formátu). Ale může jít i o podpisy vytvořené v jiném nástroji,
+  který také nevytváří podpisy či pečeti v referenčním formátu.
+technicky =
+  Jde o neznámý SubFilter, nebo ve struktuře podpisu (CMS) chybí některé podepsané atributy
+pomoc =
+  Zvolit tolerantní režim ověřování: v Nastavení zrušit zaškrtnutí volby "Ověřování podpisů a
+  pečetí dle standardů". Případně v rámci pokročilého nastavení zapnout jen volbu "Ověřovat i
+  podpisy ve standardu PDF-NOT-ETSI"
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[2]
+kratce = revokační informace vydané po expiraci certifikátu
+problem =
+  Aplikaci se podařilo získat (on-line) čerstvé revokační informace, prokazující stav revokace certifikátu
+  k rozhodnému okamžiku. Tyto ale byly vydány až po expiraci (skončení řádné doby platnosti)
+  certifikátu, ke kterému se vztahují (k ní došlo {konec}). Technické standardy však zakazují
+  využití takovýchto revokačních informací (vydaných až po expiraci).
+technicky =
+  Jde o CRL seznam či odpověď OCSP serveru s hodnotou thisUpdate, která následuje až po notAfter
+  toho certifikátu, ke kterému se vztahuje.
+pomoc =
+  Zvolit tolerantní režim ověřování: v Nastavení zrušit zaškrtnutí volby "Ověřování podpisů a
+  pečetí dle standardů", případně v rámci pokročilého nastavení zapnout jen volbu "Využij i
+  revokační informace, vydané po expiraci certifikátu", a opakovat ověření.
+zkusenejsi =
+  Pokud je možné získat použitelný CRL seznam z vhodné doby, lze jej (v Pokročilém nastavení)
+  vložit do úložiště vlastních CRL seznamů
+
+[3]
+kratce = neznámý certifikát
+problem =
+  Podpis (či pečeť) je založen na certifikátu, který není této aplikaci znám — vydala jej autorita
+  „{vydavatel}“. Aplikace proto neví, zda může jeho obsahu důvěřovat a pracovat s ním.
+technicky =
+  Certifikát sám, ani žádný z jeho nadřazených certifikátů, nejsou kotvou důvěry. Aplikace čerpá
+  důvěru primárně ze seznamů LOTL (EUTL), a dále z vlastního úložiště důvěryhodných certifikátů,
+  který je dostupný z pokročilého nastavení. Toto úložiště je defaultně předvyplněno certifikáty
+  tuzemských certifikačních autorit, vydávajících komerční certifikáty. V případě potřeby je možné
+  toto úložiště doplnit vlastními certifikáty. Každý vložený certifikát je považován za kotvu
+  důvěry.
+# pomoc =
+zkusenejsi = 
+  Explicitně vyjádřit důvěru příslušnému certifikátu či jeho vydavateli.
+  Viz podrobnosti u popisu problému.
+
+[4]
+kratce = expirovaný podpisový certifikát, bez časového razítka
+problem =
+  Podpis (či pečeť) není opatřen časovým razítkem a je založen na certifikátu, který již expiroval
+  (tj. již skončila řádná doba jeho platnosti). K tomu došlo {konec}. To znamená ztrátu digitální
+  kontinuity, kterou již nejde obnovit.
+# technicky =      (AnEP zde nic neukazuje)
+# pomoc =
+zkusenejsi =   
+ Lze využít možnost ověřování k zadanému datu a času (lze zvolit v pokročilém nastavení)
+
+[5]
+kratce = expirovaný certifikát posledního časového razítka, při ověřování dle certifikátů
+problem =
+  Certifikát naposledy přidaného časového razítka již expiroval. Při právě zapnutém striktním
+  způsobu ověřování časových razítek (tj. podle expirace jejich certifikátů) tak již není možné ověřit
+  platnost tohoto časového razítka, a kvůli tomu ani platnost samotného podpisu či
+  pečeti.
+technicky =
+  Pokud je certifikát, na kterém je časové razítko založeno, kotvou důvěry v důvěryhodných
+  seznamech, může být při ověřování podle standardů razítko ověřeno jako platné i po expiraci jeho
+  certifikátu — do tzv. sunsetu. Tím je okamžik, kdy služba, která razítko vydala, přestala mít v
+  důvěryhodném seznamu kvalifikovaný status; ze seznamu přitom nemizí, zůstává v něm i se svou historií, 
+  jako služba s odebraným kvalifikovaný statusem. U řady starších služeb bylo tímto okamžikem datum 1. 7. 2016, 
+  kdy nabyly účinnosti relevantní pasáže nařízení eIDAS.
+pomoc =
+  V nastavení zapnout (zaškrtnout) volbu ověřování časových razítek podle standardů. Díky tomu je
+  možné (nikoli jisté), že časové razítko bude ověřeno jako platné. Je-li vedle tohoto důvodu
+  indikován i jiný důvod o časovém razítku, které neslouží jako důkaz existence podpisu (PoE), samotné
+  přepnutí režimu nestačí: razítko neobstojí i z dalšího důvodu, který s expirací jeho certifikátu
+  nesouvisí.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[6]
+kratce = vložená revokační data nejde použít — jejich vydavatel mezitím expiroval
+problem =
+  Aplikace našla přímo v podpisu (či dokumentu) vložené revokační informace, prokazující stav
+  revokace certifikátu k rozhodnému okamžiku. Byly vydány v době, kdy certifikát jejich vydavatele
+  byl platný. Jenže mezitím tento certifikát expiroval (jeho platnost skončila {konec}) — a tím
+  skončila i možnost prokázat, že byl v době vydání revokačních informací důvěryhodný. Technické
+  standardy zakazují využití takovýchto revokačních informací (od expirovaného vydavatele).
+technicky =
+  Typicky jde o odpověď OCSP responderu, kterému mezitím expiroval certifikát. V knihovně
+  DSS na tom padá kontrola LTV_ISCKNR: "Current time is not in the validity range of the
+  revocation data issuer's certificate!"
+pomoc =
+  Zvolit tolerantní režim ověřování: v Nastavení zrušit zaškrtnutí volby "Ověřování podpisů a
+  pečetí dle standardů". Případně v rámci pokročilého nastavení zapnout jen volbu "Využij i
+  revokační informace od již expirovaného vydavatele"
+zkusenejsi =
+  Pokud je možné získat použitelný CRL seznam z vhodné doby, lze jej (v Pokročilém nastavení)
+  vložit do úložiště vlastních CRL seznamů
+
+[7]
+kratce = porušená integrita podpisu
+problem = Došlo ke změně podepsaného obsahu (porušení jeho integrity).
+# technicky =      (AnEP zde nic neukazuje)
+pomoc = Pro tento případ neexistuje řešení
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[8]
+kratce = nesprávná dvojice soubor + podpis
+problem =
+  Nesouhlasí otisky mezi dokumentem a jeho externím podpisem — buď došlo ke změně podepsaného
+  dokumentu, nebo jde o nesprávnou kombinaci podepsaného dokumentu a jeho externího podpisu.
+# technicky =      (AnEP zde nic neukazuje)
+pomoc = Zadat správnou dvojici: podepsaný dokument a jeho externí podpis. Soubor s podepsaným 
+  dokumentem vložte do hlavního vstupního pole (vlevo), externí podpis do druhého vstupného pole
+  (zcela vpravo).
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[9]
+kratce = revokovaný certifikát
+problem =
+  Certifikát, na kterém je podpis založen, byl k rozhodnému okamžiku již revokovaný (odvolaný, resp. předčasně
+  zneplatněný). Rozhodný okamžik určilo časové razítko — jenže to je horní mez okamžiku
+  podpisu, ne dolní: dokládá, že podpis v ten čas už existoval, nikoli že právě vznikl. 
+  Rozhodnout, zda podpis existoval ještě před revokací, proto nelze.
+# technicky =      (AnEP zde nic neukazuje)
+pomoc =
+  Řešení neexistuje a žádné nastavení na tom nic nezmění: chybějící věcí není revokační informace,
+  ale důkaz o čase vzniku podpisu. Standardy proto nedovolují prohlásit takovýto podpis za neplatný (ani za platný).
+  Jeho stav platnosti proto zůstává neznámý. 
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[10]
+kratce = neznámý stav revokace
+problem =
+  Aplikaci se podařilo získat (on-line) revokační informace, ale tyto neobsahují potřebné údaje o stavu revokace certifikátu 
+  (indikují, že stav revokace je neznámý).
+technicky = OCSP odpověď, kterou se podařilo získat, uvádí že stav revokace certifikátu je neznámý.
+# pomoc =
+zkusenejsi =
+  Pokud je možné získat použitelný CRL seznam z vhodné doby, lze jej (v Pokročilém nastavení)
+  vložit do úložiště vlastních CRL seznamů
+
+[11]
+kratce = revokační informace nelze využít
+problem = Revokační informace, které má aplikace k dispozici, nelze využít.
+# technicky =      (AnEP zde nic neukazuje)
+# pomoc =
+zkusenejsi =
+  Pokud je možné získat použitelný CRL seznam z vhodné doby, lze jej (v Pokročilém nastavení)
+  vložit do úložiště vlastních CRL seznamů
+
+[12]
+kratce = revokační informace nedostupné
+problem = Aplikaci se nepodařilo získat revokační informace od jejich vydavatele.
+# technicky =      (AnEP zde nic neukazuje)
+# pomoc =
+zkusenejsi =
+  Pokud je možné získat použitelný CRL seznam z vhodné doby, lze jej (v Pokročilém nastavení)
+  vložit do úložiště vlastních CRL seznamů
+
+[13]
+kratce = podpis před začátkem platnosti certifikátu
+problem =
+  Aplikace zjistila, že podpis vznikl (přesněji: již existoval) ještě předtím, než začala řádná doba
+  platnosti podpisového certifikátu.
+# technicky =      (AnEP zde nic neukazuje)
+pomoc = Pro tento případ neexistuje řešení
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[14]
+kratce = revokovaný certifikát CA
+problem =
+  Certifikát vydavatele (certifikační autority) byl revokován ještě před rozhodným okamžikem.
+technicky =
+  K rozhodnému okamžiku musí být prokázáno, že ani podpisový certifikát, ani žádný jemu nadřazený
+  certifikát na certifikační cestě, až ke kotvě důvěry, nebyl revokován. Zde bylo zjištěno, že byl
+  revokován některý z nadřazených certifikátů.
+pomoc = Pro tento případ neexistuje řešení
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[15]
+kratce = zastaralá hashovací funkce SHA1
+problem =
+  Při vytváření podpisu, pečeti či časového razítka byla využita dnes již zastaralá hashovací
+  funkce SHA1.
+technicky = V ČR bylo rozhodnutím MV ČR ukončeno vydávání kvalifikovaných certifikátů s SHA1   
+  k 31.12.2009, a od 1. 1. 2011 doporučeno nepoužívat SHA1 pro elektronické podpisy.
+pomoc =
+  Pokud jste ochotni tolerovat zastaralost hashovací funkce SHA1, můžete v Nastavení zrušit 
+  zaškrtnutí volby "Ověřování podpisů a pečetí dle standardů". Případně v rámci pokročilého 
+  nastavení zapnout jen volbu "Ignorovat zastaralost SHA1"
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[16]
+kratce = kryptograficky nedůvěryhodná hashovací funkce (MD5, RIPEMD-160)
+problem =
+  Při vytváření podpisu, pečeti či časového razítka byla využita dnes již zastaralá hashovací
+  funkce MD5 nebo RIPEMD-160.
+# technicky =      (AnEP zde nic neukazuje)
+pomoc = Pro tento případ neexistuje řešení, zastaralost těchto hashovacích funkcí není vhodné tolerovat.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[17]
+kratce = neznámý SubFilter
+problem = Podpis (či pečeť) používá podpisový algoritmus, který aplikace nepodporuje.
+technicky = Podpis používá nepodporovaný SubFilter
+pomoc = Pro tento případ neexistuje řešení.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+# Důvod 18 se od 3. 10. 2026 nevydává: požadavek na atribut signing-time AnEP trvale
+# nevyžaduje a situace 22 je jen poznámka k výsledku. Oddíl zůstává, protože čísla
+# důvodů se nepřečíslují.
+[18]
+kratce = chybí atribut signing-time v podpisu
+problem =
+  Podpis neobsahuje podepsaný atribut 'signing-time' (deklarovaný čas podpisu). Validační
+  politika, podle které aplikace ověřuje, jej vyžaduje jako povinnou součást podpisu, a bez něj
+  proto ověření nedokončí — a to i tehdy, když dobu vzniku podpisu dokládá platné časové razítko.
+  O době vzniku podpisu ani o jeho platnosti to nic nevypovídá; jde o formální požadavek na
+  podobu podpisu.
+# technicky =      (AnEP zde nic neukazuje)
+pomoc =
+  Pro tento případ neexistuje nastavení, které by výsledek změnilo. Chybějící atribut je
+  záležitostí softwaru, který podpis vytvořil.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[19]
+kratce = nedůvěryhodné časové razítko — TSA není na EUTL
+problem =
+  Podpis je opatřen časovým razítkem, jehož vydavatel (TSA) není uveden v důvěryhodném seznamu EU
+  (EUTL). Aplikace tomuto razítku nemůže důvěřovat a použít jej jako důkaz o existenci podpisu v čase (tzv. PoE).
+  Bez toho nelze posoudit, zda byl podpisový certifikát v době podpisu platný a nerevokovaný.
+# technicky =      (AnEP zde nic neukazuje)
+pomoc =
+  Pokud razítku důvěřujete, vložte certifikát příslušné TSA do vlastního úložiště důvěryhodných
+  certifikátů (Nastavení → Pokročilé nastavení… → Vlastní důvěryhodné certifikáty → Spravovat).
+  Po vložení ověřte podpis znovu — aplikace razítku začne důvěřovat a pokusí se stanovit rozhodný
+  okamžik.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[20]
+kratce = podpis po expiraci certifikátu
+problem =
+  Z dostupných údajů vychází, že podpis (či pečeť) byl vytvořen v době, kdy platnost podpisového certifikátu již skončila.
+  Certifikát opravňoval podepisovat a zaručoval identitu podepisující osoby pouze v rámci vymezené
+  doby platnosti (notBefore–notAfter). 
+# technicky =      (AnEP zde nic neukazuje)
+pomoc = Pro tento případ neexistuje řešení — podpis vznikl v době, kdy certifikát již neplatil.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[21]
+kratce = některé časové razítko neslouží jako PoE
+problem =
+  Přiložené časové razítko (razítka) se nepodařilo ověřit jako platné. Ověřovací knihovna DSS jim
+  přidělila jinou indikaci než „platné“ (PASSED) a nelze je proto použít jako důkaz existence
+  podpisu (PoE). Bez PoE nelze stanovit rozhodný okamžik (BST) a posoudit, zda byl podpisový
+  certifikát v době podpisu platný a nerevokovaný.
+# technicky =      (AnEP zde nic neukazuje)
+pomoc =
+  Proč se razítko nepodařilo ověřit, říká podrobný protokol knihovny DSS — záložku "Protokoly DSS"
+  zpřístupní volba "Expertní mód" v Nastavení. Pokud razítkovací autorita není v evropských
+  důvěryhodných seznamech, lze její certifikát přidat do vlastního úložiště: Nastavení → Pokročilé
+  nastavení… → Vlastní důvěryhodné certifikáty → Spravovat.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[22]
+kratce =
+  on-line revokační informace prokazující revokaci certifikátu; nelze je dle standardů použít
+problem =
+  Aplikace získala on-line revokační informace (OCSP nebo CRL), které prokazují, že podpisový
+  certifikát byl k rozhodnému okamžiku (BST) již revokován. Tato data byla ale vydána až po
+  skončení řádné doby platnosti (notAfter) certifikátu a technické standardy jejich použití
+  zakazují. Výsledek ověření proto zůstává neznámý.
+# technicky =      (AnEP zde nic neukazuje)
+pomoc =
+  Zaškrtnutím volby "Využij i revokační informace, vydané po expiraci certifikátu" se informace do
+  ověření vpustí, ale platnost tím spolehlivě posouzena nebude: zůstane neznámá. K revokaci se
+  ověření dopracuje, jenže nic nedokládá, zda podpis vznikl před ní, nebo až po ní, a to žádné
+  nastavení nespraví. Stojí to za zaškrtnutí jen tehdy, chcete-li mít revokaci pojmenovanou přímo
+  ve zjištěných důvodech.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[23]
+kratce = porušená integrita časového razítka — vadu nelze napravit
+problem =
+  Přiložené časové razítko je poškozené. Otisk (message imprint), který razítko nese, neodpovídá
+  datům, jež má krýt — případně nesouhlasí podpis samotného razítka. Takové razítko nic
+  neprokazuje a nemůže sloužit jako důkaz existence podpisu (PoE). Bez PoE nelze stanovit rozhodný
+  okamžik (BST) a posoudit, zda byl podpisový certifikát v době podpisu platný a nerevokovaný.
+technicky =
+  Typicky jde o dokument, který byl změněn až poté, co k němu bylo razítko připojeno. Poškození se
+  týká vztahu razítka a podepsaného obsahu. V záložce Detailní
+  rozbor je u dotčeného razítka vidět, že jeho otisk neodpovídá krytým datům.
+pomoc =
+  Pro tento případ neexistuje řešení. Na rozdíl od ostatních příčin, proč razítko neslouží jako
+  PoE (nedůvěryhodná TSA, zastaralá hashovací funkce, expirovaný řetěz certifikátů), nelze
+  poškozené razítko opravit žádným nastavením ani doplněním certifikátu. Máte-li k dispozici
+  původní, nezměněnou verzi dokumentu, ověřte ji.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[24]
+kratce = vydavatel revokačních dat mimo dobu své platnosti k rozhodnému okamžiku
+problem =
+  Aplikace má k dispozici revokační informace o {certifikat}, ale certifikát jejich vydavatele —
+  respondéra OCSP nebo vydavatele CRL — k rozhodnému okamžiku neplatil. Technické standardy
+  žádají, aby šlo vydavatele revokační informace k tomuto okamžiku ověřit, a proto takovou
+  informaci nepovolují použít.
+technicky =
+  Ověřuje-li se k okamžiku v minulosti, bývá důvodem to, že odpověď staženou dnes podepsal
+  respondér zřízený až později — k tehdejšímu dni tedy ještě neplatil. Druhou možností je
+  vydavatel, jemuž platnost mezitím skončila. Jde o dvě strany téhož požadavku: standardy neptají
+  se, zda certifikát vydavatele vypršel, ale zda k rozhodnému okamžiku platil.
+pomoc =
+  V pokročilém nastavení zapnout volbu "Využij i revokační informace od již expirovaného
+  vydavatele". Volba "Využij i revokační informace, vydané po expiraci certifikátu" tuhle překážku
+  neodstraní — týká se stáří samotné informace, ne jejího vydavatele.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[25]
+kratce = stažená revokační informace o certifikátu nic neříká
+problem =
+  Aplikaci se sice podařilo on-line revokační informaci získat, ale ta o {certifikat} nic
+  neříká. Seznam odvolaných certifikátů (CRL) byl vydán až po skončení platnosti certifikátu a
+  nenese příznak expiredCertsOnCRL s datem, které by do doby jeho platnosti sahalo. Vydavatel
+  přitom smí záznam o certifikátu po jeho expiraci ze seznamu vypustit (RFC 5280, čl. 3.3), takže
+  z toho, že v seznamu není, neplyne, že odvolán nebyl.
+technicky =
+  Validátor DSS to hlásí jako BBB_XCV_REVOC_HAS_CERT_INFO_ANS ("The revocation data is not known
+  to contain information about the certificate!"). Od případu, kdy se žádnou revokační informaci
+  získat nepodařilo, se to liší tím, že informace k dispozici je — jen o tomto certifikátu mlčí. A
+  od informace vydané po expiraci, kterou propustí tolerantní režim, se liší tím, že tato neprojde ani
+  tak: tolerance mluví o stáří informace, ne o tom, že v ní certifikát vůbec nefiguruje.
+# pomoc =      (AnEP zde nic neukazuje)
+zkusenejsi =
+  Pokud je možné získat použitelný CRL seznam z vhodné doby, lze jej (v Pokročilém nastavení)
+  vložit do úložiště vlastních CRL seznamů
+
+[26]
+kratce = revokovaný certifikát; chybí důkaz, kdy podpis vznikl
+problem =
+  Certifikát, na kterém je podpis založen, byl revokován (předčasně zneplatněn). Revokační
+  informace o tom má aplikace k dispozici a ověřování je použilo — nic jim nechybí. Není ale čím
+  doložit, kdy podpis vznikl, a tak nelze rozhodnout, zda k tomu došlo ještě před revokací, nebo
+  až po ní.
+technicky =
+  Podpis není opatřen žádným časovým razítkem, které by mohlo doložit čas jeho vzniku, takže
+  rozhodný okamžik ověření padá na přítomnost — a k dnešku je certifikát odvolaný. Deklarovaný čas
+  podpisu zapsaný v dokumentu nic nedokládá: pochází z počítače podepisující osoby a lze ho
+  nastavit libovolně. Standardy proto podpis neprohlásí za neplatný (mohl vzniknout dřív, než k
+  revokaci došlo), ale ani za platný (mohl vzniknout až po ní).
+pomoc =
+  Chybějící důkaz už doplnit nelze — časové razítko připojené dnes by dokládalo jen dnešek, a to
+  je doba, kdy je certifikát odvolaný. Znáte-li čas podpisu z jiného zdroje, můžete v Nastavení
+  zapnout ověření k zadanému času; výsledek pak ale stojí na tomto údaji, ne na důkazu obsaženém v
+  dokumentu.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[27]
+kratce = razítko ve slovníku VRI nezakládá důkaz existence podpisu
+problem =
+  Dokument sice obsahuje časové razítko, ale takové, které nemůže doložit, kdy podpis vznikl. Je
+  uloženo ve slovníku VRI dokumentu, nikoli v podpisu samotném, a nekryje je žádné dokumentové
+  (archivní) časové razítko. Rozhodný okamžik ověření proto padá na přítomnost, přestože razítko v
+  dokumentu vidíte. Nejčastěji jde o časové razítko, které k podpisu přidává program Adobe Acrobat
+  Reader, když mu uživatel zadá pokyn "Přidat informaci o ověření".
+technicky =
+  Norma PAdES uznává pro úroveň T jen dvě konstrukce: atribut signature-time-stamp uvnitř podpisu
+  a dokumentové časové razítko. Razítko ve VRI záznamu není ani jedno z nich a do dokumentu
+  přibylo inkrementálním updatem — dokud je nekryje dokumentové razítko, může je kdokoli odstranit
+  či nahradit, aniž by to šlo poznat. Důkaz, který lze beze stopy odstranit, nemůže nést závěr o
+  platnosti. Samotné razítko je přitom kryptograficky v pořádku a čas, který uvádí, je nejspíš
+  pravdivý; konformní validátory včetně online služby DSS s ním ale nepočítají a AnEP se chová
+  stejně, aby nesliboval ověřitelnost, kterou jinde nepotvrdí.
+pomoc =
+  Napravit to lze jedině dokumentovým (archivním) časovým razítkem, které VRI záznam kryje — tím
+  se dostane pod ochranu a jeho čas se uplatní jako důkaz existence. Připojit je má smysl jen
+  dokud je podpisový certifikát ještě platný; potom už razítko doloží pouze to, že podpis
+  existoval v době, kdy bylo pozdě. Zda to u tohoto dokumentu ještě jde, říká záložka Digitální
+  kontinuita.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[28]
+kratce = podpisová hodnota se neověřila, obsah je přitom nezměněný
+problem =
+  Podpisovou hodnotu se nepodařilo ověřit veřejným klíčem z podpisového certifikátu. Podepsaný
+  obsah se přitom nezměnil: otisk podepsaných dat souhlasí, takže po podpisu do dokumentu nikdo
+  nezasáhl. Vada je uvnitř samotného podpisu, nikoli v dokumentu.
+technicky =
+  Validátor DSS to hlásí jako BBB_CV_ISI_ANS ("The signature is not intact!") a výsledek uzavře
+  jako TOTAL_FAILED/SIG_CRYPTO_FAILURE. Je to jiná vada než porušená integrita: tam nesouhlasí
+  otisk podepsaných dat, tedy obsah se po podpisu změnil. Zde otisk souhlasí a selhává až ověření
+  podpisové hodnoty. Nejčastější příčinou je rozpor v identifikátorech algoritmů uvnitř struktury
+  CMS: pole signatureAlgorithm uvádí jiný algoritmus otisku, než jakým byl podpis skutečně
+  vytvořen a než jaký uvádí pole digestAlgorithm. Takové podpisy vytvářely některé starší verze
+  programu Adobe Acrobat. Validátory, které se řídí polem digestAlgorithm — Adobe Reader a
+  nástroje z něj vycházející, ale i CzechPOINT či Signer — takový podpis ověří jako platný;
+  validátory postavené na knihovně DSS (včetně online služby DSS a této aplikace) berou
+  signatureAlgorithm doslova, a proto ověření selže.
+pomoc =
+  Vada je v samotném podpisu a odstranit ji nelze — jinak už by to nebyl tentýž podpis. Záleží-li
+  na jeho platnosti, je namístě porovnat výsledek s validátorem, který se řídí polem
+  digestAlgorithm (Adobe Reader, Signer, CzechPOINT), a rozdíl doložit; do dokumentu zasahovat
+  netřeba, ten je v pořádku.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[29]
+kratce = vložená revokační data od vydavatele, který neplatil už při jejich vydání
+problem =
+  Aplikace našla přímo v podpisu (či dokumentu) vložené revokační informace, prokazující stav
+  revokace certifikátu k rozhodnému okamžiku. Jsou ale zastaralé (certifikát jejich vydavatele k
+  rozhodnému okamžiku již expiroval), a technické standardy nepovolují jejich využití.
+technicky =
+  Typicky jde o odpovědi OCSP serverů, vydané OCSP responderem, jehož certifikát k rozhodnému
+  okamžiku již expiroval.
+pomoc =
+  Zvolit tolerantní režim ověřování: v Nastavení zrušit zaškrtnutí volby "Ověřování podpisů a
+  pečetí dle standardů". Případně v rámci pokročilého nastavení zapnout jen volbu "Využij i
+  revokační informace od již expirovaného vydavatele"
+zkusenejsi =
+  Pokud je možné získat použitelný CRL seznam z vhodné doby, lze jej (v Pokročilém nastavení)
+  vložit do úložiště vlastních CRL seznamů
+
+[30]
+kratce = chybí jen důkaz, že revokační informace v dokumentu byla vložena včas
+problem =
+  Revokační informace, které ověření podle standardů postrádá, jsou v dokumentu vložené — jenže
+  tam, kde leží, na ně posuzování nedosáhne.
+technicky =
+  Rozhoduje, kterým procesem podle ETSI EN 319 102-1 podpis projde. Bez razítka nad celým souborem
+  a bez validačního materiálu v dlouhodobém úložišti dokumentu skončí u klauzule 5.5, kde kontrola
+  LTV_ISCKNR žádá, aby certifikát vydavatele revokační informace platil k okamžiku ověření. S nimi
+  se podpis dostane do klauzule 5.6 (archivní data), kde se pracuje s důkazy existence — a ten
+  důkaz už dokument zpravidla nese: je jím jeho stávající časové razítko. Nově přidané razítko
+  tedy nedokládá nic o minulosti, jen přesouvá posuzování tam, kde se s důkazy pracuje.
+pomoc =
+  Použít uchování: tlačítko "Uchovat" v záložce Digitální kontinuita. Vloží revokační informace do
+  dlouhodobého úložiště dokumentu a přidá archivní časové razítko — tím se posuzování přesune tam,
+  kde se ty informace uplatní. Případně, jen pro jedno ověření, zapnout v pokročilém nastavení
+  volbu "Využij i revokační informace od již expirovaného vydavatele"; závěr pak ale stojí na
+  ústupku, který jiný nástroj mít nemusí.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[31]
+kratce = samostatné časové razítko neobstálo
+problem = Samostatné časové razítko nad dokumentem se nepodařilo ověřit jako platné.
+# technicky =      (AnEP zde nic neukazuje)
+pomoc =
+  Co s tím lze dělat, závisí na příčině; tu se u tohoto razítka nepodařilo zařadit. Podrobnosti
+  nese podrobný protokol knihovny DSS — záložku "Protokoly DSS" zpřístupní volba "Expertní mód" v
+  Nastavení.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[32]
+kratce = evidenčnímu záznamu něco schází
+problem =
+  Evidenčnímu záznamu přiloženému k dokumentu něco schází, takže neprokazuje to, co prokazovat má.
+# technicky =      (AnEP zde nic neukazuje)
+pomoc = Vada je v samotném záznamu a opravit ji může jen ten, kdo záznam vytvořil.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[33]
+kratce = chybí podepsaný soubor (externí podpis)
+problem =
+  Tento podpis je externí, neboli je uložený zvlášť, mimo podepsaný soubor — a ten nebyl aplikaci
+  předložen. Bez něj se nedá ověřit vůbec nic: podpis se porovnává právě s ním.
+# technicky =      (AnEP zde nic neukazuje)
+pomoc =
+  Předložte podpis společně se souborem, ke kterému patří. V aplikaci k tomu slouží hlavní vstupní
+  pole (vlevo), zatímco externí podpis se vkládá do vstupního pole zcela vpravo.
+
+# Důvod 34 se od 4. 10. 2026 nevydává: shodu deklarovaného času s platností certifikátu
+# AnEP trvale nevyžaduje a situace 55 je jen poznámka k výsledku. Oddíl zůstává, protože
+# čísla důvodů se nepřečíslují.
+[34]
+kratce = deklarovaný čas podpisu leží mimo platnost certifikátu
+problem =
+  Deklarovaný čas podpisu (atribut 'signing-time', u PDF také údaj ve slovníku podpisu) leží mimo
+  dobu platnosti podpisového certifikátu. Validační politika, podle které aplikace ověřuje, to
+  považuje za nesplnění požadavku na podpis a ověření nedokončí — a to i tehdy, když skutečnou
+  dobu vzniku podpisu dokládá platné časové razítko. Deklarovaný čas zapisuje software
+  podepisujícího podle hodin jeho počítače; o skutečné době vzniku podpisu ani o jeho platnosti
+  sám nic nevypovídá.
+pomoc =
+  Pro tento případ neexistuje nastavení, které by výsledek změnilo. Chybný deklarovaný čas je
+  záležitostí softwaru či počítače, na kterém podpis vznikl.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+[35]
+kratce = hashovací funkce, kterou standardy nepřipouštějí (SHA3-224)
+problem =
+  Při vytváření podpisu, pečeti či časového razítka byla využita hashovací funkce SHA3-224
+  (případně jiná, například MD2), kterou dokument ETSI TS 119 312 o kryptografických algoritmech
+  pro elektronické podpisy neuvádí. Validační politika, podle které aplikace ověřuje, ji proto
+  nepřipouští vůbec. Nejde o funkci prolomenou ani zastaralou — jen ji standardy pro elektronické
+  podpisy nepočítají mezi použitelné, a ověřování podle nich ji tedy neuzná.
+pomoc =
+  Pro tento případ neexistuje nastavení, které by výsledek změnilo. Validátory, které se řídí
+  jinými pravidly, mohou podpis posoudit jinak.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
+# ======================================================================================
+#  N Á H R A D N Í   Z N Ě N Í
+#
+#  Tyhle oddíly přebíjejí katalog výše, když aplikace pozná okolnosti přesněji.
+#  Nepozná-li je, zůstane u znění z katalogu.
+# ======================================================================================
+
+# Certifikát s vlastním podpisem žádného vydavatele nemá — jmenovat u něj autoritu by znamenalo
+# jmenovat podepsaného samotného. Platí proto tohle znění, a to i před tím níže.
+[3/vlastni-podpis]
+problem =
+  Podpis (či pečeť) je založen na certifikátu s vlastním podpisem: nevydala jej žádná autorita,
+  ručí sám za sebe. Aplikace proto neví, zda může jeho obsahu důvěřovat a pracovat s ním.
+
+# Datum expirace se čte z certifikátu, kterého se nález týká — u důvodu 2 z toho, k němuž se
+# revokační údaj vztahuje, u důvodu 4 z podpisového certifikátu, u důvodu 6 z certifikátu
+# vydavatele revokačního údaje. Nepodaří-li se určit, platí místo katalogového znění tohle;
+# věta s prázdnou závorkou ani s holým „K tomu došlo ." by vypadala jako chyba.
+[2/bez-data]
+problem =
+  Aplikaci se podařilo získat (on-line) čerstvé revokační informace, prokazující stav revokace certifikátu
+  k rozhodnému okamžiku. Tyto ale byly vydány až po expiraci (skončení řádné doby platnosti)
+  certifikátu, ke kterému se vztahují. Technické standardy však zakazují využití takovýchto
+  revokačních informací (vydaných až po expiraci).
+
+[4/bez-data]
+problem =
+  Podpis (či pečeť) není opatřen časovým razítkem a je založen na certifikátu, který již expiroval
+  (tj. již skončila řádná doba jeho platnosti). To znamená ztrátu digitální kontinuity, kterou již
+  nejde obnovit.
+
+# Prvek bez vlastního časového razítka, který ale kryje pozdější autentizační prvek s razítkem.
+# Katalogové znění tu tvrdí nepravdu hned dvakrát: dokument razítko nese a dřívější existence
+# doložena je, takže o nenávratné ztrátě kontinuity nemůže být řeč. Podrobnosti o tom, který
+# prvek to je a co jeho razítko dokládá, stojí v bloku „Průběh ověřování".
+[4/kryto]
+problem =
+  Podpis (či pečeť) nemá vlastní časové razítko a je založen na certifikátu, který již expiroval
+  (tj. již skončila řádná doba jeho platnosti). K tomu došlo {konec}. Dřívější existenci ale
+  dokládá jiný autentizační prvek téhož dokumentu, který tento podpis (či pečeť) kryje a nese
+  platné časové razítko. Aplikace k tomu doloženému okamžiku ověření zopakovala a ani tak
+  neuspělo — překážka tedy leží jinde než v době vzniku; popisuje ji blok „Průběh ověřování".
+
+[6/bez-data]
+problem =
+  Aplikace našla přímo v podpisu (či dokumentu) vložené revokační informace, prokazující stav
+  revokace certifikátu k rozhodnému okamžiku. Byly vydány v době, kdy certifikát jejich vydavatele
+  byl platný. Jenže mezitím tento certifikát expiroval (skončila jeho platnost) — a tím skončila i
+  možnost prokázat, že byl v době vydání revokačních informací důvěryhodný. Technické standardy
+  zakazují využití takovýchto revokačních informací (od expirovaného vydavatele).
+
+# Důvody 24 a 25 jmenují certifikát, kterého se nález týká — aplikace ho dosadí za {certifikat}.
+# Nepodaří-li se určit (to by znamenalo, že situace nastala nad prázdným výčtem), platí tohle.
+[24/bez-certifikatu]
+problem =
+  Aplikace má k dispozici revokační informace o certifikátu, ale certifikát jejich vydavatele —
+  respondéra OCSP nebo vydavatele CRL — k rozhodnému okamžiku neplatil. Technické standardy
+  žádají, aby šlo vydavatele revokační informace k tomuto okamžiku ověřit, a proto takovou
+  informaci nepovolují použít.
+
+[25/bez-certifikatu]
+problem =
+  Aplikaci se sice podařilo on-line revokační informaci získat, ale ta o dotčeném certifikátu nic
+  neříká. Seznam odvolaných certifikátů (CRL) byl vydán až po skončení platnosti certifikátu a
+  nenese příznak expiredCertsOnCRL s datem, které by do doby jeho platnosti sahalo. Vydavatel
+  přitom smí záznam o certifikátu po jeho expiraci ze seznamu vypustit (RFC 5280, čl. 3.3), takže
+  z toho, že v seznamu není, neplyne, že odvolán nebyl.
+
+# Jméno vydavatele se čte z certifikátu (položka CN). Není-li tam k nalezení, platí místo
+# katalogového znění tohle — věta s prázdnými uvozovkami by vypadala jako chyba.
+[3/bez-vydavatele]
+problem =
+  Podpis (či pečeť) je založen na certifikátu, který není této aplikaci znám. Proto neví, zda může
+  jeho obsahu důvěřovat a pracovat s ním.
+
+# Důvod 9 mluví o čase razítka. Není-li žádný důkaz existence a rozhodným okamžikem
+# zůstává čas ověření, platí místo něj tohle.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+[9/bez-dukazu]
+problem =
+  Certifikát, na kterém je podpis založen, byl k rozhodnému okamžiku již revokovaný (předčasně
+  zneplatněný). Rozhodným okamžikem je tu čas ověření, protože důkaz o dřívější existenci podpisu
+  k dispozici není — a k dnešku je certifikát odvolaný. Rozhodnout, zda podpis revokaci předchází,
+  proto nelze.
+
+# Připojuje se za „pomoc“ u důvodu 15, když je zároveň indikována situace 43
+# (vyřazená razítkovací služba). Obě věty začínají stejně — měníte-li jednu, změňte i druhou.
+[15/vyrazena-sluzba]
+dodatek-s-duvodem-21 =
+  Samo o sobě to ale nestačí: rozhodný okamžik by musel stát na časovém razítku od služby, jejíž
+  status v důvěryhodném seznamu je dnes odňatý, a co je k tomu potřeba navíc, stojí u důvodu 21.
+dodatek-bez-duvodu-21 =
+  Samo o sobě to ale nestačí: rozhodný okamžik by musel stát na časovém razítku od služby, jejíž
+  status v důvěryhodném seznamu je dnes odňatý, a s tou překážkou se tahle tolerance nepotká.
+
+# Úvod a závěr věty u důvodu 21; mezi ně se vkládá příčina z oddílů níže.
+# (Znění v katalogu nahoře platí tehdy, když se příčinu zařadit nepodařilo.)
+[21/ramec]
+problem-uvod = Přiložené časové razítko (razítka) se nepodařilo ověřit jako platné
+problem-zaver =
+  Razítko proto nelze použít jako důkaz existence podpisu (PoE) a bez PoE nelze stanovit rozhodný
+  okamžik (BST) a posoudit, zda byl podpisový certifikát v době podpisu platný a nerevokovaný.
+
+# Dovětek k radě „vložte certifikát“ u důvodu 21: vložení odstraní jednu překážku
+# a druhá pod ní může vystoupit. Dosazuje se za {po-pripnuti}.
+[21/po-pripnuti]
+s-duvodem-15 =
+  Samo o sobě to ale nestačí: razítko je postavené na SHA-1, takže po vložení vystoupí do popředí
+  ta překážka a je potřeba i tolerance k SHA-1, o které je řeč u důvodu 15. Teprve obojí naráz
+  razítko propustí.
+bez-duvodu-15 =
+  Po vložení ověřte znovu — může se ukázat další překážka, kterou dosud zakrývala tahle.
+
+# certifikátu razítkovací autority skončila platnost
+[21/EXPIRED_NO_POE]
+pricina =
+  certifikátu razítkovací autority {autorita} skončila platnost {konec} a nic nedokládá, že
+  razítko vzniklo ještě za ní
+# Když se konec platnosti certifikátu nepodaří zjistit:
+pricina-bez-data =
+  certifikátu razítkovací autority {autorita} skončila platnost a nic nedokládá, že razítko
+  vzniklo ještě za ní
+technicky =
+  Razítko se posuzuje k nejstaršímu okamžiku, o kterém je doloženo, že v něm už existovalo. Čas,
+  který razítko samo uvádí, takovým dokladem není — právě ten se má razítkem teprve prokázat.
+  Doklad dodává až něco pozdějšího, co razítko kryje: archivní razítko nebo jiný uchovávací zásah.
+  Tady ověřování takový doklad nemá — buď v dokumentu žádný není, nebo je až z doby, kdy
+  certifikát razítkovací autority už neplatil — a tak zůstává u času ověření, tedy u dneška.
+  Certifikát té autority přitom platil jen do {konec}.
+
+  Podrobný protokol knihovny DSS hlásí u takového razítka zpravidla několik výhrad naráz a ta
+  nejnápadnější nebývá ta rozhodující: u razítek z roku 2012 stojí v protokolu na prvním místě
+  zastaralá SHA-1, přestože verdikt drží tahle chybějící opora. Aplikace proto vybírá tu, která o
+  výsledku rozhodla, a ostatní ponechává protokolu.
+# Pozdější razítko dokládá, že tohle vzniklo ještě za platnosti certifikátu své autority —
+# a přesto se ověřit nepodařilo. Věty o chybějícím dokladu by tu byly nepravdivé; nález
+# uživatele z 20. 9. 2026.
+pricina-s-dokladem =
+  certifikátu razítkovací autority {autorita} skončila platnost {konec}; že razítko vzniklo
+  ještě za ní, sice dokládá pozdější razítko v témže dokumentu, ověřit je podle standardů se
+  přesto nepodařilo
+technicky-s-dokladem =
+  Razítko se posuzuje k nejstaršímu okamžiku, o kterém je doloženo, že v něm už existovalo. Čas,
+  který razítko samo uvádí, takovým dokladem není — právě ten se má razítkem teprve prokázat.
+  Doklad dodává až něco pozdějšího, co razítko kryje: archivní razítko nebo jiný uchovávací zásah.
+  Tady takový doklad je a je ze správné doby — pozdější razítko v dokumentu vzniklo ještě za
+  platnosti certifikátu té autority, který skončil {konec}. Ověřování podle standardů přesto
+  neskončilo závěrem; podrobný protokol knihovny DSS to hlásí jako „past time-stamp validation
+  is not conclusive".
+
+  Ta hlášení bývají u jednoho razítka hned čtyři naráz a ta nejnápadnější nebývá ta rozhodující:
+  u razítek z roku 2012 stojí v protokolu na prvním místě zastaralá SHA-1, přestože verdikt drží
+  něco jiného. Aplikace proto vybírá tu, která o výsledku rozhodla, a ostatní ponechává protokolu.
+pomoc-s-dokladem =
+  Uchovávací zásah, který měl dřívější existenci razítka doložit, v dokumentu je a přišel včas —
+  na tom už se nedá nic zlepšit. Zbývá ústupek: vložit certifikát {autorita} do vlastního
+  úložiště (Nastavení → Pokročilé nastavení… → Vlastní důvěryhodné certifikáty → Spravovat).
+  Vložený certifikát vystupuje jako kotva důvěry a jeho vlastní platnost se už nezkoumá, takže
+  požadavek na důkaz odpadne. {po-pripnuti} Je to ústupek zdejšího ověření, ne oprava dokumentu:
+  validátor, který se drží standardů, dojde k témuž závěru jako aplikace teď.
+pomoc =
+  Doložit zpětně, že razítko vzniklo za platnosti certifikátu, už nelze; to měl zajistit archivní
+  (uchovávací) zásah ještě v době, kdy certifikát platil. Zbývá ústupek: vložit certifikát
+  {autorita} do vlastního úložiště (Nastavení → Pokročilé nastavení… → Vlastní důvěryhodné
+  certifikáty → Spravovat). Vložený certifikát vystupuje jako kotva důvěry a jeho vlastní
+  platnost se už nezkoumá, takže požadavek na důkaz odpadne. {po-pripnuti} Je to ústupek zdejšího
+  ověření, ne oprava dokumentu: validátor, který se drží standardů, dojde k témuž závěru jako
+  aplikace teď.
+
+# zastaralý otisk nebo podpisový algoritmus
+[21/CRYPTO]
+pricina =
+  razítko od {autorita} stojí na otisku nebo podpisovém algoritmu, který už není považován za
+  dostatečně odolný
+technicky =
+  Odolnost otisku i podpisu se počítá na desítky let dopředu, a tak mají standardy u každého
+  algoritmu den, k němuž se přestává uznávat. Razítko to postihuje dvakrát: jednou kvůli otisku,
+  který nese, podruhé kvůli podpisu, kterým je autorita stvrdila.
+
+  Rozhodující je, že razítko nemá důkaz o své dřívější existenci: kdyby se dalo doložit, že
+  vzniklo v době, kdy algoritmus ještě uznávaný byl, ověření by ho přijalo. Právě tohle dělá
+  uchování (archivní časové razítko) — starší razítko zapouzdří novým a silnějším, dokud je to
+  ještě možné.
+pomoc =
+  V pokročilém nastavení zapněte volbu „Ignorovat zastaralost algoritmu SHA1“, případně v
+  Nastavení zrušte zaškrtnutí volby „Ověřování podpisů a pečetí dle standardů“. Odolnost otisku
+  tím nevzroste — ověření jen přestane zastaralý algoritmus odmítat, a je na vás, zda je to v
+  daném případě únosné.
+# Je-li vedle toho indikován i důvod 15 (SHA-1):
+pomoc-s-duvodem-15 =
+  Tolerance k SHA-1, o které je řeč o kus výš, je i odpovědí tady: po jejím zapnutí razítko
+  ověřením projde a může sloužit jako důkaz existence podpisu. Odolnost otisku tím ovšem nevzroste
+  — ověření jen přestane zastaralý algoritmus odmítat, a je na vás, zda je to v daném případě
+  únosné.
+
+# certifikát razítkovací autority byl odvolán
+[21/REVOKED]
+pricina =
+  certifikát razítkovací autority {autorita} byl odvolán (předčasně zneplatněn) a nic nedokládá,
+  že razítko vzniklo ještě před odvoláním
+technicky =
+  Odvolání není totéž co skončení platnosti. Platnost je předem daná lhůta, kdežto odvolání říká,
+  že certifikátu se nemá věřit od určitého okamžiku — typicky proto, že klíč přestal být pod
+  výhradní kontrolou své autority, nebo že certifikát neměl být vydán. Razítko od takové autority
+  má cenu jen tehdy, dá-li se doložit, že vzniklo ještě před odvoláním.
+
+  A právě to doložit nelze: bez důkazu existence dřívějšího než čas ověření se razítko posuzuje k
+  dnešku, kdy je certifikát odvolaný už jistě. Čas, který razítko samo uvádí, důkazem není — kdyby
+  stačil, stačilo by u padělku napsat dřívější datum.
+pomoc =
+  Nastavení, které by výsledek poctivě změnilo, tu není: odvolání certifikátu razítkovací autority
+  se nedá vyvrátit a razítko od něj nemůže sloužit jako důkaz existence podpisu, dokud není
+  doloženo, že vzniklo dřív. Obejít se to zdánlivě dá — vložením certifikátu té autority do
+  vlastního úložiště, protože u kotvy důvěry se revokace nezjišťuje. Tenhle důvod by zmizel, jenže
+  odvolání ne: přestalo by se na ně jen ptát. Kdo dokument někomu předkládá, tím nezíská nic —
+  ověřovatel na druhé straně se zeptá.
+
+# řetěz nevede k žádné kotvě důvěry
+[21/NO_CHAIN]
+pricina =
+  řetěz certifikátů razítka od {autorita} nevede k žádné kotvě důvěry — autorita v evropských
+  důvěryhodných seznamech není, nebo tam ke kontrolovanému okamžiku nebyla
+technicky =
+  Důvěra v razítko nestojí na razítku samotném, nýbrž na tom, že se od certifikátu razítkovací
+  autority dojde po vydavatelích až k někomu, komu se věří předem — ke kotvě důvěry. Těmi jsou pro
+  aplikaci evropské důvěryhodné seznamy (EUTL) a k tomu certifikáty, které jste si sami vložili do
+  vlastního úložiště.
+
+  Tady taková cesta nevede nikam: autorita v seznamech buď vůbec není — tak to bývá u interních,
+  zkušebních a mimoevropských služeb — nebo tam ke kontrolovanému okamžiku nebyla, protože ji
+  seznam uvádí až od pozdějšího data.
+pomoc =
+  Pokud té razítkovací autoritě důvěřujete, vložte její certifikát do vlastního úložiště
+  důvěryhodných certifikátů (Nastavení → Pokročilé nastavení… → Vlastní důvěryhodné certifikáty →
+  Spravovat). Aplikace pak razítku začne důvěřovat a pokusí se z něj stanovit rozhodný okamžik.
+  {po-pripnuti}
+
+# nepodařilo se zjistit, zda nebyl certifikát odvolán
+[21/NO_REVOCATION]
+pricina =
+  o certifikátu razítkovací autority {autorita} se nepodařilo zjistit, zda nebyl odvolán, a mlčení
+  se za kladnou odpověď nebere
+technicky =
+  Standardy nežádají jen to, aby certifikát nebyl odvolaný, ale aby se to dalo doložit: chybějící
+  odpověď se nebere za kladnou. Ověření proto skončí u „nevím“, ne u „v pořádku“.
+
+  U starších razítek to bývá tím, že autorita už svůj seznam odvolaných certifikátů (CRL) ani
+  odpovídací službu (OCSP) neprovozuje, nebo že adresa v certifikátu dnes nikam nevede. Samotný
+  dokument přitom revokační údaj k řetězu razítka nenese — kdyby ho nesl, ověření by se na síť
+  ptát nemuselo. Přispět může i to, že aplikace zrovna nemá spojení.
+pomoc =
+  Pokud té razítkovací autoritě důvěřujete, vložte certifikát {autorita} do vlastního úložiště
+  důvěryhodných certifikátů (Nastavení → Pokročilé nastavení… → Vlastní důvěryhodné certifikáty →
+  Spravovat). Vložený certifikát vystupuje jako kotva důvěry a u kotvy se stav odvolání
+  nezjišťuje, takže tenhle důvod zmizí. Otázku, na které ověření uvázlo, to ale nezodpoví — jen
+  se přestane klást. Doložit, že certifikát odvolaný nebyl, umí teprve seznam CRL z vhodné doby.
+  {po-pripnuti}
+zkusenejsi = 
+  Pokud je možné získat použitelný CRL seznam z vhodné doby, lze jej (v Pokročilém nastavení)
+  vložit do úložiště vlastních CRL seznamů
+
+# otisk v razítku nesouhlasí nebo podpis razítka nesedí
+[21/BROKEN]
+pricina =
+  otisk, který nese razítko od {autorita}, neodpovídá krytým datům, nebo nesedí podpis razítka
+technicky =
+  Tahle výhrada se netýká důvěry ani certifikátů, nýbrž razítka samotného a jeho vztahu k datům,
+  která má krýt: razítko nese otisk těch dat a ten se při ověření přepočítá. Neshoda znamená, že se
+  data po orazítkování změnila, nebo že je poškozený sám token razítka.
+pomoc =
+  Změnila-li se data až po orazítkování, pomůže jedině původní, nezměněná podoba dokumentu; samo
+  razítko opravit nelze a žádné nastavení na tom nic nezmění.
+
+# krytá data se nenašla (od 25. 9. 2026 odděleno od BROKEN — nenalezení není neshoda)
+[21/NO_DATA]
+pricina =
+  razítko od {autorita} není s čím porovnat — data, která má krýt, se nenašla
+technicky =
+  Razítko nenese data samotná, jen jejich otisk, a ten se při ověření přepočítá z dat, která má
+  razítko krýt. Tady se ta data nenašla, takže přepočítat nebylo z čeho — u odděleného razítka
+  typicky proto, že chybí soubor, ke kterému patří. Nic z toho nesvědčí o tom, že by se data
+  změnila.
+pomoc =
+  Jde-li o oddělené razítko, ověřte ho společně se souborem, ke kterému patří — bez krytých dat
+  není razítko s čím porovnat.
+
+# Samostatné časové razítko nad dokumentem, které neobstálo. Mluví se o celém prvku,
+# ne o „přiloženém razítku“ jako u důvodu 21.
+[31/EXPIRED_NO_POE]
+problem =
+  Razítko potvrzuje, že dokument v určitý čas existoval v té podobě, v jaké ho vidíte. Aby to
+  potvrzení platilo, musí jít ověřit certifikát, na kterém razítko stojí — a tomuto certifikátu
+  skončila platnost {konec}. Že razítko vzniklo ještě předtím, není čím doložit: čas, který
+  razítko samo uvádí, je právě to, co se má teprve prokázat.
+# Když se konec platnosti certifikátu nepodaří zjistit:
+problem-bez-data =
+  Razítko potvrzuje, že dokument v určitý čas existoval v té podobě, v jaké ho vidíte. Aby to
+  potvrzení platilo, musí jít ověřit certifikát, na kterém razítko stojí — a tomuto certifikátu
+  skončila platnost. Že razítko vzniklo ještě předtím, není čím doložit: čas, který razítko samo
+  uvádí, je právě to, co se má teprve prokázat.
+pomoc =
+  Doložit to zpětně už nelze; mělo se to ošetřit dalším razítkem ještě v době, kdy certifikát
+  platil. Pokud té razítkovací autoritě důvěřujete, můžete její certifikát vložit do vlastního
+  úložiště (Nastavení → Pokročilé nastavení… → Vlastní důvěryhodné certifikáty → Spravovat);
+  ověření pak jeho platnost přestane zkoumat. Je to ústupek zdejší aplikace, ne oprava dokumentu —
+  jiný ověřovatel dojde k témuž závěru jako aplikace teď.
+
+[31/CRYPTO]
+problem =
+  Razítko je postavené na výpočtu, který se dnes už nepovažuje za dost odolný. U každého takového
+  výpočtu je stanovený den, po kterém se přestává uznávat, a ten už uplynul.
+pomoc =
+  V pokročilém nastavení lze zapnout volbu „Ignorovat zastaralost algoritmu SHA1“. Odolnost
+  razítka tím nevzroste — ověření jen přestane zastaralý výpočet odmítat, a je na vás, zda je to v
+  daném případě únosné.
+
+[31/REVOKED]
+problem =
+  Certifikát, na kterém razítko stojí, byl revokován, resp. odvolán — tedy prohlášen za
+  nedůvěryhodný ještě před koncem své platnosti. Razítko od něj má cenu jen tehdy, dá-li se
+  doložit, že vzniklo dříve, ještě před revokací; a právě to doložit nelze.
+pomoc =
+  Nastavení, které by výsledek poctivě změnilo, tu není. Obejít se to zdánlivě dá vložením
+  certifikátu té autority do vlastního úložiště, protože u kotvy důvěry se odvolání nezjišťuje —
+  jenže tím odvolání nezmizí, jen se na ně aplikace přestane ptát. Kdo dokument někomu předkládá,
+  tím nezíská nic.
+
+[31/NO_CHAIN]
+problem =
+  Důvěra v razítko nestojí na razítku samotném, ale na tom, že se od jeho vydavatele dojde až k
+  někomu, komu se věří předem (kdo je tzv. kotvou důvěry). Tady taková cesta nikam nevede:
+  autorita v evropských důvěryhodných seznamech buď vůbec není — tak to bývá u interních,
+  zkušebních a mimoevropských služeb — nebo tam v rozhodné době nebyla.
+pomoc =
+  Pokud té autoritě důvěřujete, vložte její certifikát do vlastního úložiště (Nastavení →
+  Pokročilé nastavení… → Vlastní důvěryhodné certifikáty → Spravovat) a ověřte znovu.
+
+[31/NO_REVOCATION]
+problem =
+  U certifikátu se ověřuje i to, jestli nebyl mezitím odvolán. Odpověď na tuto otázku se získat
+  nepodařilo — a mlčení se za „v pořádku“ nebere. U starších razítek to bývá tím, že autorita už
+  na otázky neodpovídá, nebo že adresa v certifikátu (pro kladení otázek) dnes nikam nevede.
+pomoc =
+  Máte-li seznam odvolaných certifikátů (CRL) z doby, kdy certifikát ještě platil, vložte jej do
+  vlastního úložiště (Nastavení → Pokročilé nastavení… → Vlastní CRL seznamy → Spravovat). Na
+  seznamu vydaném až po skončení platnosti certifikátu nezáleží — o tomto certifikátu už
+  nevypovídá nic.
+
+[31/BROKEN]
+problem =
+  Razítko obsahuje otisk dokumentu, pořízený v okamžiku, kdy razítko vzniklo. Při ověřování se
+  otisk spočítá znovu a porovná — a zde nesouhlasí. Typicky to znamená, že dokument byl po
+  orazítkování změněn.
+pomoc =
+  Opravit to nelze a žádné nastavení na tom nic nezmění. Máte-li původní, nezměněnou podobu
+  dokumentu, ověřte ji.
+
+[31/NO_DATA]
+problem =
+  Razítko nenese orazítkovaná data samotná, jen jejich otisk — a data, ke kterým patří, nebyla
+  k ověření předložena ani se nenašla. Otisk tak není s čím porovnat a nelze říct, co razítko
+  vlastně potvrzuje. Nic z toho nesvědčí o tom, že by se data změnila.
+pomoc =
+  Ověřte razítko společně se souborem, ke kterému patří — teprve pak je otisk s čím porovnat.
+
+# Evidenční záznam. Nastane-li víc těchto situací naráz, mluví věta o té první v tomhle pořadí.
+# záznam neodpovídá předepsanému tvaru
+[32/s37]
+problem =
+  Evidenční záznam je zvláštní příloha, která má prokazovat, že dokument existoval v určitém čase
+  a od té doby se nezměnil. Tento záznam neodpovídá tvaru, který pro něj předepisuje norma, takže
+  se na něj nedá spolehnout tak, jak by mělo být možné.
+pomoc = Vada je v samotném záznamu a opravit ji může jen ten, kdo záznam vytvořil.
+
+# otisk v záznamu se neshoduje s dokumentem
+[32/s39]
+problem =
+  Otisk uložený v evidenčním záznamu se neshoduje s tím, co se spočítá z dokumentu dnes. Záznam
+  tedy patří k jiné podobě dokumentu, než jakou máte před sebou.
+pomoc =
+  Máte-li tu podobu dokumentu, ke které záznam patří, ověřte ji. Jinak záznam neprokazuje nic.
+
+# záznam nemá platné časové razítko
+[32/s40]
+problem =
+  Celá průkaznost evidenčního záznamu stojí na časovém razítku, které jej ukotvuje v čase. Tento
+  záznam žádné platné nemá, takže neprokazuje, kdy dokument existoval.
+pomoc = Chybu nese samotný záznam; doplnit razítko zpětně nelze.
+
+# záznam nepokrývá všechno, co podpis podepisuje
+[32/s38]
+problem = Záznam nepokrývá všechno, co podpis podepisuje. O části dokumentu tedy neříká nic.
+pomoc = Potřebný je záznam pořízený nad celým podepsaným obsahem; tenhle nahradit nelze.
+
+

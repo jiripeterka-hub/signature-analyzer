@@ -1,0 +1,3 @@
+# Skripty pro Linux musí mít konce řádků LF i v pracovní kopii na Windows (core.autocrlf):
+# bash s CR na konci řádku skončí chybou „$'\r': command not found“.
+*.sh text eol=lf
