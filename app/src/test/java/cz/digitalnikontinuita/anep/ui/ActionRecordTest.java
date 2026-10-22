@@ -332,7 +332,8 @@ class ActionRecordTest {
         assertTrue(text.contains("Algoritmy nového razítka:"), text);
         assertTrue(text.contains("RSA, klíč 2 048 bitů, hašovací funkce podpisu razítka"
                 + " SHA256, hašovací funkce otisku dat SHA512"), text);
-        assertTrue(text.contains("od 1. 1. 2027 nepovažuje za spolehlivý"), text);
+        assertTrue(text.contains("knihovna DSS, nad kterou AnEP ověřuje, ho od 1. 1. 2027"
+                + " nepovažuje za spolehlivý"), text);
         assertTrue(!text.contains("ECDSA"), "razítko, které dokument nesl už předtím: " + text);
     }
 

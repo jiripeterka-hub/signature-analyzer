@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Upozornění u zdroje časových razítek, že klíč autority přestane být podle ETSI TS 119 312
+ * Upozornění u zdroje časových razítek, že klíč autority přestane být podle knihovny DSS
  * spolehlivý dřív, než skončí její certifikát (5. 10. 2026). Případy jsou ze skenu sbírek:
  * PostSignum TSA (RSA-2048, certifikát do 2032) a Sectigo Qualified (RSA-4096, do 2034).
  */
@@ -39,6 +39,9 @@ class TsaKeyWarningTest {
         assertTrue(text.contains("RSA, klíč 2 048 bitů"), text);
         assertTrue(text.contains("10. 10. 2032"), text);
         assertTrue(text.contains("jen varováním"), text);
+        // Datum přisuzuje knihovně DSS, ne ETSI — to ho míní pro nové certifikáty TSA.
+        assertTrue(text.contains("Knihovna DSS, nad kterou AnEP ověřuje, ho od 1. 1. 2027"), text);
+        assertTrue(!text.contains("ETSI"), text);
     }
 
     @Test

@@ -131,7 +131,7 @@
   <li>datum určuje ten článek, který povolí nejdřív: <strong>důkaz existence</strong> (PoE), <strong>dostupnost revokačních informací</strong>, <strong>uznatelnost vloženého údaje</strong> (po expiraci jeho vydavatele) a <strong>uznání razítka</strong> (do vyřazení služby ze seznamů, jinak do konce certifikátu TSA)</li>
   <li>u každého prvku stojí čtyři odpovědi — dokdy ověří AnEP, dokdy validátor podle standardů, dokdy CzechPOINT a podatelny, a co a do kdy je třeba udělat</li>
   <li>zvláštní případ: stojí-li dnešní kladný závěr na údaji staženém právě teď ze sítě a doba, po kterou se na jeho dostupnost dalo spoléhat, už uplynula, <strong>žádné datum se neuvede</strong> a u úkonu stojí „Nejlépe ihned“</li>
-  <li>druhý takový případ: nejnovější časové razítko prvku je podepsané algoritmem, který podle ETSI TS 119 312 přestane být spolehlivý dřív, než lhůta uplyne — dnes typicky klíč RSA o 2 048 bitech s datem 1. 1. 2027; i pak u úkonu stojí „Nejlépe ihned“ s vysvětlením, že nové razítko se silnějším algoritmem je třeba přidat před tímto datem. Podepisuje-li slabým klíčem i vybraný zdroj razítek, upozorní na to blok „Jak dlouho je možné zachovat ověřitelnost?“</li>
+  <li>druhý takový případ: nejnovější časové razítko prvku je podepsané algoritmem, který podle knihovny DSS, nad kterou AnEP ověřuje, přestane být spolehlivý dřív, než lhůta uplyne — dnes typicky klíč RSA o 2 048 bitech s datem 1. 1. 2027; i pak u úkonu stojí „Nejlépe ihned“ s vysvětlením, že nové razítko se silnějším algoritmem je třeba přidat před tímto datem. Podepisuje-li slabým klíčem i vybraný zdroj razítek, upozorní na to blok „Jak dlouho je možné zachovat ověřitelnost?“</li>
 </ul>
 <h2>Co aplikace udělá s dokumentem</h2>
 <ul>
@@ -155,7 +155,7 @@
   <li>spravují se jako <strong>pojmenované profily</strong> s adresou, přihlášením (včetně klientského certifikátu) a algoritmem otisku</li>
   <li>veřejný zdroj Sectigo Qualified umí aplikace <strong>předvyplnit</strong></li>
   <li>při zadání se zdroj <strong>otestuje</strong>: zjistí se konec platnosti jeho certifikátu (podle něj se pak počítá, kam až úkon posune ověřitelnost) a výčet otisků, které autorita skutečně podporuje, aby se pak nevybíral algoritmus, který odmítne</li>
-  <li>u zdroje se zjistí i <strong>algoritmus a délka klíče</strong>, kterým autorita razítka podepisuje (při testu i z každého dalšího razítka); přestane-li klíč být podle ETSI TS 119 312 spolehlivý dřív, než skončí certifikát autority — dnes typicky RSA o 2 048 bitech s datem 1. 1. 2027 —, správa zdrojů na to <strong>upozorní</strong> a doporučí zdroj s delším klíčem</li>
+  <li>u zdroje se zjistí i <strong>algoritmus a délka klíče</strong>, kterým autorita razítka podepisuje (při testu i z každého dalšího razítka); přestane-li klíč být podle knihovny DSS spolehlivý dřív, než skončí certifikát autority — dnes typicky RSA o 2 048 bitech s datem 1. 1. 2027 —, správa zdrojů na to <strong>upozorní</strong> a doporučí zdroj s delším klíčem</li>
   <li>nedostupnost zdroje se nezamění za odmítnutí</li>
 </ul>
 <h2>Protokoly a export</h2>

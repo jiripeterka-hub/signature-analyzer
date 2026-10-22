@@ -154,7 +154,8 @@ final class ActionRecord {
      * Jedno časové razítko tak, jak ho záznam popisuje — kvůli kryptografickým parametrům
      * razítek, která úkon přidal. Doplněno 5. 10. 2026 na pokyn uživatele: záznam uváděl jen
      * konec platnosti certifikátu nového razítka, a ne algoritmus a délku klíče, na kterých
-     * podle ETSI TS 119 312 záleží, dokdy razítko obstojí (typicky RSA-2048 a 1. 1. 2027).
+     * podle kryptografické sady knihovny DSS záleží, dokdy razítko obstojí (typicky RSA-2048
+     * a 1. 1. 2027).
      *
      * <p>Páruje se podle toho, co razítko podepisuje — času vzniku a otisku orazítkovaných
      * dat ({@link #stampKey}) —, ne podle identifikátoru DSS, který se úkonem změnit umí (viz
@@ -597,7 +598,10 @@ final class ActionRecord {
         if (s.imprint() != null) sb.append(", hašovací funkce otisku dat ").append(s.imprint());
         if (s.reliableUntil() != null && (tsaCertNotAfter == null
                 || s.reliableUntil().isBefore(tsaCertNotAfter.toInstant()))) {
-            sb.append(" — podle ETSI TS 119 312 se ")
+            // Původcem data je knihovna DSS, ne ETSI (pokyn uživatele z 22. 10. 2026): ETSI
+            // TS 119 312 to datum míní pro vydávání nových certifikátů TSA, kdežto výchozí
+            // politika DSS 6.5 ho uplatňuje i na razítko vydané dřív.
+            sb.append(" — knihovna DSS, nad kterou AnEP ověřuje, ho ")
               .append(s.reliableUntil().isBefore(Instant.now()) ? "už od " : "od ")
               .append(TimeFormat.day(s.reliableUntil()))
               .append(" nepovažuje za spolehlivý, tedy dřív, než skončí certifikát razítka");

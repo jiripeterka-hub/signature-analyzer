@@ -2000,7 +2000,10 @@ final class ContinuityElementBlocks {
     private static String weakKeyClause(SignatureSummary.TimestampKey k) {
         boolean past = elapsed(k.reliableUntil());
         String day = TimeFormat.day(k.reliableUntil());
-        return "a ten se podle ETSI TS 119 312 " + (past ? "už od " : "od ") + day
+        // Původcem data je knihovna DSS, ne ETSI (pokyn uživatele z 22. 10. 2026): ETSI TS 119 312
+        // to datum míní pro vydávání nových certifikátů TSA, kdežto výchozí politika DSS 6.5 ho
+        // uplatňuje i na razítko vydané dřív, pokud jeho užití nedoloží pozdější razítko.
+        return "a ten knihovna DSS, nad kterou AnEP ověřuje, " + (past ? "už od " : "od ") + day
                 + " nepovažuje za spolehlivý."
                 + (k.forecast()
                     ? " Aplikace AnEP na to zatím reaguje jen varováním a ověřitelnost tím"
@@ -2038,8 +2041,8 @@ final class ContinuityElementBlocks {
         boolean past = w.until().before(new java.util.Date());
         body.getChildren().add(AdvisorView.continuityNote(
                 "Vybraný zdroj časových razítek" + (tsa.named() ? " (" + tsa.name() + ")" : "")
-                + " podepisuje razítka algoritmem " + w.key().describe() + ", který se podle"
-                + " ETSI TS 119 312 " + (past ? "už od " : "od ")
+                + " podepisuje razítka algoritmem " + w.key().describe() + ", který knihovna"
+                + " DSS, nad kterou AnEP ověřuje, " + (past ? "už od " : "od ")
                 + TimeFormat.day(w.until().toInstant()) + " nepovažuje za spolehlivý — dřív,"
                 + " než skončí platnost certifikátu jeho autority."
                 + (w.forecast()
@@ -3319,7 +3322,7 @@ final class ContinuityElementBlocks {
                 SignatureSummary.TimestampKey k = sig.getNewestTimestampKey();
                 body.getChildren().add(AdvisorView.continuityNote(
                         "Nejnovější časové razítko tohoto prvku je podepsané algoritmem "
-                        + k.description() + ", který se podle ETSI TS 119 312 "
+                        + k.description() + ", který knihovna DSS, nad kterou AnEP ověřuje, "
                         + (elapsed(k.reliableUntil()) ? "už od " : "od ")
                         + TimeFormat.day(k.reliableUntil()) + " nepovažuje za spolehlivý."));
                 continue;

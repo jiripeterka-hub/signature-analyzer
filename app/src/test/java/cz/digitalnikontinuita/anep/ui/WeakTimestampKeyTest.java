@@ -74,6 +74,9 @@ class WeakTimestampKeyTest {
         assertTrue(text.contains("Nejlépe ihned"), text);
         assertTrue(text.contains("RSA, klíč 2 048 bitů"), text);
         assertTrue(text.contains("jen varováním"), text);
+        // Datum přisuzuje knihovně DSS, ne ETSI TS 119 312 (22. 10. 2026).
+        assertTrue(text.contains("knihovna DSS, nad kterou AnEP ověřuje,"), text);
+        assertFalse(text.contains("ETSI TS 119 312"), text);
         assertFalse(text.contains("Do kdy je třeba ji využít?"), text);
     }
 
@@ -111,6 +114,7 @@ class WeakTimestampKeyTest {
                 element(SOON), PRESERVE, WEAK, null, true, null)));
         assertTrue(text.contains("Vybraný zdroj časových razítek (Slabá TSA) podepisuje"), text);
         assertTrue(text.contains("jeho razítko by tenhle problém nevyřešilo"), text);
+        assertFalse(text.contains("ETSI TS 119 312"), text);
     }
 
     @Test

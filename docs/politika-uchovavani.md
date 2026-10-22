@@ -243,7 +243,7 @@ Lhůta k úkonu je **konec ověřitelnosti dokumentu podle AnEP** — dokud je c
 
 ### 8.2 Kryptografie (OVR-6.5-03, 6.5-04)
 
-Hašovací funkci otisku dat, který se odesílá autoritě, určuje profil zdroje razítek (výchozí je SHA-512) a nabízejí se jen funkce, které autorita při testu přijala. Podpisový algoritmus, délku klíče a hašovací funkci podpisu razítka volí autorita; aplikace je zjistí a upozorní na klíč, který podle ETSI TS 119 312 přestane být spolehlivý dřív, než skončí certifikát autority (4.2). Kryptografická omezení při ověřování důkazu stanoví politika ověřování, kapitola 10.
+Hašovací funkci otisku dat, který se odesílá autoritě, určuje profil zdroje razítek (výchozí je SHA-512) a nabízejí se jen funkce, které autorita při testu přijala. Podpisový algoritmus, délku klíče a hašovací funkci podpisu razítka volí autorita; aplikace je zjistí a upozorní na klíč, který podle knihovny DSS přestane být spolehlivý dřív, než skončí certifikát autority (4.2). Kryptografická omezení při ověřování důkazu stanoví politika ověřování, kapitola 10.
 
 ### 8.3 Jak důkaz ověřit (OVR-6.5-06)
 

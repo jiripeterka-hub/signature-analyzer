@@ -352,7 +352,7 @@ public class TsaManagerDialog {
 
     /** Je tenhle zdroj už v seznamu? Hlásí to a odpoví true, aby se volající mohl vrátit. */
     /**
-     * Upozornění, že klíč, kterým autorita podepisuje razítka, přestane být podle ETSI TS 119 312
+     * Upozornění, že klíč, kterým autorita podepisuje razítka, přestane být podle knihovny DSS
      * spolehlivý dřív, než skončí její certifikát — nebo už přestal. Pokyn uživatele z 5. 10. 2026
      * po měření nad sbírkami: většina autorit podepisuje klíčem RSA o 2 048 bitech, jehož datum je
      * 1. 1. 2027, a jejich certifikáty platí do let 2028 až 2036.
@@ -393,8 +393,11 @@ public class TsaManagerDialog {
         boolean forecast = weak.forecast();
         String day = day(until);
         boolean past = until.before(new java.util.Date());
-        String head = "Autorita podepisuje razítka algoritmem " + key.describe() + ". Podle ETSI"
-                + " TS 119 312 se " + (past ? "od " + day + " už" : "od " + day)
+        // Původcem data je knihovna DSS, ne ETSI (pokyn uživatele z 22. 10. 2026): ETSI TS 119 312
+        // to datum míní pro vydávání nových certifikátů TSA, kdežto výchozí politika DSS 6.5 ho
+        // uplatňuje i na razítko vydané dřív, pokud jeho užití nedoloží pozdější razítko.
+        String head = "Autorita podepisuje razítka algoritmem " + key.describe() + ". Knihovna"
+                + " DSS, nad kterou AnEP ověřuje, ho " + (past ? "už od " : "od ") + day
                 + " nepovažuje za spolehlivý"
                 + (certEnd != null ? ", ačkoli certifikát autority platí do "
                         + day(certEnd)

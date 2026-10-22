@@ -807,8 +807,8 @@ def kapitola_10(doc):
                   'vysvětlení a s ním i datum, kam by ověřitelnost sahala, kdyby údaj dostupný '
                   'zůstal. Datum se tím neztrácí, jen přestává být slibem.')
     odstavec(doc, 'Druhý důvod pro „Nejlépe ihned“: nejnovější časové razítko prvku je '
-                  'podepsané algoritmem, který podle ETSI TS 119 312 přestane být spolehlivý '
-                  'dřív, než lhůta uplyne — dnes typicky klíč RSA o 2 048 bitech s datem '
+                  'podepsané algoritmem, který podle knihovny DSS, nad kterou AnEP ověřuje, '
+                  'přestane být spolehlivý dřív, než lhůta uplyne — dnes typicky klíč RSA o 2 048 bitech s datem '
                   '1. 1. 2027. Aplikace AnEP na to datum reaguje jen varováním, jiné validátory '
                   'ale takové razítko mohou odmítnout; nové razítko se silnějším algoritmem je '
                   'proto třeba přidat dřív. Podepisuje-li slabým klíčem i vybraný zdroj razítek, '
@@ -959,7 +959,7 @@ def kapitola_13(doc):
                   'pak nevybíral algoritmus, který odmítne. Nedostupnost zdroje se přitom '
                   'nezamění za odmítnutí: profil jde uložit i tak, jen se dopředu neví, kam '
                   'dosáhne. Zjistí se i **algoritmus a délka klíče**, kterým autorita razítka '
-                  'podepisuje; přestane-li klíč být podle ETSI TS 119 312 spolehlivý dřív, než '
+                  'podepisuje; přestane-li klíč být podle knihovny DSS spolehlivý dřív, než '
                   'skončí certifikát autority — dnes typicky RSA o 2 048 bitech s datem '
                   '1. 1. 2027 —, správa zdrojů na to upozorní a doporučí zdroj s delším klíčem.')
     obrazek(doc, 'Správa zdrojů časových razítek s výsledkem sondy.',
