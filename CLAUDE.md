@@ -17,7 +17,9 @@ Uživatel je odborník na elektronické podpisy; s aplikací řeší i právní 
   v `ReasonTextsTest` / `SituationTextsTest`, nový důvod či situaci i do počtů tamtéž.
 - `app/src/test/java/.../tools/` — měřicí sondy (sken sbírek, výpis karty, protokoly DSS).
 - `docs/` — dokumenty pro čtenáře. Wordové podoby se **generují** (`gen-*.py` přes `docx_kit.py`),
-  ručně se nemění. `politika-overovani.md` je zdroj politiky ověřování; když se změní chování
+  ručně se nemění. Vygenerované `.docx` jsou jen předloha: uživatel je sám upraví, podepíše
+  a vydá na https://bajecnysvet.cz/anep/. Do repozitáře nepatří (`.gitignore`); po věcné
+  změně dokumentu uživateli říct, které pasáže si má přenést do svých vydaných podob. `politika-overovani.md` je zdroj politiky ověřování; když se změní chování
   ověřování, aktualizovat ji a přegenerovat `python docs/gen-politika-overovani.py`.
 - `docs/architecture.md` — stavba aplikace a spouštění sond (classpath `cp.txt`).
 

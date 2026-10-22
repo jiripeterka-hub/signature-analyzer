@@ -126,6 +126,12 @@ signature-analyzer/
 > two silent traps are in
 > [docs/architecture.md](docs/architecture.md#číselníky-situací-a-důvodů).
 
+**Word documents.** The user handbook, the validation and preservation policies and
+the capability overview are published by the author as edited and electronically
+signed Word documents at <https://bajecnysvet.cz/anep/>. The `gen-*.py` scripts in
+`docs/` only produce unedited drafts of them, so the generated `.docx` files are
+deliberately kept out of this repository.
+
 ## Prerequisites
 
 - JDK 21+

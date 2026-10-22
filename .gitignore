@@ -19,3 +19,8 @@ docs/prirucka.epub
 
 # bajtkód generátorů v docs/ (docx_kit.py je od 16. 9. 2026 importovaný modul)
 __pycache__/
+
+# Wordové podoby dokumentů (22. 10. 2026): autor je upravuje, podepisuje a vydává sám
+# na https://bajecnysvet.cz/anep/. Generátory gen-*.py dělají jen neupravenou předlohu
+# a ta do repozitáře nepatří, aby nevypadala jako vydaný dokument.
+docs/*.docx
