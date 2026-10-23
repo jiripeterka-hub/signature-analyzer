@@ -169,7 +169,8 @@ bash packaging/linux/dist.sh 1.0.0 1.0      # app-image + AnEP-1.0-linux-<arch>-
 ```
 
 The same steps as `dist.ps1` without the installer: one shaded JAR, JavaFX outside the
-classpath in `lib/app/fx`, `licenses/` and `relink/`. jpackage only builds for the
+classpath in `lib/app/fx`, `licenses/` and `relink/`, plus `pridat-do-nabidky.sh`, which adds
+a menu entry for the current user (no sudo, nothing deleted). jpackage only builds for the
 system and CPU it runs on, so the two Linux archives are built by GitHub Actions —
 workflow **Linux portable** (`.github/workflows/linux-portable.yml`), started by hand
 (`gh workflow run linux-portable.yml -f version=1.0.0 -f release=1.0`), one job on

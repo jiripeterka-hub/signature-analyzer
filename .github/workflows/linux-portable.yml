@@ -53,6 +53,17 @@ jobs:
           if [ "$rc" -ne 124 ]; then echo "Aplikace skončila sama (kód $rc)"; exit 1; fi
           if grep -E "Exception|Error:" anep-start.log; then echo "V logu je výjimka"; exit 1; fi
 
+      # Spouštěč z pridat-do-nabidky.sh musí ukazovat na existující program i ikonu.
+      - name: Zkouška položky v nabídce
+        run: |
+          export XDG_DATA_HOME="$RUNNER_TEMP/xdg"
+          app/target/dist-image/AnEP/pridat-do-nabidky.sh
+          d="$XDG_DATA_HOME/applications/anep.desktop"
+          cat "$d"
+          test -x "$(sed -n 's/^Exec="\(.*\)"$/\1/p' "$d")"
+          test -f "$(sed -n 's/^Icon=//p' "$d")"
+          tar -tvzf app/target/AnEP-*-portable.tar.gz | grep 'rwx.*AnEP/pridat-do-nabidky.sh'
+
       - uses: actions/upload-artifact@v4
         with:
           name: AnEP-${{ inputs.release }}-linux-${{ matrix.arch }}-portable

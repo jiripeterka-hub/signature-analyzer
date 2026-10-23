@@ -152,6 +152,12 @@ Spuštění: rozbalte archiv a spusťte
 
   ./AnEP/bin/AnEP
 
+Položku v nabídce aplikací přidá
+
+  ./AnEP/pridat-do-nabidky.sh
+
+(jen pro přihlášeného uživatele, bez sudo; po přesunu adresáře AnEP skript spusťte znovu).
+
 Instalace není potřeba; prostředí Java i JavaFX jsou součástí archivu. Aplikace potřebuje
 grafické prostředí s knihovnou GTK 3 a glibc, což mají běžné desktopové distribuce
 (Ubuntu, Debian, Mint, Fedora, openSUSE).
@@ -164,6 +170,33 @@ Grafická knihovna: JavaFX $(ls "$APP_HOME/lib/app/fx" | sed -n 's/^javafx-base-
 Nastavení, vlastní úložiště certifikátů a CRL a mezipaměť důvěryhodných seznamů jsou
 v ~/.config/SignatureAnalyzer (nebo v \$XDG_CONFIG_HOME/SignatureAnalyzer).
 EOF
+
+# 6b. Položka v nabídce aplikací (23. 10. 2026). Skript pro živé USB (rozbalení do ~/AnEP,
+#     písmo přes sudo apt-get) se pro vydání nehodil: měl napevno jméno archivu i cíl, cíl
+#     předem mazal a sudo funguje jen na Debianu/Ubuntu. Tento jen zapíše spouštěč .desktop
+#     pro místo, kde AnEP právě leží — nic nemaže, nic neinstaluje, běží na každé distribuci.
+cat > "$APP_HOME/pridat-do-nabidky.sh" <<'SCRIPT'
+#!/usr/bin/env bash
+# Přidá AnEP do nabídky aplikací přihlášeného uživatele (bez sudo).
+# Spouštěč ukazuje na místo, kde AnEP právě leží; po přesunu adresáře skript spusťte znovu.
+set -e
+APP="$(cd "$(dirname "$0")" && pwd)"
+DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+mkdir -p "$DIR"
+cat > "$DIR/anep.desktop" <<DESKTOP
+[Desktop Entry]
+Type=Application
+Name=AnEP
+Comment=Analyzátor elektronických podpisů
+Exec="$APP/bin/AnEP"
+Icon=$APP/lib/AnEP.png
+Terminal=false
+Categories=Office;
+DESKTOP
+echo "AnEP je v nabídce aplikací ($DIR/anep.desktop)."
+echo "Odebrání: rm \"$DIR/anep.desktop\""
+SCRIPT
+chmod +x "$APP_HOME/pridat-do-nabidky.sh"
 
 # 7. Archiv.
 rm -f "$ARCHIVE"
