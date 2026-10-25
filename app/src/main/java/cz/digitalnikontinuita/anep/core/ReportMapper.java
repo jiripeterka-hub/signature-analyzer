@@ -328,6 +328,11 @@ public class ReportMapper {
                     reports.getDetailedReport(), settings, bestSigTime, hasExternalSig,
                     s33.detected(), s33.tolerantlyComplete(), s34.detected(),
                     outcome.skippedRevocations(), derivedPasses);
+            // Porušená integrita druh podpisu nemaže — viz brokenIntegrityLegalType().
+            if (!sysZnacka && situations.contains(1)) {
+                String broken = brokenIntegrityLegalType(q, reports.getDetailedReport(), id);
+                if (broken != null) legalTypeStr = broken;
+            }
             // Čeho se revokační nálezy týkají: u neznámé kotvy (důvod 3) umlčí detectReasons()
             // rady o revokaci podpisového řetězu, kdežto tyhle — z řetězu razítka, který ukotvený
             // být může — nechá stát.
@@ -7829,6 +7834,60 @@ public class ReportMapper {
 
     private boolean isQualifiedSig(SignatureQualification q) {
         return q == SignatureQualification.QESIG || q == SignatureQualification.QESEAL;
+    }
+
+    /**
+     * Druh podpisu či pečeti, jejichž podepsaný obsah se po podpisu změnil (situace 1) —
+     * „neplatný kvalifikovaný elektronický podpis“ místo „autentizační prvek nesplňující
+     * požadavky…“; {@code null}, když se druh certifikátu nezjistí.
+     *
+     * <p>DSS u každého TOTAL_FAILED vrací kvalifikaci {@code NOT_ADES_*}, a ta se do 25. 10. 2026
+     * četla jako prvek, který kvalifikovaným ani zaručeným podpisem není. Uživatel (odborník na
+     * elektronické podpisy) to posoudil jinak: neplatný podpis může stále být kvalifikovaný,
+     * uznávaný či zaručený, jen nemá účinky platného podpisu. Ty účinky popírá výklad v
+     * {@code ExtendedView.legalTypeTooltipMarkup}; {@code qualified} zůstává false, takže se
+     * nenabídnou ani právní účinky úředně ověřeného podpisu. Naměřeno na PAdES B-LTA
+     * s kvalifikovaným certifikátem I.CA a pozměněným obsahem první revize: DSS
+     * TOTAL_FAILED/HASH_FAILURE, NOT_ADES_QC_QSCD.
+     *
+     * <p>Jen pro porušenou integritu: tam je jisté, že vadný je obsah, a výklad o účincích lze
+     * napsat přesně. Ostatní příčiny TOTAL_FAILED (revokace před podpisem, situace 53) mají
+     * zatím dosavadní znění.
+     */
+    private String brokenIntegrityLegalType(SignatureQualification q, DetailedReport detailed,
+                                            String sigId) {
+        if (q == null || !q.name().startsWith("NOT_ADES")) return null;
+        CertificateQualification cq = certificateQualificationForSignature(detailed, sigId);
+        if (cq == null) return null;
+        SignatureQualification asIfPassed = signatureQualificationOf(cq, "TOTAL_PASSED");
+        String type = legalType(asIfPassed);
+        if (type.startsWith("pouze ")) type = type.substring("pouze ".length());
+        return (asIfPassed.name().contains("SEAL") ? "neplatnou " : "neplatný ") + type;
+    }
+
+    /**
+     * Kvalifikace podpisového certifikátu, ze které DSS kvalifikaci podpisu odvodilo — k času
+     * podpisu, jinak k vydání certifikátu. Tu DSS spočítá i u podpisu, který neprošel.
+     */
+    private static CertificateQualification certificateQualificationForSignature(
+            DetailedReport detailed, String sigId) {
+        try {
+            var xs = detailed.getXmlSignatureById(sigId);
+            if (xs == null || xs.getValidationSignatureQualification() == null) return null;
+            CertificateQualification atIssuance = null;
+            for (var vcq : xs.getValidationSignatureQualification()
+                    .getValidationCertificateQualification()) {
+                if (vcq.getValidationTime() == eu.europa.esig.dss.enumerations.ValidationTime.BEST_SIGNATURE_TIME) {
+                    return vcq.getCertificateQualification();
+                }
+                if (vcq.getValidationTime() == eu.europa.esig.dss.enumerations.ValidationTime.CERTIFICATE_ISSUANCE_TIME) {
+                    atIssuance = vcq.getCertificateQualification();
+                }
+            }
+            return atIssuance;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private String legalType(SignatureQualification q) {

@@ -69,6 +69,12 @@ Uživatel je odborník na elektronické podpisy; s aplikací řeší i právní 
 - Tvrzení o jiných ověřovatelích (CzechPOINT, SecuSign, Signer, QVerify) formulovat podmíněně
   („mohou“) a bez výčtu jejich tolerancí — aplikace nezná jejich verzi ani nastavení.
 
+## Soupis změn
+
+- Verze 1.0.0 je vydaná (tag `v1.0`). Každou změnu, kterou uživatel aplikace pozná (výklad,
+  ověřování, UI, balíčky), zapsat do `CHANGELOG.md` pod „Připravovaná verze“ — česky,
+  pro čtenáře, bez situací a názvů tříd. Zapisuje se se změnou samou, ne až při vydání.
+
 ## Git
 
 - Pracuje se na `master`. Commit i push jen na pokyn uživatele, commit message česky

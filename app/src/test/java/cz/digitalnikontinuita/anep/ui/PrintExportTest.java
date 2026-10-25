@@ -155,7 +155,9 @@ class PrintExportTest {
         for (String type : new String[] {
                 "uznávaný elektronický podpis", "kvalifikovaný elektronický podpis",
                 "uznávanou elektronickou pečeť", "kvalifikovanou elektronickou pečeť",
-                "uznávanou elektronickou značku", "elektronickou značku" }) {
+                "uznávanou elektronickou značku", "elektronickou značku",
+                "neplatný kvalifikovaný elektronický podpis", "neplatný zaručený elektronický podpis",
+                "neplatnou uznávanou elektronickou pečeť" }) {
             String text = ExtendedView.legalTypeTooltip(type);
             assertNotNull(text, "vyklad chybi pro: " + type);
             char first = text.charAt(0);
@@ -163,6 +165,23 @@ class PrintExportTest {
                     "vyklad navazuje na \u201eJde o:\u201c / \u201etj.: \u201c, takze nezacina vetu \u2014 "
                     + type + ": " + text);
         }
+    }
+
+    @Test
+    @DisplayName("Neplatny podpis s porusenou integritou: druh zustava, ucinky se popiraji")
+    void brokenIntegrityExplanationKeepsTypeAndDeniesEffects() {
+        String sig = ExtendedView.legalTypeTooltip("neplatný kvalifikovaný elektronický podpis");
+        assertTrue(sig.startsWith(ExtendedView.legalTypeTooltip("kvalifikovaný elektronický podpis")
+                + " Dokument se ale po podpisu změnil"), sig);
+        assertTrue(sig.endsWith("K podpisu na dokumentu v této podobě se proto neváží účinky"
+                + " kvalifikovaného elektronického podpisu (QESig) dle nařízení (EU) č. 910/2014"
+                + " (eIDAS) ani uznávaného podpisu dle § 6 odst. 2 zákona č. 297/2016 Sb."), sig);
+
+        String seal = ExtendedView.legalTypeTooltip("neplatnou kvalifikovanou elektronickou pečeť");
+        assertTrue(seal.contains("K pečeti na dokumentu v této podobě")
+                && seal.endsWith("ani uznávané pečeti dle § 9 odst. 2 zákona č. 297/2016 Sb."), seal);
+        assertEquals("neplatná kvalifikovaná elektronická pečeť",
+                ExtendedView.nominativeLegalType("neplatnou kvalifikovanou elektronickou pečeť"));
     }
 
     @Test

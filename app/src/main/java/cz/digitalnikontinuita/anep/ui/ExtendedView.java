@@ -2634,7 +2634,8 @@ public class ExtendedView {
      */
     static String nominativeLegalType(String simplified) {
         if (!isSealLegalType(simplified)) return simplified;
-        return simplified.replace("kvalifikovanou", "kvalifikovaná")
+        return simplified.replace("neplatnou", "neplatná")
+                         .replace("kvalifikovanou", "kvalifikovaná")
                          .replace("uznávanou", "uznávaná")
                          .replace("zaručenou", "zaručená")
                          .replace("elektronickou", "elektronická")
@@ -2671,6 +2672,9 @@ public class ExtendedView {
      */
     static String legalTypeTooltipMarkup(String simplified) {
         if (simplified == null) return null;
+        if (simplified.startsWith("neplatný ") || simplified.startsWith("neplatnou ")) {
+            return brokenIntegrityTooltipMarkup(simplified.substring(simplified.indexOf(' ') + 1));
+        }
         return switch (simplified) {
             case "uznávaný elektronický podpis" ->
                 "zaručený elektronický podpis, založený na kvalifikovaném certifikátu"
@@ -2699,6 +2703,49 @@ public class ExtendedView {
                 + " Jde o starší českou právní kategorii, předcházející pečeti dle nařízení eIDAS.";
             default -> null;
         };
+    }
+
+    /**
+     * Výklad druhu u podpisu či pečeti s porušenou integritou („neplatný kvalifikovaný
+     * elektronický podpis“, viz {@code ReportMapper.brokenIntegrityLegalType}): nejprve totéž
+     * konstatování o druhu jako u platného prvku, pak věta, že se k němu na dokumentu v této
+     * podobě neváží účinky. Znění té věty dal uživatel 25. 10. 2026 — „k podpisu na dokumentu
+     * v této podobě“, ne „k dokumentu“: účinky vůči původnímu obsahu se tím nepopírají.
+     */
+    private static String brokenIntegrityTooltipMarkup(String validType) {
+        boolean seal = isSealLegalType(validType);
+        String eidas = " dle nařízení (EU) č. 910/2014 (eIDAS)";
+        String recognised = seal
+                ? " ani uznávané pečeti dle [§ 9 odst. 2](" + URL_ACT_297_2016_S9 + ") zákona č. 297/2016 Sb."
+                : " ani uznávaného podpisu dle [§ 6 odst. 2](" + URL_ACT_297_2016_S6 + ") zákona č. 297/2016 Sb.";
+        String effects = switch (validType) {
+            case "kvalifikovaný elektronický podpis" ->
+                "kvalifikovaného elektronického podpisu (QESig)" + eidas + recognised;
+            case "uznávaný elektronický podpis" ->
+                "zaručeného elektronického podpisu, založeného na kvalifikovaném certifikátu"
+                + " (AdESig-QC)," + eidas + recognised;
+            case "kvalifikovanou elektronickou pečeť" ->
+                "kvalifikované elektronické pečeti (QESeal)" + eidas + recognised;
+            case "uznávanou elektronickou pečeť" ->
+                "zaručené elektronické pečeti, založené na kvalifikovaném certifikátu"
+                + " (AdESeal-QC)," + eidas + recognised;
+            case "zaručenou elektronickou pečeť" ->
+                "zaručené elektronické pečeti (AdESeal)" + eidas + ".";
+            default ->
+                "zaručeného elektronického podpisu (AdESig)" + eidas + ".";
+        };
+        // Zaručený podpis a pečeť vlastní výklad nemají (řádek „Jde o:“ je bez ⓘ) — sem ho
+        // potřebují, protože věta o účincích navazuje slovem „ale“.
+        String type = legalTypeTooltipMarkup(validType);
+        if (type == null) {
+            type = (seal ? "zaručená elektronická pečeť (AdESeal)"
+                         : "zaručený elektronický podpis (AdESig)") + eidas + ".";
+        }
+        String element = seal ? "pečeť" : "podpis";
+        String toElement = seal ? "K pečeti" : "K podpisu";
+        return type + " Dokument se ale po " + (seal ? "zapečetění" : "podpisu")
+                + " změnil, takže " + element + " jeho současný obsah nekryje. "
+                + toElement + " na dokumentu v této podobě se proto neváží účinky " + effects;
     }
 
     /** Seškrtne značky {@code **tučně**} a {@code [text](url)} na holý text. */
