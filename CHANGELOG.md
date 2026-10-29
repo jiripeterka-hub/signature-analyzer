@@ -20,6 +20,16 @@ pro soupis změn ke každé nové vydané verzi.
   změny. U ostatních příčin neplatnosti (například odvolání certifikátu před podpisem) zůstává
   dosavadní znění.
 
+### Prohlížeč kontejnerů
+
+- **Jméno dokumentu vloženého v obálce .p7m.** Obálka CMS / PKCS #7 sama jméno podepsaného
+  souboru neuchovává. Nese ho jen nepovinný podepsaný atribut content-hints, který některé
+  podepisující nástroje vyplňují. Verze 1.0.0 vložený dokument vždy pojmenovala podle obálky
+  (z `smlouva podepsana.p7m` udělala `smlouva podepsana.pdf`). Nově, když obálka content-hints
+  se jménem souboru nese, ukáže prohlížeč a nabídne k uložení původní jméno dokumentu a uvede
+  ho i v záhlaví (u odděleného podpisu .p7s také). Když ho nenese, jméno se odvodí jako dosud
+  a karta prvku v řádku „Původ názvu“ řekne, že je odvozené z názvu obálky.
+
 ### Instalační balíčky
 
 - **Linuxová verze: položka v nabídce aplikací.** Přenosný archiv pro Linux nově obsahuje

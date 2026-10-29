@@ -3,7 +3,9 @@ package cz.digitalnikontinuita.anep.core;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
+import org.bouncycastle.asn1.ASN1String;
 import org.bouncycastle.asn1.cms.Attribute;
 import org.bouncycastle.asn1.cms.AttributeTable;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
@@ -875,11 +877,15 @@ public final class ContainerInspector {
                 if (isds != null) return isds;
             }
             if (content != null && content.length > 0) {
-                String payloadName = payloadName(fileName, content);
+                String hinted = contentHintsFileName(cms);
+                String payloadName = hinted != null ? hinted : payloadName(fileName, content);
                 Node payload = root.add(new Node(payloadName, payloadName, false, "podepsaný obsah"));
                 payload.data = content;
                 payload.size = content.length;
                 payload.put("Role", "podepsaný obsah vložený v CMS (eContent)");
+                payload.put("Původ názvu", hinted != null
+                        ? "podepsaný atribut content-hints"
+                        : "odvozen z názvu obálky — obálka jméno podepsaného souboru nenese");
                 payload.put("Typ obsahu (OID)", contentTypeOid + oidHint(contentTypeOid));
             }
         } else {
@@ -895,6 +901,10 @@ public final class ContainerInspector {
         summary.put("Velikost souboru", formatSize(raw.length));
         summary.put("Typ zapouzdřeného obsahu", contentTypeOid + oidHint(contentTypeOid));
         summary.put("Obsah vložen", detached ? "ne (oddělený podpis)" : "ano");
+        String hintedName = contentHintsFileName(cms);
+        if (hintedName != null) {
+            summary.put("Jméno podepsaného souboru", hintedName + " (podle atributu content-hints)");
+        }
         summary.put("Počet podpisů", String.valueOf(counts.signers()));
         summary.put("Vložené certifikáty", String.valueOf(counts.certificates()));
         summary.put("Vložené CRL / OCSP", counts.crls() + " / " + counts.ocsps());
@@ -1239,6 +1249,57 @@ public final class ContainerInspector {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Jméno podepsaného souboru z podepsaného atributu content-hints (RFC 2634 §2.9, převzatý
+     * CAdES), nebo {@code null}.
+     * <p>
+     * CMS samo pro jméno vloženého souboru žádné pole nemá; content-hints je jediné místo, kam ho
+     * podepisující nástroj může zapsat, a je nepovinný (DSS ho bez nastavení nepřidá). Nástroje,
+     * které ho vyplňují, píší do popisu hlavičku MIME — na sbírkách {@code D:\tmp}
+     * a {@code D:\Downloads} (29. 10. 2026) všech 14 obálek s content-hints, sedm .p7m a sedm
+     * .p7s, neslo {@code Content-Disposition: attachment; filename="…"} spolu
+     * s {@code Content-Type: …; name="…"}. Jiný tvar popisu se za jméno nebere.
+     */
+    static String contentHintsFileName(CMSSignedData cms) {
+        try {
+            for (SignerInformation si : cms.getSignerInfos().getSigners()) {
+                AttributeTable signed = si.getSignedAttributes();
+                if (signed == null) continue;
+                Attribute attr = signed.get(new ASN1ObjectIdentifier("1.2.840.113549.1.9.16.2.4"));
+                if (attr == null || attr.getAttrValues().size() == 0) continue;
+                for (ASN1Encodable part : ASN1Sequence.getInstance(attr.getAttrValues().getObjectAt(0))) {
+                    if (part instanceof ASN1String text) {
+                        String name = mimeFileName(text.getString());
+                        if (name != null) return name;
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // Poškozený atribut jméno neposkytne; název se pak odvodí z obálky.
+        }
+        return null;
+    }
+
+    private static final java.util.regex.Pattern MIME_FILENAME = java.util.regex.Pattern.compile(
+            "(?i)(?:^|[;\\s])filename\\s*=\\s*(?:\"([^\"\\r\\n]*)\"|([^;\\s]+))");
+    private static final java.util.regex.Pattern MIME_NAME = java.util.regex.Pattern.compile(
+            "(?i)(?:^|[;\\s])name\\s*=\\s*(?:\"([^\"\\r\\n]*)\"|([^;\\s]+))");
+
+    /** {@code filename=} z Content-Disposition, jinak {@code name=} z Content-Type. */
+    static String mimeFileName(String headers) {
+        if (headers == null) return null;
+        for (java.util.regex.Pattern p : new java.util.regex.Pattern[]{MIME_FILENAME, MIME_NAME}) {
+            java.util.regex.Matcher m = p.matcher(headers);
+            if (m.find()) {
+                String name = m.group(1) != null ? m.group(1) : m.group(2);
+                // Jen jméno, žádná cesta: prvek se jím ukládá na disk.
+                name = name.substring(Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\')) + 1).trim();
+                if (!name.isEmpty() && !name.equals(".") && !name.equals("..")) return name;
+            }
+        }
+        return null;
     }
 
     /** Names the extracted payload after the container, minus the signature extension. */
