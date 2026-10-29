@@ -149,18 +149,13 @@ public final class CmsStructure {
             }
             out.add(g);
         }
-        List<byte[]> ocsps = new ArrayList<>();
-        try {
-            for (Object o : cms.getOtherRevocationInfo(OCSPObjectIdentifiers.id_pkix_ocsp_basic).getMatches(null)) {
-                if (o instanceof ASN1Encodable enc) ocsps.add(enc.toASN1Primitive().getEncoded("DER"));
-            }
-        } catch (Exception ignored) {
-            // Starší objekty CMS pole otherRevocationInfo vůbec neznají.
-        }
+        // Oba tvary: holá BasicOCSPResponse i celá OCSPResponse (id-ri-ocsp-response, RFC 5940),
+        // jak ji ukládá DSS — viz ContainerInspector.otherRevocationInfo.
+        List<ContainerInspector.CmsOcsp> ocsps = ContainerInspector.otherRevocationInfo(cms);
         if (!ocsps.isEmpty()) {
             StructureNode g = new StructureNode(Kind.GROUP,
                     "Odpovědi OCSP v CMS (otherRevocationInfo) (" + ocsps.size() + ")");
-            for (byte[] o : ocsps) g.add(ocsp(o));
+            for (ContainerInspector.CmsOcsp o : ocsps) g.add(ocsp(o.der()));
             out.add(g);
         }
         return out;

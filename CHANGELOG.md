@@ -29,6 +29,16 @@ pro soupis změn ke každé nové vydané verzi.
   se jménem souboru nese, ukáže prohlížeč a nabídne k uložení původní jméno dokumentu a uvede
   ho i v záhlaví (u odděleného podpisu .p7s také). Když ho nenese, jméno se odvodí jako dosud
   a karta prvku v řádku „Původ názvu“ řekne, že je odvozené z názvu obálky.
+- **Odpovědi OCSP vložené v podpisech .p7s a .p7m.** Odpověď OCSP lze v objektu CMS uložit
+  dvojím způsobem: samotnou vnitřní strukturu (BasicOCSPResponse), nebo celou odpověď podle
+  RFC 5940. Verze 1.0.0 v prohlížeči kontejnerů i v Inspektoru četla jen první způsob, takže
+  podpisy s odpověďmi uloženými celé (tak je ukládá například knihovna DSS u CAdES B-LT
+  a B-LTA) vypadaly, jako by žádné revokační údaje nenesly („Vložené CRL / OCSP: 0 / 0“).
+  Nově se ukážou oba způsoby a celou odpověď lze vyjmout beze změny. Prohlížeč kontejnerů
+  navíc nově ukazuje certifikáty, seznamy CRL a odpovědi OCSP z nepodepsaných atributů
+  certificate-values a revocation-values (rozšířená forma CAdES-X-L), které dosud přecházel.
+  Údaj uložený na více místech se ukáže jednou a karta v řádku „Uloženo v“ uvede všechna
+  místa. Ověřování samo se nemění, tyto údaje četlo vždy.
 
 ### Instalační balíčky
 

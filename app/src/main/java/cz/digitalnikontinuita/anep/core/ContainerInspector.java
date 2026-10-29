@@ -984,9 +984,29 @@ public final class ContainerInspector {
             }
         }
 
-        // Certificates, CRLs and OCSP responses carried along for validation.
-        List<X509CertificateHolder> certs =
-                new ArrayList<>(cms.getCertificates().getMatches(null));
+        // Certificates, CRLs and OCSP responses carried along for validation — z polí SignedData
+        // i z nepodepsaných atributů certificate-values a revocation-values (CAdES-X-L), které
+        // prohlížeč dříve přecházel (29. 10. 2026: 5 ze 66 objektů CMS ve sbírkách). Inspektor je
+        // vypisoval vždy. Co je na obou místech, se ukáže jednou s oběma místy v „Uloženo v“.
+        CarriedValues carried = new CarriedValues();
+        for (X509CertificateHolder h : cms.getCertificates().getMatches(null)) {
+            carried.certs.add(h.getEncoded(), "pole certificates objektu CMS");
+        }
+        for (X509CRLHolder h : cms.getCRLs().getMatches(null)) {
+            carried.crls.add(h.getEncoded(), "pole crls objektu CMS");
+        }
+        for (CmsOcsp o : otherRevocationInfo(cms)) {
+            carried.ocsps.add(o.der(), "pole crls objektu CMS", o.whole());
+        }
+        int sIdx = 0;
+        for (SignerInformation signer : signers) {
+            sIdx++;
+            carried.addAttributeValues(signer, signers.size() > 1
+                    ? (isdsSeal ? " pečeti " : " podpisu ") + sIdx : "");
+        }
+
+        List<X509CertificateHolder> certs = new ArrayList<>();
+        for (byte[] der : carried.certs.ders()) certs.add(new X509CertificateHolder(der));
         if (!certs.isEmpty()) {
             Node folder = root.add(new Node("Certifikáty (" + certs.size() + ")",
                     "certs", true, "certifikáty vložené v CMS"));
@@ -1004,10 +1024,12 @@ public final class ContainerInspector {
                 n.put("Sériové číslo", hexNumber(holder.getSerialNumber()));
                 n.put("Platnost od", formatDate(holder.getNotBefore()));
                 n.put("Platnost do", formatDate(holder.getNotAfter()));
+                carried.certs.describe(i - 1, n);
             }
         }
 
-        List<X509CRLHolder> crls = new ArrayList<>(cms.getCRLs().getMatches(null));
+        List<X509CRLHolder> crls = new ArrayList<>();
+        for (byte[] der : carried.crls.ders()) crls.add(new X509CRLHolder(der));
         if (!crls.isEmpty()) {
             Node folder = root.add(new Node("Seznamy CRL (" + crls.size() + ")",
                     "crls", true, "revokační seznamy vložené v CMS"));
@@ -1023,20 +1045,46 @@ public final class ContainerInspector {
                 n.put("Vydavatel", String.valueOf(holder.getIssuer()));
                 n.put("Vydáno", formatDate(holder.getThisUpdate()));
                 if (holder.getNextUpdate() != null) n.put("Příští vydání", formatDate(holder.getNextUpdate()));
+                carried.crls.describe(i - 1, n);
             }
         }
 
-        List<byte[]> ocsps = otherRevocationInfo(cms);
+        List<CmsOcsp> ocsps = carried.ocsps.entries();
         if (!ocsps.isEmpty()) {
             Node folder = root.add(new Node("Odpovědi OCSP (" + ocsps.size() + ")",
                     "ocsp", true, "OCSP odpovědi vložené v CMS"));
             if (collapsed) folder.collapsed();
             int i = 0;
-            for (byte[] enc : ocsps) {
+            for (CmsOcsp entry : ocsps) {
                 i++;
-                // CMS carries the bare BasicOCSPResponse: RFC 5940 puts it into
-                // otherRevocationInfo without the OCSPResponse envelope a responder would have
-                // sent it in. Taken out as those bytes it is a file nothing opens — openssl, DSS
+                String place = carried.ocsps.extraPlace(i - 1);
+                if (entry.whole()) {
+                    // Uložená celá (id-ri-ocsp-response): vyjme se, jak je, nic se nedoplňuje.
+                    Node n = folder.add(new Node("ocsp-" + i + ".ocsp", "ocsp/" + i, false,
+                            "odpověď OCSP"));
+                    n.data = entry.der();
+                    n.size = n.data.length;
+                    org.bouncycastle.asn1.ocsp.BasicOCSPResponse inner =
+                            CmsStructure.basicOcsp(entry.der());
+                    if (inner != null) {
+                        try {
+                            BasicOCSPResp basic = new BasicOCSPResp(inner);
+                            n.put("Vydáno", formatDate(basic.getProducedAt()));
+                            n.put("Počet záznamů", String.valueOf(basic.getResponses().length));
+                            n.put("SHA-256 vnitřní BasicOCSPResponse", sha256Hex(inner.getEncoded("DER")));
+                        } catch (Exception ignored) {
+                            // Metadata are a nicety; the bytes are still extractable.
+                        }
+                    }
+                    n.put("Forma", "úplná odpověď OCSP, v CMS uložená celá (id-ri-ocsp-response,"
+                            + " RFC 5940)");
+                    if (place != null) n.put("Uloženo v", place);
+                    continue;
+                }
+                byte[] enc = entry.der();
+                // In this form (id-pkix-ocsp-basic, and always in revocation-values) CMS carries
+                // the bare BasicOCSPResponse, without the OCSPResponse envelope a responder would
+                // have sent it in. Taken out as those bytes it is a file nothing opens — openssl, DSS
                 // and this application's own "Ulož" buttons all speak whole responses. So the
                 // element is handed over wrapped, and the envelope costs nothing: a status word
                 // and an OID, both constants, no evidence added and none taken away. It also
@@ -1064,10 +1112,101 @@ public final class ContainerInspector {
                             + " až při vyjmutí, aby soubor šlo otevřít samostatně");
                     n.put("SHA-256 vnitřní BasicOCSPResponse", sha256Hex(enc));
                 }
+                if (place != null) n.put("Uloženo v", place);
             }
         }
 
         return new CmsCounts(signers.size(), certs.size(), crls.size(), ocsps.size());
+    }
+
+    /**
+     * Ověřovací data objektu CMS posbíraná ze všech míst, kde je CAdES nese, bez opakování.
+     * Místo uložení se na kartu píše, jen když je některým z nich atribut — u běžného podpisu,
+     * kde je vše v polích SignedData, zůstává karta jako dřív.
+     */
+    private static final class CarriedValues {
+        final Carried certs = new Carried();
+        final Carried crls = new Carried();
+        final Carried ocsps = new Carried();
+
+        /** Hodnoty z nepodepsaných atributů certificate-values a revocation-values. */
+        void addAttributeValues(SignerInformation signer, String whose) {
+            AttributeTable unsigned = signer.getUnsignedAttributes();
+            if (unsigned == null) return;
+            try {
+                Attribute cv = unsigned.get(new ASN1ObjectIdentifier("1.2.840.113549.1.9.16.2.23"));
+                if (cv != null && cv.getAttrValues().size() > 0) {
+                    for (ASN1Encodable c : ASN1Sequence.getInstance(cv.getAttrValues().getObjectAt(0))) {
+                        certs.add(c.toASN1Primitive().getEncoded("DER"),
+                                "nepodepsaný atribut certificate-values" + whose);
+                    }
+                }
+                Attribute rv = unsigned.get(new ASN1ObjectIdentifier("1.2.840.113549.1.9.16.2.24"));
+                if (rv != null && rv.getAttrValues().size() > 0) {
+                    var values = org.bouncycastle.asn1.esf.RevocationValues.getInstance(
+                            rv.getAttrValues().getObjectAt(0));
+                    String where = "nepodepsaný atribut revocation-values" + whose;
+                    if (values.getCrlVals() != null) {
+                        for (var cl : values.getCrlVals()) crls.add(cl.getEncoded("DER"), where);
+                    }
+                    if (values.getOcspVals() != null) {
+                        for (var b : values.getOcspVals()) ocsps.add(b.getEncoded("DER"), where, false);
+                    }
+                }
+            } catch (Exception ignored) {
+                // Poškozený atribut nic nepřidá; co je v polích SignedData, zůstává.
+            }
+        }
+    }
+
+    /** Jeden druh ověřovacích dat: bajty, místa uložení, u OCSP i tvar. */
+    private static final class Carried {
+        private final Map<String, Integer> index = new LinkedHashMap<>();
+        private final List<byte[]> ders = new ArrayList<>();
+        private final List<Boolean> whole = new ArrayList<>();
+        private final List<List<String>> places = new ArrayList<>();
+
+        void add(byte[] der, String place) { add(der, place, false); }
+
+        void add(byte[] der, String place, boolean wholeOcsp) {
+            // OCSP se porovnává podle vnitřní BasicOCSPResponse: táž odpověď může být v poli
+            // crls celá a v atributu holá.
+            byte[] key = der;
+            org.bouncycastle.asn1.ocsp.BasicOCSPResponse inner =
+                    wholeOcsp ? CmsStructure.basicOcsp(der) : null;
+            if (inner != null) {
+                try { key = inner.getEncoded("DER"); } catch (Exception ignored) { }
+            }
+            String k = sha256Hex(key);
+            Integer at = index.get(k);
+            if (at != null) {
+                if (!places.get(at).contains(place)) places.get(at).add(place);
+                return;
+            }
+            index.put(k, ders.size());
+            ders.add(der);
+            whole.add(wholeOcsp);
+            places.add(new ArrayList<>(List.of(place)));
+        }
+
+        List<byte[]> ders() { return ders; }
+
+        List<CmsOcsp> entries() {
+            List<CmsOcsp> out = new ArrayList<>();
+            for (int i = 0; i < ders.size(); i++) out.add(new CmsOcsp(ders.get(i), whole.get(i)));
+            return out;
+        }
+
+        /** Místa uložení, když je mezi nimi atribut; jinak {@code null}. */
+        String extraPlace(int i) {
+            List<String> p = places.get(i);
+            return p.stream().anyMatch(s -> s.startsWith("nepodepsaný")) ? String.join("; ", p) : null;
+        }
+
+        void describe(int i, Node n) {
+            String p = extraPlace(i);
+            if (p != null) n.put("Uloženo v", p);
+        }
     }
 
     static byte[] contentBytes(CMSSignedData cms) {
@@ -1227,18 +1366,39 @@ public final class ContainerInspector {
         }
     }
 
-    private static List<byte[]> otherRevocationInfo(CMSSignedData cms) {
-        List<byte[]> out = new ArrayList<>();
+    /** Odpověď OCSP z pole crls objektu CMS; {@code whole} = uložená celá, s obálkou OCSPResponse. */
+    record CmsOcsp(byte[] der, boolean whole) {}
+
+    /** id-ri-ocsp-response (RFC 5940): v otherRevocationInfo celá OCSPResponse. */
+    static final ASN1ObjectIdentifier ID_RI_OCSP_RESPONSE = new ASN1ObjectIdentifier("1.3.6.1.5.5.7.16.2");
+
+    /**
+     * Odpovědi OCSP z pole crls (RevocationInfoChoices) v obou tvarech, které se v praxi
+     * vyskytují: holá BasicOCSPResponse pod {@code id-pkix-ocsp-basic} (zvyklost CAdES)
+     * a celá OCSPResponse pod {@code id-ri-ocsp-response} (RFC 5940).
+     * <p>
+     * Dříve se četl jen první tvar, takže obálky ve druhém tvaru vypadaly, jako by revokační
+     * údaje neměly („Vložené CRL / OCSP: 0 / 0“). Naměřeno 29. 10. 2026 na podpisech CAdES
+     * B-LT/B-LTA, .p7s i .p7m, které vytvořila DSS: obě odpovědi OCSP nesly v druhém tvaru.
+     */
+    static List<CmsOcsp> otherRevocationInfo(CMSSignedData cms) {
+        List<CmsOcsp> out = new ArrayList<>();
+        collectOcsp(cms, OCSPObjectIdentifiers.id_pkix_ocsp_basic, false, out);
+        collectOcsp(cms, ID_RI_OCSP_RESPONSE, true, out);
+        return out;
+    }
+
+    private static void collectOcsp(CMSSignedData cms, ASN1ObjectIdentifier format, boolean whole,
+                                    List<CmsOcsp> out) {
         try {
-            for (Object o : cms.getOtherRevocationInfo(OCSPObjectIdentifiers.id_pkix_ocsp_basic).getMatches(null)) {
+            for (Object o : cms.getOtherRevocationInfo(format).getMatches(null)) {
                 if (o instanceof ASN1Encodable enc) {
-                    out.add(enc.toASN1Primitive().getEncoded("DER"));
+                    out.add(new CmsOcsp(enc.toASN1Primitive().getEncoded("DER"), whole));
                 }
             }
         } catch (Exception ignored) {
             // Older CMS objects may not carry this field at all.
         }
-        return out;
     }
 
     private static Date signingTime(AttributeTable signed) {
