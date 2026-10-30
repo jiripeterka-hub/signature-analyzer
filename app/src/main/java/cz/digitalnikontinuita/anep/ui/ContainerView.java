@@ -361,13 +361,26 @@ public class ContainerView {
         GridPane grid = new GridPane();
         grid.setHgap(14);
         grid.setVgap(3);
+        // Stejná pravidla jako v mřížce karty prvku (detailPane): popisek se nezkracuje,
+        // hodnota se zalamuje. Dokud byly hodnoty v souhrnu krátké, nebylo to znát; dlouhé řádky
+        // podpisu kódu při zúžení okna ořezaly popisky na „Velikost s…“ (30. 10. 2026).
+        ColumnConstraints keys = new ColumnConstraints();
+        keys.setHgrow(Priority.NEVER);
+        keys.setMinWidth(Region.USE_PREF_SIZE);
+        ColumnConstraints values = new ColumnConstraints();
+        values.setHgrow(Priority.ALWAYS);
+        values.setFillWidth(true);
+        values.setMinWidth(10);
+        grid.getColumnConstraints().setAll(keys, values);
         int row = 0;
         for (Map.Entry<String, String> e : result.summary().entrySet()) {
             Label k = new Label(e.getKey() + ":");
             k.setStyle("-fx-text-fill: #666666; -fx-font-size: 11px;");
+            k.setMinWidth(Region.USE_PREF_SIZE);
             Label v = new Label(e.getValue());
             v.setStyle("-fx-font-size: 11px;");
             v.setWrapText(true);
+            v.setMinHeight(Region.USE_PREF_SIZE);
             grid.add(k, 0, row);
             if (ACCEPTANCE_TIME_KEY.equals(e.getKey())) {
                 // The value and the mark share a row so the mark reads as qualifying this time
