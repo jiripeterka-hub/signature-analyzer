@@ -43,7 +43,6 @@ class AuthenticodeInspectorTest {
 
     private static KeyPair keys;
     private static X509CertificateHolder cert;
-    private static final byte[] DIGEST = new byte[32];
 
     @BeforeAll
     static void setUp() throws Exception {
@@ -55,17 +54,16 @@ class AuthenticodeInspectorTest {
         cert = new JcaX509v3CertificateBuilder(dn, BigInteger.TEN,
                 new Date(System.currentTimeMillis() - 86_400_000L),
                 new Date(System.currentTimeMillis() + 86_400_000L * 365), dn, keys.getPublic()).build(cs);
-        Arrays.fill(DIGEST, (byte) 0xAB);
     }
 
-    /** PKCS #7 s obsahem SpcIndirectDataContent (obraz PE, otisk SHA-256 = DIGEST). */
-    private static byte[] authenticode() throws Exception {
+    /** PKCS #7 s obsahem SpcIndirectDataContent (obraz PE s daným otiskem SHA-256). */
+    private static byte[] authenticode(byte[] digest) throws Exception {
         ASN1EncodableVector data = new ASN1EncodableVector();
         data.add(new ASN1ObjectIdentifier(AuthenticodeInspector.SPC_PE_IMAGE_DATA));
         data.add(new DERSequence());
         ASN1EncodableVector digestInfo = new ASN1EncodableVector();
         digestInfo.add(new AlgorithmIdentifier(NISTObjectIdentifiers.id_sha256, DERNull.INSTANCE));
-        digestInfo.add(new DEROctetString(DIGEST));
+        digestInfo.add(new DEROctetString(digest));
         ASN1EncodableVector spc = new ASN1EncodableVector();
         spc.add(new DERSequence(data));
         spc.add(new DERSequence(digestInfo));
@@ -105,10 +103,21 @@ class AuthenticodeInspectorTest {
         return b.array();
     }
 
+    /**
+     * Otisk Authenticode souboru, který se teprve podepíše: tabulka certifikátů začne na konci
+     * nepodepsaného souboru a z otisku se vynechává, stejně jako CheckSum a položka adresáře.
+     */
+    private static byte[] peDigest() throws Exception {
+        byte[] unsigned = pe(null);
+        int opt = 0x40 + 24;
+        return AuthenticodeVerifier.pe(unsigned, opt + 64, opt + 96 + 4 * 8, unsigned.length, 0)
+                .compute("SHA-256");
+    }
+
     @Test
     @DisplayName("podepsaný program: podpis, podepisující a podepsaný otisk se vypíšou")
     void signedPe() throws Exception {
-        byte[] file = pe(authenticode());
+        byte[] file = pe(authenticode(peDigest()));
         assertEquals(ContainerInspector.Kind.CODE, ContainerInspector.detectKind(file));
         ContainerInspector.Result r = ContainerInspector.inspect(file, "setup.exe");
         assertEquals(null, r.error());
@@ -116,15 +125,58 @@ class AuthenticodeInspectorTest {
         assertEquals("ano (Authenticode)", r.summary().get("Podpis kódu"));
         assertEquals("Zkusebni vydavatel kodu", r.summary().get("Podepisující"));
         assertTrue(r.summary().get("Podepsaný otisk souboru").contains("SHA"), r.summary().toString());
-        assertTrue(r.summary().get("Platnost podpisu").startsWith("prohlížeč ji neposuzuje"));
+        assertTrue(r.summary().get("Integrita souboru").startsWith("✓ otisk souhlasí"), r.summary().toString());
+        assertTrue(r.summary().get("Matematika podpisu").startsWith("✓ platná"), r.summary().toString());
+        assertTrue(r.summary().get("Certifikát podepisujícího").startsWith("AnEP ho zatím neověřuje"));
 
         ContainerInspector.Node sig = r.root().getChildren().get(0);
         assertEquals("podpis-authenticode.p7s", sig.getName());
         assertEquals("obraz souboru PE (SpcPeImageData)", sig.getInfo().get("Podepsaný objekt"));
-        assertTrue(sig.getInfo().get("Podepsaný otisk souboru").endsWith("abab"), sig.getInfo().toString());
+        assertTrue(sig.getInfo().get("Podepsaný otisk souboru").endsWith(
+                java.util.HexFormat.of().formatHex(peDigest())), sig.getInfo().toString());
         assertTrue(sig.getInfo().get("Uložen v").startsWith("tabulka certifikátů souboru PE"));
         // Vyjmutý podpis je objekt CMS, který jde otevřít zvlášť.
         assertEquals(ContainerInspector.Kind.CMS, ContainerInspector.detectKind(sig.getData()));
+    }
+
+    @Test
+    @DisplayName("změna souboru po podpisu: otisk nesouhlasí, podpis sám zůstává platný")
+    void tamperedPe() throws Exception {
+        byte[] file = pe(authenticode(peDigest()));
+        file[0x10] ^= 1;   // hlavička DOS, kterou otisk kryje
+        ContainerInspector.Result r = ContainerInspector.inspect(file, "setup.exe");
+        assertTrue(r.summary().get("Integrita souboru").startsWith("✗ otisk NESOUHLASÍ"), r.summary().toString());
+        assertTrue(r.summary().get("Matematika podpisu").startsWith("✓"), r.summary().toString());
+    }
+
+    @Test
+    @DisplayName("pole CheckSum otisk nekryje — jeho změna integritu neporuší")
+    void checksumExcluded() throws Exception {
+        byte[] file = pe(authenticode(peDigest()));
+        file[0x40 + 24 + 64] ^= 1;
+        ContainerInspector.Result r = ContainerInspector.inspect(file, "setup.exe");
+        assertTrue(r.summary().get("Integrita souboru").startsWith("✓"), r.summary().toString());
+    }
+
+    @Test
+    @DisplayName("poškozená hodnota podpisu: matematika podpisu neplatí")
+    void brokenSignatureValue() throws Exception {
+        byte[] pkcs7 = authenticode(peDigest());
+        byte[] value = new org.bouncycastle.cms.CMSSignedData(pkcs7).getSignerInfos().getSigners()
+                .iterator().next().getSignature();
+        int at = indexOf(pkcs7, value) + value.length / 2;
+        pkcs7[at] ^= 1;
+        ContainerInspector.Result r = ContainerInspector.inspect(pe(pkcs7), "setup.exe");
+        assertTrue(r.summary().get("Matematika podpisu").startsWith("✗ NEPLATNÁ"), r.summary().toString());
+    }
+
+    private static int indexOf(byte[] hay, byte[] needle) {
+        outer:
+        for (int i = 0; i <= hay.length - needle.length; i++) {
+            for (int j = 0; j < needle.length; j++) if (hay[i + j] != needle[j]) continue outer;
+            return i;
+        }
+        throw new AssertionError("hodnota podpisu nenalezena");
     }
 
     @Test

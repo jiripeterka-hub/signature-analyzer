@@ -31,13 +31,13 @@ import java.util.Map;
 
 /**
  * Podpis kódu (Authenticode) ve spustitelném souboru Windows (.exe, .dll, … — formát PE)
- * a v instalačním balíčku Windows Installer (.msi) — etapa 1: <b>jen výpis</b>.
+ * a v instalačním balíčku Windows Installer (.msi).
  * <p>
  * Uživatel 30. 10. 2026 požádal o ověřování podpisů na kódu. DSS formát nezná, a tak se postupuje
- * po etapách; tato ukazuje v prohlížeči kontejnerů, co podpis obsahuje: podepisujícího, podepsaný
- * otisk souboru, certifikáty, časová razítka a vnořené podpisy. Nic se tu neověřuje — ani
- * shoda otisku se souborem, ani matematika podpisu, ani certifikát. Výsledek to proto nikde
- * netvrdí a souhrn to říká výslovně.
+ * po etapách. Etapa 1 ukazuje v prohlížeči kontejnerů, co podpis obsahuje: podepisujícího,
+ * podepsaný otisk souboru, certifikáty, časová razítka a vnořené podpisy. Etapa 2
+ * ({@link AuthenticodeVerifier}) k tomu přepočte otisk souboru a ověří matematiku podpisu
+ * a razítka. Certifikát (řetěz, účel, revokace) se zatím neposuzuje a souhrn to říká výslovně.
  * <p>
  * Kde podpis leží:
  * <ul>
@@ -116,6 +116,7 @@ public final class AuthenticodeInspector {
         byte[] pkcs7;
         String typeLabel;
         String where;
+        AuthenticodeVerifier.FileDigest fileDigest;
         if (bytes[0] == 'M') {
             Pe pe = readPe(bytes, warnings);
             typeLabel = pe.label;
@@ -123,8 +124,11 @@ public final class AuthenticodeInspector {
             summary.put("Velikost souboru", ContainerInspector.formatSize(bytes.length));
             pkcs7 = pe.pkcs7;
             where = pe.where;
+            fileDigest = pe.pkcs7 == null ? null : AuthenticodeVerifier.pe(bytes, pe.checksumOff,
+                    pe.certDirOff, pe.certOff, pe.certSize);
         } else {
             CompoundFile cf = new CompoundFile(bytes);
+            fileDigest = AuthenticodeVerifier.msi(cf);
             typeLabel = OLE_CLASSES.getOrDefault(cf.rootClsid(), "složený dokument OLE");
             summary.put("Formát", typeLabel);
             summary.put("Velikost souboru", ContainerInspector.formatSize(bytes.length));
@@ -146,12 +150,13 @@ public final class AuthenticodeInspector {
         sigNode.data(pkcs7);
         sigNode.put("Role", "podpis kódu Authenticode (PKCS #7)");
         sigNode.put("Uložen v", where);
-        Signature main = describeSignature(cms, sigNode);
+        Signature main = describeSignature(cms, sigNode, fileDigest);
 
         ContainerInspector.CmsCounts counts = ContainerInspector.addCmsSignatureNodes(root, cms, false);
 
         // Vnořené podpisy: každý je samostatný objekt CMS, jde ho vyjmout a otevřít zvlášť.
         List<byte[]> nested = nestedSignatures(cms);
+        List<Signature> nestedResults = new ArrayList<>();
         int i = 0;
         for (byte[] n : nested) {
             i++;
@@ -161,26 +166,35 @@ public final class AuthenticodeInspector {
             nn.put("Role", "vnořený podpis kódu Authenticode (PKCS #7)");
             nn.put("Uložen v", "nepodepsaný atribut prvního podpisu (1.3.6.1.4.1.311.2.4.1)");
             try {
-                describeSignature(new CMSSignedData(n), nn);
+                nestedResults.add(describeSignature(new CMSSignedData(n), nn, fileDigest));
             } catch (Exception e) {
                 nn.put("Poznámka", "vnořený podpis se nepodařilo přečíst (" + ContainerInspector.describe(e) + ")");
             }
         }
 
         summary.put("Podpis kódu", "ano (Authenticode)");
-        if (!nested.isEmpty()) summary.put("Vnořené podpisy", String.valueOf(nested.size()));
         if (main.signer != null) summary.put("Podepisující", main.signer);
         if (main.digest != null) summary.put("Podepsaný otisk souboru", main.digest);
-        summary.put("Časové razítko", main.timestamp != null ? main.timestamp : "ne");
+        summary.put("Integrita souboru", mark(main.integrity));
+        summary.put("Matematika podpisu", mark(main.math));
+        summary.put("Časové razítko", main.timestamp != null
+                ? main.timestamp + (main.timestampCheck != null ? "; " + mark(main.timestampCheck) : "")
+                : "ne");
+        if (!nested.isEmpty()) summary.put("Vnořené podpisy", nested.size() + " — " + nestedSummary(nestedResults, nested.size()));
         summary.put("Vložené certifikáty", String.valueOf(counts.certificates()));
         summary.put("Vložené CRL / OCSP", counts.crls() + " / " + counts.ocsps());
-        summary.put("Platnost podpisu", "prohlížeč ji neposuzuje — ukazuje jen, co podpis obsahuje");
+        summary.put("Certifikát podepisujícího", "AnEP ho zatím neověřuje (řetěz k důvěryhodné"
+                + " autoritě, účel podepisování kódu, revokace)");
         return new Result(Kind.CODE, typeLabel, root, summary, warnings, null);
     }
 
     // ---------------------------------------------------------------- PE
 
-    private record Pe(String label, byte[] pkcs7, String where) {}
+    /** Rozložení souboru PE; posuny jsou to, co otisk Authenticode vynechává. */
+    private record Pe(String label, byte[] pkcs7, String where,
+                      int checksumOff, int certDirOff, long certOff, long certSize) {
+        Pe(String label) { this(label, null, null, 0, 0, 0, 0); }
+    }
 
     private static Pe readPe(byte[] b, List<String> warnings) {
         int pe = peOffset(b);
@@ -205,13 +219,13 @@ public final class AuthenticodeInspector {
 
         int nDirs = (int) CompoundFile.le32(b, opt + (plus ? 108 : 92));
         int dirs = opt + (plus ? 112 : 96);
-        if (nDirs <= 4 || dirs + 5 * 8 > opt + optSize) return new Pe(label, null, null);
+        if (nDirs <= 4 || dirs + 5 * 8 > opt + optSize) return new Pe(label);
         long certOff = CompoundFile.le32(b, dirs + 4 * 8);
         long certSize = CompoundFile.le32(b, dirs + 4 * 8 + 4);
-        if (certOff == 0 || certSize == 0) return new Pe(label, null, null);
+        if (certOff == 0 || certSize == 0) return new Pe(label);
         if (certOff + certSize > b.length || certSize < 8) {
             warnings.add("Tabulka certifikátů ukazuje mimo soubor; podpis se nepodařilo vyjmout.");
-            return new Pe(label, null, null);
+            return new Pe(label);
         }
 
         // WIN_CERTIFICATE: dwLength, wRevision, wCertificateType, data; zarovnáno na 8 bajtů.
@@ -240,7 +254,7 @@ public final class AuthenticodeInspector {
         }
         if (first == null) {
             warnings.add("Tabulka certifikátů neobsahuje podpis PKCS #7.");
-            return new Pe(label, null, null);
+            return new Pe(label);
         }
         String where = String.format("tabulka certifikátů souboru PE (posun 0x%X, %s)",
                 certOff, ContainerInspector.formatSize(certSize));
@@ -248,17 +262,23 @@ public final class AuthenticodeInspector {
             where += "; za ní ještě " + ContainerInspector.formatSize(b.length - certOff - certSize)
                     + " dat";
         }
-        return new Pe(label, first, where);
+        return new Pe(label, first, where, opt + 64, dirs + 4 * 8, certOff, certSize);
     }
 
     // ---------------------------------------------------------------- SignedData
 
     /** Co se z podpisu dá vypsat do souhrnu. */
-    private record Signature(String signer, String digest, String timestamp) {}
+    private record Signature(String signer, String digest, String timestamp,
+                             AuthenticodeVerifier.Check integrity, AuthenticodeVerifier.Check math,
+                             AuthenticodeVerifier.Check timestampCheck) {}
 
-    private static Signature describeSignature(CMSSignedData cms, Node node) {
+    private static Signature describeSignature(CMSSignedData cms, Node node,
+                                               AuthenticodeVerifier.FileDigest fileDigest) {
         String contentType = cms.getSignedContentTypeOID();
         String signerName = null, digest = null, timestamp = null;
+        AuthenticodeVerifier.Check integrity = AuthenticodeVerifier.Check.unknown(
+                "nelze ověřit — podepsaný otisk se nepodařilo přečíst");
+        AuthenticodeVerifier.Check math, tsCheck = null;
         if (!SPC_INDIRECT_DATA.equals(contentType)) {
             node.put("Podepsaný obsah", contentType + " — neočekávaný typ, podpis Authenticode"
                     + " podepisuje SpcIndirectDataContent");
@@ -278,6 +298,11 @@ public final class AuthenticodeInspector {
                 byte[] value = ASN1OctetString.getInstance(digestInfo.getObjectAt(1)).getOctets();
                 digest = alg;
                 node.put("Podepsaný otisk souboru", alg + ": " + HexFormat.of().formatHex(value));
+                String digestOid = org.bouncycastle.asn1.x509.AlgorithmIdentifier
+                        .getInstance(digestInfo.getObjectAt(0)).getAlgorithm().getId();
+                integrity = fileDigest == null
+                        ? AuthenticodeVerifier.Check.unknown("nelze ověřit — rozložení souboru neznámé")
+                        : AuthenticodeVerifier.integrity(fileDigest, digestOid, value);
             } catch (Exception e) {
                 node.put("Podepsaný obsah", "SpcIndirectDataContent se nepodařilo přečíst ("
                         + ContainerInspector.describe(e) + ")");
@@ -285,7 +310,11 @@ public final class AuthenticodeInspector {
         }
 
         SignerInformation si = cms.getSignerInfos().getSigners().stream().findFirst().orElse(null);
-        if (si == null) return new Signature(null, digest, null);
+        node.put("Integrita souboru", mark(integrity));
+        if (si == null) {
+            return new Signature(null, digest, null, integrity,
+                    AuthenticodeVerifier.Check.unknown("nelze ověřit — podpis nemá SignerInfo"), null);
+        }
         X509CertificateHolder cert = certificateFor(cms, si.getSID());
         if (cert != null) {
             signerName = commonName(cert);
@@ -296,6 +325,8 @@ public final class AuthenticodeInspector {
         }
         node.put("Otisková funkce podpisu", ContainerInspector.oidName(si.getDigestAlgOID()));
         node.put("Podpisový algoritmus", ContainerInspector.oidName(si.getEncryptionAlgOID()));
+        math = AuthenticodeVerifier.signature(si, cert);
+        node.put("Matematika podpisu", mark(math));
 
         AttributeTable signed = si.getSignedAttributes();
         if (signed != null) {
@@ -321,16 +352,43 @@ public final class AuthenticodeInspector {
             if (rfc != null) {
                 Date t = timestampTime(rfc.getAttrValues().getObjectAt(0));
                 timestamp = "ano — RFC 3161" + (t != null ? ", " + ContainerInspector.formatDate(t) : "");
+                try {
+                    tsCheck = AuthenticodeVerifier.rfc3161(new org.bouncycastle.tsp.TimeStampToken(
+                            new CMSSignedData(ContentInfo.getInstance(rfc.getAttrValues().getObjectAt(0)))),
+                            si.getSignature());
+                } catch (Exception e) {
+                    tsCheck = AuthenticodeVerifier.Check.unknown("nelze ověřit — razítko se nepodařilo"
+                            + " přečíst (" + ContainerInspector.describe(e) + ")");
+                }
             }
             Attribute counter = unsigned.get(new ASN1ObjectIdentifier(COUNTERSIGNATURE));
             if (counter != null) {
                 String legacy = describeCountersignature(cms, counter.getAttrValues().getObjectAt(0));
                 node.put("Časové razítko (protipodpis Authenticode)", legacy);
-                if (timestamp == null) timestamp = "ano — protipodpis Authenticode, " + legacy;
+                if (timestamp == null) {
+                    timestamp = "ano — protipodpis Authenticode, " + legacy;
+                    tsCheck = AuthenticodeVerifier.countersignature(cms, si);
+                }
             }
         }
         if (timestamp != null) node.put("Časové razítko", timestamp);
-        return new Signature(signerName, digest, timestamp);
+        if (tsCheck != null) node.put("Ověření razítka", mark(tsCheck));
+        return new Signature(signerName, digest, timestamp, integrity, math, tsCheck);
+    }
+
+    /** Výsledek kontroly se značkou, jakou čtenář zná z karty Analýzy. */
+    private static String mark(AuthenticodeVerifier.Check c) {
+        return (c.ok() == null ? "? " : c.ok() ? "✓ " : "✗ ") + c.text();
+    }
+
+    private static String nestedSummary(List<Signature> results, int total) {
+        long bad = results.stream().filter(r -> r.integrity().ok() == Boolean.FALSE
+                || r.math().ok() == Boolean.FALSE).count();
+        long good = results.stream().filter(r -> r.integrity().ok() == Boolean.TRUE
+                && r.math().ok() == Boolean.TRUE).count();
+        if (bad > 0) return "✗ u " + bad + " nesouhlasí otisk nebo podpis";
+        if (good == total) return "✓ integrita i matematika podpisu souhlasí";
+        return "? u některých se ověření nepodařilo provést";
     }
 
     /** SpcIndirectDataContent; Authenticode ho ukládá jako SEQUENCE, ne jako OCTET STRING. */

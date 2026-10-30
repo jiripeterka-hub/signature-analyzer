@@ -39,16 +39,19 @@ pro soupis změn ke každé nové vydané verzi.
   certificate-values a revocation-values (rozšířená forma CAdES-X-L), které dosud přecházel.
   Údaj uložený na více místech se ukáže jednou a karta v řádku „Uloženo v“ uvede všechna
   místa. Ověřování samo se nemění, tyto údaje četlo vždy.
-- **Podpis kódu u programů (.exe, .dll, .msi) — zatím jen výpis.** Spustitelný soubor
-  Windows nebo instalační balíček Windows Installer předložený k ověření dosud skončil
-  hlášením, že formát aplikace nepodporuje. Nově se otevře v prohlížeči kontejnerů, který
-  ukáže, zda program nese podpis kódu (Authenticode), a pokud ano, kdo ho podepsal, jaký otisk
-  souboru podpis kryje, název programu a odkaz uvedené podepisujícím, časová razítka (RFC 3161
-  i starší protipodpis Authenticode), vložené certifikáty a případné vnořené podpisy. Podpis
-  i vnořené podpisy lze vyjmout jako soubory .p7s. Platnost podpisu kódu AnEP zatím
-  **neověřuje** (neporovnává otisk se souborem, nepočítá podpis ani neověřuje certifikát)
-  a okno to výslovně říká. Program se z prohlížeče nedá spustit: tlačítko „Otevřít
-  v aplikaci“ je u něj nedostupné, aby se z rozebíraného podání omylem nespustil cizí kód.
+- **Podpis kódu u programů (.exe, .dll, .msi) — integrita a matematika podpisu.**
+  Spustitelný soubor Windows nebo instalační balíček Windows Installer předložený k ověření
+  dosud skončil hlášením, že formát aplikace nepodporuje. Nově se otevře v prohlížeči
+  kontejnerů, který ukáže, zda program nese podpis kódu (Authenticode), a pokud ano, kdo ho
+  podepsal, jaký otisk souboru podpis kryje, název programu a odkaz uvedené podepisujícím,
+  časová razítka (RFC 3161 i starší protipodpis Authenticode), vložené certifikáty a případné
+  vnořené podpisy. AnEP přitom ověří, zda se soubor od podpisu nezměnil (přepočte jeho otisk
+  a porovná ho s podepsaným), zda podpis matematicky sedí ke klíči certifikátu podepisujícího
+  a zda časové razítko kryje tento podpis a jeho podpis sedí. Certifikát podepisujícího
+  (důvěryhodnost vydavatele, platnost, revokaci) zatím **neověřuje**, a o platnosti podpisu
+  jako celku proto nerozhoduje; okno to výslovně říká. Podpis i vnořené podpisy lze vyjmout
+  jako soubory .p7s. Program se z prohlížeče nedá spustit: tlačítko „Otevřít v aplikaci“ je
+  u něj nedostupné, aby se z rozebíraného podání omylem nespustil cizí kód.
 - **Velké položky archivu ZIP se už nevydávají za celé.** Prohlížeč načítá do paměti položky
   do 128 MB. Když archiv velikost položky v hlavičce neuváděl (tak balí například Průzkumník
   Windows), verze 1.0.0 načetla jen prvních 128 MB a s touto useknutou částí dál zacházela jako

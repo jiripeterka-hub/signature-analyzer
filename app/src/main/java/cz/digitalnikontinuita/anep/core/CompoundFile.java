@@ -2,36 +2,56 @@ package cz.digitalnikontinuita.anep.core;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
  * Čtení složeného dokumentu OLE (Compound File Binary, [MS-CFB]) — jen tolik, kolik potřebuje
- * podpis balíčku MSI: proudy na nejvyšší úrovni a identifikátor třídy kořene.
+ * podpis balíčku MSI: strom úložišť a proudů, obsah proudů a údaje adresáře.
  * <p>
- * Napsáno vlastní, ne převzato z Apache POI (30. 10. 2026, etapa 1 podpisu kódu): podpis MSI leží
- * v jediném proudu {@code \u0005DigitalSignature} a kvůli němu nestojí za to přibalit knihovnu
- * o několika megabajtech. Zápis neumí a vnořená úložiště neprochází. Poškozený soubor končí
- * výjimkou, ne zacyklením: každý řetěz sektorů je omezen jejich počtem.
+ * Napsáno vlastní, ne převzato z Apache POI (30. 10. 2026, podpis kódu): podpis MSI leží
+ * v jediném proudu {@code \u0005DigitalSignature} a jeho otisk se počítá ze všech proudů
+ * a z polí adresáře; kvůli tomu nestojí za to přibalit knihovnu o několika megabajtech. Zápis
+ * neumí. Poškozený soubor končí výjimkou, ne zacyklením: každý řetěz sektorů je omezen jejich
+ * počtem.
  */
 final class CompoundFile {
 
     static final byte[] MAGIC = {(byte) 0xD0, (byte) 0xCF, 0x11, (byte) 0xE0,
             (byte) 0xA1, (byte) 0xB1, 0x1A, (byte) 0xE1};
 
+    static final int STORAGE = 1, STREAM = 2, ROOT = 5;
     private static final int FREE = 0xFFFFFFFF, END_OF_CHAIN = 0xFFFFFFFE;
+
+    /** Položka adresáře; {@code raw} je celých jejích 128 bajtů, jak leží v souboru. */
+    static final class Entry {
+        final byte[] raw;
+        final List<Entry> children = new ArrayList<>();
+
+        Entry(byte[] raw) { this.raw = raw; }
+
+        int type() { return raw[0x42]; }
+        /** Délka jména v bajtech včetně koncové nuly UTF-16 (pole adresáře). */
+        int nameLen() { int n = le16(raw, 0x40); return n >= 2 && n <= 64 ? n : 0; }
+        /** Jméno v UTF-16LE včetně koncové nuly, jak se porovnává při výpočtu otisku. */
+        byte[] nameBytes() { return Arrays.copyOf(raw, nameLen()); }
+        String name() {
+            int n = nameLen();
+            return n >= 2 ? new String(raw, 0, n - 2, StandardCharsets.UTF_16LE) : "";
+        }
+        byte[] clsid() { return Arrays.copyOfRange(raw, 0x50, 0x60); }
+        long start() { return le32(raw, 0x74); }
+        long size() { return le64(raw, 0x78); }
+    }
 
     private final byte[] bytes;
     private final int sectorSize, miniSectorSize, miniCutoff;
     private final int[] fat;
     private final int[] miniFat;
     private final byte[] miniStream;
-    private final String rootClsid;
-    /** Proudy pod kořenem: jméno → [první sektor, velikost]. */
-    private final Map<String, long[]> streams = new LinkedHashMap<>();
+    private final Entry root;
 
     static boolean looksLike(byte[] b) {
         if (b == null || b.length < MAGIC.length) return false;
@@ -80,45 +100,64 @@ final class CompoundFile {
         miniFat = toInts(firstMiniFat == END_OF_CHAIN || firstMiniFat == FREE
                 ? new byte[0] : readChain(firstMiniFat, -1));
 
-        // Kořen (položka 0) nese začátek a délku mini-proudu a identifikátor třídy.
-        if (dir.length < 128 || dir[0x42] != 5) throw new IllegalArgumentException("chybí kořenová položka");
-        rootClsid = clsid(dir, 0x50);
-        long rootStart = le32(dir, 0x74), rootSize = le64(dir, 0x78);
-        miniStream = rootSize > 0 ? readChain((int) rootStart, rootSize) : new byte[0];
+        int count = dir.length / 128;
+        if (count < 1 || dir[0x42] != ROOT) throw new IllegalArgumentException("chybí kořenová položka");
+        Entry[] entries = new Entry[count];
+        for (int i = 0; i < count; i++) entries[i] = new Entry(Arrays.copyOfRange(dir, i * 128, i * 128 + 128));
+        root = entries[0];
+        // Kořen nese začátek a délku mini-proudu.
+        long rootSize = root.size();
+        miniStream = rootSize > 0 ? readChain((int) root.start(), rootSize) : new byte[0];
 
-        // Proudy přímo pod kořenem: binární strom od potomka kořene přes levé a pravé sourozence.
-        int entries = dir.length / 128;
-        List<Integer> todo = new ArrayList<>();
-        todo.add((int) le32(dir, 0x4C));
-        Set<Integer> seen = new HashSet<>();
+        // Potomci úložiště jsou všechny uzly binárního stromu pod jeho polem „child“.
+        Set<Integer> placed = new HashSet<>();
+        placed.add(0);
+        List<Object[]> todo = new ArrayList<>();
+        todo.add(new Object[]{root, 0});
         while (!todo.isEmpty()) {
-            int id = todo.remove(todo.size() - 1);
-            if (id < 0 || id >= entries || !seen.add(id)) continue;
-            int base = id * 128;
-            int nameLen = le16(dir, base + 0x40);
-            String name = nameLen >= 2 && nameLen <= 64
-                    ? new String(dir, base, nameLen - 2, StandardCharsets.UTF_16LE) : "";
-            if (dir[base + 0x42] == 2) {
-                streams.put(name, new long[]{le32(dir, base + 0x74), le64(dir, base + 0x78)});
+            Object[] item = todo.remove(todo.size() - 1);
+            Entry parent = (Entry) item[0];
+            int parentId = (int) item[1];
+            List<Integer> stack = new ArrayList<>();
+            stack.add((int) le32(entries[parentId].raw, 0x4C));
+            while (!stack.isEmpty()) {
+                int id = stack.remove(stack.size() - 1);
+                if (id < 0 || id >= count || !placed.add(id)) continue;
+                Entry e = entries[id];
+                if (e.type() == STREAM || e.type() == STORAGE) {
+                    parent.children.add(e);
+                    if (e.type() == STORAGE) todo.add(new Object[]{e, id});
+                }
+                stack.add((int) le32(e.raw, 0x44));
+                stack.add((int) le32(e.raw, 0x48));
             }
-            todo.add((int) le32(dir, base + 0x44));
-            todo.add((int) le32(dir, base + 0x48));
         }
     }
 
-    /** Identifikátor třídy kořene ve tvaru {@code {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}}. */
-    String rootClsid() { return rootClsid; }
+    Entry root() { return root; }
 
-    boolean hasStream(String name) { return streams.containsKey(name); }
+    /** Identifikátor třídy kořene ve tvaru {@code {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}}. */
+    String rootClsid() { return clsid(root.raw, 0x50); }
+
+    private Entry rootStream(String name) {
+        for (Entry e : root.children) if (e.type() == STREAM && e.name().equals(name)) return e;
+        return null;
+    }
+
+    boolean hasStream(String name) { return rootStream(name) != null; }
 
     /** Obsah proudu pod kořenem, nebo {@code null}, když tam není. */
     byte[] stream(String name) {
-        long[] s = streams.get(name);
-        if (s == null) return null;
-        long size = s[1];
+        Entry e = rootStream(name);
+        return e == null ? null : read(e);
+    }
+
+    /** Obsah proudu. */
+    byte[] read(Entry e) {
+        long size = e.size();
         if (sectorSize == 512) size &= 0xFFFFFFFFL; // verze 3: horní polovina se nepoužívá
         if (size == 0) return new byte[0];
-        return size < miniCutoff ? readMini((int) s[0], size) : readChain((int) s[0], size);
+        return size < miniCutoff ? readMini((int) e.start(), size) : readChain((int) e.start(), size);
     }
 
     private byte[] readChain(int start, long size) {
@@ -134,7 +173,7 @@ final class CompoundFile {
         }
         byte[] all = out.toByteArray();
         if (size >= 0 && all.length < size) throw new IllegalArgumentException("proud je kratší, než udává adresář");
-        return size >= 0 ? java.util.Arrays.copyOf(all, (int) size) : all;
+        return size >= 0 ? Arrays.copyOf(all, (int) size) : all;
     }
 
     private byte[] readMini(int start, long size) {

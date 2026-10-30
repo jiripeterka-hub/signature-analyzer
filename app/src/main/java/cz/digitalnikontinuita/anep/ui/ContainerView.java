@@ -158,8 +158,8 @@ public class ContainerView {
 
     /**
      * Otevře prohlížeč nad programem (.exe, .dll, .msi…), který DSS odmítla jako nepodporovaný
-     * formát — etapa 1 podpisu kódu (30. 10. 2026): ukáže, co podpis Authenticode obsahuje,
-     * ale neověřuje ho. Okno se otevře i nad nepodepsaným programem: souhrn pak řekne, že
+     * formát — podpis kódu (30. 10. 2026): ukáže, co podpis Authenticode obsahuje, a ověří
+     * integritu souboru a matematiku podpisu i razítka, certifikát zatím ne. Okno se otevře i nad nepodepsaným programem: souhrn pak řekne, že
      * podpis nemá, a to je u programu odpověď, pro kterou ho čtenář předložil.
      *
      * @return {@code false}, když soubor program není — volající pokračuje jako dřív
@@ -182,9 +182,10 @@ public class ContainerView {
             return false;
         }
         String notice = result.isBrowsable()
-                ? "Soubor je program s podpisem kódu (Authenticode). Ověřovat podpis kódu AnEP"
-                  + " zatím neumí: okno ukazuje, co podpis obsahuje (kdo podepsal, podepsaný otisk"
-                  + " souboru, certifikáty a časová razítka), nikoli zda je platný."
+                ? "Soubor je program s podpisem kódu (Authenticode). AnEP ověří, zda se soubor od"
+                  + " podpisu nezměnil a zda podpis i časové razítko matematicky sedí. Certifikát"
+                  + " podepisujícího (důvěryhodnost vydavatele, platnost, revokaci) zatím"
+                  + " neověřuje — o platnosti podpisu jako celku proto nerozhoduje."
                 : "Soubor je program bez podpisu kódu (Authenticode) — není co ověřovat ani"
                   + " rozebírat.";
         Stage stage = new ContainerView(owner, result, name, notice, forensicPackage).stage;
@@ -310,6 +311,10 @@ public class ContainerView {
         if (notice != null) {
             Label info = new Label(notice);
             info.setWrapText(true);
+            // Bez toho rozvržení stlačí štítek na minimální výšku jednoho řádku (strom pod ním
+            // si bere všechno místo) a delší vysvětlení skončí za třemi tečkami místo zalomení
+            // (30. 10. 2026, upozornění u podpisu kódu).
+            info.setMinHeight(Region.USE_PREF_SIZE);
             info.setPadding(new Insets(6, 8, 6, 8));
             info.setMaxWidth(Double.MAX_VALUE);
             info.setStyle("-fx-background-color: #e8f0fe; -fx-border-color: #9ab4e0; "
@@ -449,6 +454,7 @@ public class ContainerView {
         for (String w : result.warnings()) {
             Label l = new Label("• " + w);
             l.setWrapText(true);
+            l.setMinHeight(Region.USE_PREF_SIZE);
             l.setStyle("-fx-font-size: 11px;");
             box.getChildren().add(l);
         }

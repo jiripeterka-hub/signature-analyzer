@@ -1538,13 +1538,14 @@ public class MainView {
                 // prohlížeč s „Ověřit v AnEP“ a balíček je v něm tlačítkem (15. 10. 2026).
                 // Druhý soubor tu nemá co dělat — u archivu jde o jeho obsah —, do balíčku
                 // ale patří stejně jako dřív.
-                // Program (.exe, .msi…): podpis kódu se zatím jen vypíše, neověřuje (30. 10. 2026).
+                // Program (.exe, .msi…): podpis kódu se vypíše a ověří se integrita a matematika,
+                // certifikát zatím ne (30. 10. 2026).
                 if (ContainerView.openRejectedCode(owner, sf, () ->
                         ForensicPackageDialog.show(owner, files, sf.getName(),
                                 cz.digitalnikontinuita.anep.core.FixationService.Reason.UNSUPPORTED_FORMAT,
                                 fixationService, appSettings))) {
-                    setStatus("Soubor " + sf.getName() + " je program; podpis kódu aplikace"
-                            + " neověřuje, co obsahuje, je v samostatném okně.");
+                    setStatus("Soubor " + sf.getName() + " je program; rozbor jeho podpisu kódu"
+                            + " je v samostatném okně.");
                     resetFileZones();
                     return;
                 }
