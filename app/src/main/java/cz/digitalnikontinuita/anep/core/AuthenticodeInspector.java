@@ -183,8 +183,9 @@ public final class AuthenticodeInspector {
         if (!nested.isEmpty()) summary.put("Vnořené podpisy", nested.size() + " — " + nestedSummary(nestedResults, nested.size()));
         summary.put("Vložené certifikáty", String.valueOf(counts.certificates()));
         summary.put("Vložené CRL / OCSP", counts.crls() + " / " + counts.ocsps());
-        summary.put("Certifikát podepisujícího", "AnEP ho zatím neověřuje (řetěz k důvěryhodné"
-                + " autoritě, účel podepisování kódu, revokace)");
+        // Certifikát ověřuje AuthenticodeCertificateCheck přes síť; prohlížeč ho pustí na pozadí
+        // a tento řádek nahradí výsledkem.
+        summary.put(AuthenticodeCertificateCheck.KEY_SIGNER, AuthenticodeCertificateCheck.PENDING);
         return new Result(Kind.CODE, typeLabel, root, summary, warnings, null);
     }
 

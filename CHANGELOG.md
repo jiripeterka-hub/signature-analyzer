@@ -39,7 +39,7 @@ pro soupis změn ke každé nové vydané verzi.
   certificate-values a revocation-values (rozšířená forma CAdES-X-L), které dosud přecházel.
   Údaj uložený na více místech se ukáže jednou a karta v řádku „Uloženo v“ uvede všechna
   místa. Ověřování samo se nemění, tyto údaje četlo vždy.
-- **Podpis kódu u programů (.exe, .dll, .msi) — integrita a matematika podpisu.**
+- **Podpis kódu u programů (.exe, .dll, .msi).**
   Spustitelný soubor Windows nebo instalační balíček Windows Installer předložený k ověření
   dosud skončil hlášením, že formát aplikace nepodporuje. Nově se otevře v prohlížeči
   kontejnerů, který ukáže, zda program nese podpis kódu (Authenticode), a pokud ano, kdo ho
@@ -47,11 +47,22 @@ pro soupis změn ke každé nové vydané verzi.
   časová razítka (RFC 3161 i starší protipodpis Authenticode), vložené certifikáty a případné
   vnořené podpisy. AnEP přitom ověří, zda se soubor od podpisu nezměnil (přepočte jeho otisk
   a porovná ho s podepsaným), zda podpis matematicky sedí ke klíči certifikátu podepisujícího
-  a zda časové razítko kryje tento podpis a jeho podpis sedí. Certifikát podepisujícího
-  (důvěryhodnost vydavatele, platnost, revokaci) zatím **neověřuje**, a o platnosti podpisu
-  jako celku proto nerozhoduje; okno to výslovně říká. Podpis i vnořené podpisy lze vyjmout
+  a zda časové razítko kryje tento podpis a jeho podpis sedí. Na Windows ověří i certifikát
+  podepisujícího a autority razítka: řetěz ke kořeni, kterému počítač ve Windows důvěřuje,
+  účel certifikátu a zneplatnění, s časovým razítkem jako důkazem existence. Výsledkem je
+  verdikt „platný podpis kódu“, „neplatný“ nebo „nerozhodnuto“ s důvodem. Revokační údaje
+  vydané po vypršení certifikátu přijme po dobu 10 let, po kterou je autoritám ukládají
+  pravidla CA/B Fóra pro podpis kódu. Na jiných systémech certifikát neověří a okno to
+  řekne. Pravidla popisuje nový oddíl 12.8 politiky ověřování. Podpis i vnořené podpisy lze vyjmout
   jako soubory .p7s. Program se z prohlížeče nedá spustit: tlačítko „Otevřít v aplikaci“ je
   u něj nedostupné, aby se z rozebíraného podání omylem nespustil cizí kód.
+- **Hledání v prohlížeči kontejnerů i v údajích prvků.** Pole nad stromem dosud hledalo jen
+  v názvech prvků. Nově prohledává i jejich roli a všechny údaje na kartě prvku (předmět
+  a vydavatel certifikátu, sériové číslo, čas razítka a další) a otisky SHA-256 a SHA-1, takže
+  certifikát lze najít podle vydavatele či sériového čísla a prvek podle otisku z protokolu.
+  Nezáleží na velikosti písmen ani na diakritice („pecet“ najde „Pečeť“) a otisk či sériové
+  číslo lze vložit i s mezerami nebo dvojtečkami. Obsah prvků (text uvnitř souborů) se
+  neprohledává.
 - **Velké položky archivu ZIP se už nevydávají za celé.** Prohlížeč načítá do paměti položky
   do 128 MB. Když archiv velikost položky v hlavičce neuváděl (tak balí například Průzkumník
   Windows), verze 1.0.0 načetla jen prvních 128 MB a s touto useknutou částí dál zacházela jako

@@ -127,7 +127,8 @@ class AuthenticodeInspectorTest {
         assertTrue(r.summary().get("Podepsaný otisk souboru").contains("SHA"), r.summary().toString());
         assertTrue(r.summary().get("Integrita souboru").startsWith("✓ otisk souhlasí"), r.summary().toString());
         assertTrue(r.summary().get("Matematika podpisu").startsWith("✓ platná"), r.summary().toString());
-        assertTrue(r.summary().get("Certifikát podepisujícího").startsWith("AnEP ho zatím neověřuje"));
+        assertEquals(AuthenticodeCertificateCheck.PENDING, r.summary().get("Certifikát podepisujícího"));
+        assertTrue(AuthenticodeCertificateCheck.applies(r));
 
         ContainerInspector.Node sig = r.root().getChildren().get(0);
         assertEquals("podpis-authenticode.p7s", sig.getName());
@@ -177,6 +178,46 @@ class AuthenticodeInspectorTest {
             return i;
         }
         throw new AssertionError("hodnota podpisu nenalezena");
+    }
+
+    /** Kotvy se testu podávají přímo; úložiště Windows se tu nepoužije. */
+    private static eu.europa.esig.dss.spi.validation.CertificateVerifier anchored(X509CertificateHolder... anchors)
+            throws Exception {
+        java.util.List<eu.europa.esig.dss.model.x509.CertificateToken> list = new java.util.ArrayList<>();
+        for (X509CertificateHolder h : anchors) {
+            list.add(new eu.europa.esig.dss.model.x509.CertificateToken(
+                    new org.bouncycastle.cert.jcajce.JcaX509CertificateConverter().getCertificate(h)));
+        }
+        return TrustConfig.buildAnchoredVerifier(list, java.util.List.of());
+    }
+
+    @Test
+    @DisplayName("certifikát: kotva obstojí, cizí řetěz ne")
+    void certificateChain() throws Exception {
+        AuthenticodeVerifier.Check trusted = AuthenticodeCertificateCheck.evaluate(cert, null,
+                AuthenticodeCertificateCheck.EKU_CODE_SIGNING, "podepisování kódu", anchored(cert));
+        assertEquals(Boolean.TRUE, trusted.ok(), trusted.text());
+        AuthenticodeVerifier.Check foreign = AuthenticodeCertificateCheck.evaluate(cert, null,
+                AuthenticodeCertificateCheck.EKU_CODE_SIGNING, "podepisování kódu", anchored());
+        assertEquals(Boolean.FALSE, foreign.ok(), foreign.text());
+        assertTrue(foreign.text().contains("řetěz nevede"), foreign.text());
+    }
+
+    @Test
+    @DisplayName("certifikát s jiným účelem (EKU) pro podpis kódu neobstojí, ani jako kotva")
+    void certificateWrongPurpose() throws Exception {
+        X500Name dn = new X500Name("CN=Webovy server,O=Test");
+        X509CertificateHolder web = new JcaX509v3CertificateBuilder(dn, BigInteger.TWO,
+                new Date(System.currentTimeMillis() - 86_400_000L),
+                new Date(System.currentTimeMillis() + 86_400_000L * 365), dn, keys.getPublic())
+                .addExtension(org.bouncycastle.asn1.x509.Extension.extendedKeyUsage, false,
+                        new org.bouncycastle.asn1.x509.ExtendedKeyUsage(
+                                org.bouncycastle.asn1.x509.KeyPurposeId.id_kp_serverAuth))
+                .build(new JcaContentSignerBuilder("SHA256withRSA").build(keys.getPrivate()));
+        AuthenticodeVerifier.Check c = AuthenticodeCertificateCheck.evaluate(web, null,
+                AuthenticodeCertificateCheck.EKU_CODE_SIGNING, "podepisování kódu", anchored(web));
+        assertEquals(Boolean.FALSE, c.ok(), c.text());
+        assertTrue(c.text().contains("není určen pro podepisování kódu"), c.text());
     }
 
     @Test

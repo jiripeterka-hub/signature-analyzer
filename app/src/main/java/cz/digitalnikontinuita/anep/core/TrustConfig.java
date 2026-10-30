@@ -1427,6 +1427,32 @@ public class TrustConfig {
         return src;
     }
 
+    /**
+     * Ověřovač s vlastními kotvami místo důvěryhodných seznamů EU — pro podpis kódu, jehož
+     * certifikáty se k LOTL nevážou (30. 10. 2026, kotvy z úložiště kořenů Windows). Revokace
+     * a AIA jdou přes tytéž zavaděče jako hlavní ověření. {@code adjunct} je materiál pro
+     * sestavení řetězu (certifikáty přibalené v podpisu), důvěru nepropůjčuje.
+     */
+    public static CommonCertificateVerifier buildAnchoredVerifier(List<CertificateToken> anchors,
+                                                                  List<CertificateToken> adjunct) {
+        CommonCertificateVerifier verifier = new CommonCertificateVerifier();
+        CommonTrustedCertificateSource trusted = new CommonTrustedCertificateSource();
+        anchors.forEach(trusted::addCertificate);
+        verifier.setTrustedCertSources(trusted);
+        eu.europa.esig.dss.spi.x509.CommonCertificateSource extra =
+                new eu.europa.esig.dss.spi.x509.CommonCertificateSource();
+        adjunct.forEach(extra::addCertificate);
+        verifier.setAdjunctCertSources(extra);
+        configureOnlineRevocationSources(verifier);
+        // CRL napřed: respondéry OCSP razítkovacích autorit odpovídají na vlastní certifikáty
+        // „unknown“ (Certum, 30. 10. 2026) a výchozí strategie DSS pak k CRL už nesáhne, kdežto
+        // CRL Baseline Requirements for Code Signing předepisují (oddíl 7.2).
+        verifier.setRevocationDataLoadingStrategyFactory(
+                new eu.europa.esig.dss.spi.validation.CRLFirstRevocationDataLoadingStrategyFactory());
+        verifier.setAIASource(new DefaultAIASource(createDataLoader()));
+        return verifier;
+    }
+
     /** Builds a verifier backed by a static trust store and live revocation checks. */
     public CommonCertificateVerifier buildCertificateVerifier(File trustStoreFile, String trustStorePassword)
             throws IOException, KeyStoreException, NoSuchAlgorithmException, CertificateException {

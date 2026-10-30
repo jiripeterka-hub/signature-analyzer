@@ -183,9 +183,10 @@ public class ContainerView {
         }
         String notice = result.isBrowsable()
                 ? "Soubor je program s podpisem kódu (Authenticode). AnEP ověří, zda se soubor od"
-                  + " podpisu nezměnil a zda podpis i časové razítko matematicky sedí. Certifikát"
-                  + " podepisujícího (důvěryhodnost vydavatele, platnost, revokaci) zatím"
-                  + " neověřuje — o platnosti podpisu jako celku proto nerozhoduje."
+                  + " podpisu nezměnil, zda podpis i časové razítko matematicky sedí a zda"
+                  + " certifikát podepisujícího vede ke kořeni, kterému tento počítač ve Windows"
+                  + " důvěřuje, a nebyl zneplatněn. Podpis kódu není elektronický podpis"
+                  + " dokumentu podle eIDAS; dokládá, kdo program vydal a že se od té doby nezměnil."
                 : "Soubor je program bez podpisu kódu (Authenticode) — není co ověřovat ani"
                   + " rozebírat.";
         Stage stage = new ContainerView(owner, result, name, notice, forensicPackage).stage;
@@ -321,7 +322,11 @@ public class ContainerView {
                     + "-fx-border-radius: 3; -fx-background-radius: 3; -fx-text-fill: #111111;");
             header.getChildren().add(info);
         }
-        header.getChildren().add(summaryGrid());
+        GridPane summary = summaryGrid();
+        header.getChildren().add(summary);
+        if (cz.digitalnikontinuita.anep.core.AuthenticodeCertificateCheck.applies(result)) {
+            checkCodeSigningCertificate(header, summary);
+        }
 
         if (!result.warnings().isEmpty()) {
             header.getChildren().add(warningsBox());
@@ -356,6 +361,25 @@ public class ContainerView {
             + "(např. zda bylo doručováno do správné datové schránky). Závěry právního posouzení "
             + "se mohou lišit, jak co do data a času, tak i co do skutečnosti, zda bylo či nebylo "
             + "řádně doručeno.";
+
+    /**
+     * Ověří certifikát podpisu kódu na pozadí (revokace a AIA jdou přes síť a trvají sekundy)
+     * a pak souhrn postaví znovu s výsledkem. Do té doby souhrn říká, že se ověřuje.
+     */
+    private void checkCodeSigningCertificate(VBox header, GridPane shown) {
+        Thread t = new Thread(() -> {
+            Map<String, String> lines = cz.digitalnikontinuita.anep.core.AuthenticodeCertificateCheck.run(result);
+            javafx.application.Platform.runLater(() -> {
+                result.summary().putAll(lines);
+                int at = header.getChildren().indexOf(shown);
+                if (at >= 0) header.getChildren().set(at, summaryGrid());
+            });
+        }, "authenticode-certificate");
+        // Týž zavaděč tříd jako vlákno ověřování v MainView: DSS si služby hledá přes něj.
+        t.setContextClassLoader(cz.digitalnikontinuita.anep.AppClassLoader.get());
+        t.setDaemon(true);
+        t.start();
+    }
 
     private GridPane summaryGrid() {
         GridPane grid = new GridPane();
@@ -476,7 +500,7 @@ public class ContainerView {
 
     private VBox treePane() {
         TextField filter = new TextField();
-        filter.setPromptText("Filtr podle názvu…");
+        filter.setPromptText("Hledat v názvech a údajích prvků (vydavatel, sériové číslo, otisk…)");
         filter.textProperty().addListener((o, old, text) -> rebuildTree(text));
 
         tree.setShowRoot(false);
@@ -620,10 +644,51 @@ public class ContainerView {
     // ---------------------------------------------------------------- tree
 
     private void rebuildTree(String filterText) {
-        String needle = filterText == null ? "" : filterText.trim().toLowerCase(Locale.ROOT);
+        String needle = filterText == null ? "" : fold(filterText.trim());
+        // Otisk či sériové číslo vložené s mezerami či dvojtečkami se hledá v souvislé podobě.
+        if (needle.matches("[0-9a-f:\\s]+") && needle.replaceAll("[\\s:]", "").length() >= 4) {
+            needle = needle.replaceAll("[\\s:]", "");
+        }
         TreeItem<Node> root = buildItem(result.root(), needle);
         tree.setRoot(root != null ? root : new TreeItem<>(result.root()));
         if (tree.getRoot() != null) tree.getRoot().setExpanded(true);
+    }
+
+    /** Text, ve kterém hledací pole hledá, po prvcích; počítá se při prvním hledání. */
+    private final Map<Node, String> searchTexts = new java.util.IdentityHashMap<>();
+
+    /**
+     * Co se u prvku prohledává: obě jména (to ve stromu i skutečné jméno položky, které čtenář
+     * zná z jiného nástroje), role a všechny údaje karty — vydavatel, sériové číslo, čas
+     * razítka… — a otisky SHA-256 a SHA-1 jeho bajtů. Obsah prvku ne: u velkých kontejnerů by
+     * to bylo pomalé a nalezený prvek by nevysvětlil, proč se našel. Dokud se hledalo jen
+     * v názvu, nešlo najít certifikát podle vydavatele či sériového čísla ani prvek podle
+     * otisku z protokolu (30. 10. 2026, dotaz uživatele).
+     */
+    private String searchText(Node node) {
+        return searchTexts.computeIfAbsent(node, n -> {
+            StringBuilder sb = new StringBuilder();
+            sb.append(n.getName()).append('\n').append(n.getDisplayName()).append('\n');
+            if (n.getRole() != null) sb.append(n.getRole()).append('\n');
+            for (Map.Entry<String, String> e : n.getInfo().entrySet()) {
+                sb.append(Node.labelOf(e.getKey())).append(' ').append(e.getValue()).append('\n');
+            }
+            byte[] data = n.getData();
+            if (data != null && data.length > 0) {
+                sb.append(ContainerInspector.sha256Hex(data)).append('\n')
+                        .append(ContainerInspector.digestHex(data, "SHA-1")).append('\n');
+            }
+            String text = fold(sb.toString());
+            // Sériová čísla a otisky se jinde píší po bajtech s mezerami či dvojtečkami;
+            // hledaný řetězec v jakékoli z podob má najít i souvislou podobu na kartě a naopak.
+            return text + "\n" + text.replaceAll("[\\s:]", "");
+        });
+    }
+
+    /** Malá písmena bez diakritiky — „pecet“ najde „Pečeť“, „podepisujici“ „Podepisující“. */
+    static String fold(String s) {
+        String d = java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD);
+        return d.replaceAll("\\p{M}+", "").toLowerCase(Locale.ROOT);
     }
 
     /** Keeps a node when it matches, or when any descendant does — an ancestor must stay visible. */
@@ -633,11 +698,7 @@ public class ContainerView {
             TreeItem<Node> item = buildItem(child, needle);
             if (item != null) kids.add(item);
         }
-        // Obě jména. Kdo hledá podle toho, co vidí ve stromu, musí najít; kdo zná skutečné
-        // jméno položky z jiného nástroje, taky.
-        boolean matches = needle.isEmpty()
-                || node.getName().toLowerCase(Locale.ROOT).contains(needle)
-                || node.getDisplayName().toLowerCase(Locale.ROOT).contains(needle);
+        boolean matches = needle.isEmpty() || searchText(node).contains(needle);
         if (!matches && kids.isEmpty()) return null;
 
         TreeItem<Node> item = new TreeItem<>(node);

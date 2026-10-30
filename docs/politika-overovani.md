@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika ověřování podpisu**
 
-==Verze 1.9== · stav ke dni 17. 10. 2026 · AnEP 1.0.0, knihovna DSS 6.5
+==Verze 1.10== · stav ke dni 30. 10. 2026 · AnEP 1.0.0, knihovna DSS 6.5
 
 ## 1 Úvod
 
@@ -28,9 +28,9 @@ Dokument je stavěný jako politika ověřování podpisu ve smyslu ETSI TS 119 
 | Položka | Hodnota |
 |---|---|
 | Název | Politika ověřování elektronických podpisů AnEP |
-| Verze | ==1.9== ze dne 17. 10. 2026 |
+| Verze | ==1.10== ze dne 30. 10. 2026 |
 | Platí pro | AnEP 1.0.0 (repozitář signature-analyzer, stav po commitu ==11f98cf==) |
-| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.9== |
+| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.10== |
 | Ověřovací jádro | knihovna DSS (Digital Signature Service) 6.5 Evropské komise |
 | Postup ověřování | ETSI EN 319 102-1 V1.4.0 (2024-03) |
 | Struktura dokumentu | ETSI TS 119 172-1 (politika ověřování podpisu) |
@@ -331,6 +331,19 @@ Inspektor čte soubor nezávisle na ověřování a o výsledku ověření **ner
 
 Kryptografickou platnost podpisů, řetězy certifikátů ani stav revokace neposuzuje; to je věcí ověřování podle této politiky. U prvků, které se podaří spárovat s výsledkem ověření, uvádí odděleně od zjištění o souboru, jak s nimi ověřování naložilo: výsledek podpisu či razítka, roli certifikátu v řetězu a který revokační údaj rozhodl, nebyl přijat nebo nebyl použit.
 
+### 12.8 Podpis kódu u programů
+
+Program pro Windows (spustitelný soubor .exe či .dll a instalační balíček .msi) může nést podpis kódu podle technologie Authenticode. Není to elektronický podpis dokumentu ve smyslu eIDAS a AnEP ho neposuzuje podle této politiky: nevyhodnocuje kvalifikovanost ani právní kvalifikaci a výsledek neuvádí v kartě Analýzy, nýbrž v prohlížeči kontejnerů. Postup je tento:
+
+- **Integrita** — AnEP přepočte otisk souboru a porovná ho s podepsaným. U souboru PE se hašuje celý soubor kromě pole CheckSum, položky tabulky certifikátů a tabulky samotné; u balíčku MSI obsah všech proudů složeného dokumentu v pořadí podle jména a s předotiskem metadat (MsiDigitalSignatureEx). Postup pro MSI Microsoft nezveřejnil; AnEP ho přebírá z nástroje osslsigncode.
+- **Matematika podpisu a razítka** — podpis se ověří klíčem certifikátu podepisujícího; časové razítko (RFC 3161 i starší protipodpis Authenticode) musí krýt hodnotu podpisu a jeho podpis musí sedět. Protipodpis, který podepisuje holý otisk bez struktury DigestInfo (razítka Symantec a VeriSign), se uzná jen při přesné shodě otisku.
+- **Kotvy důvěry** — kořeny z úložiště důvěryhodných certifikátů Windows na počítači, kde AnEP běží; certifikáty pro podpis kódu se k důvěryhodným seznamům EU neváží. Na jiném systému se certifikát neověří a výsledek to uvede. AnEP vidí jen kořeny v počítači nainstalované, ne ty, které by si Windows dotáhly až při první potřebě, ani omezení účelu, která Windows u kořenů evidují; výsledek proto může záviset na počítači.
+- **Certifikát** — řetěz ke kotvě a revokaci ověřuje knihovna DSS k okamžiku ověření, revokační informace přednostně z CRL. Účel certifikátu musí odpovídat (podepisování kódu, u razítka časová razítka). Platné časové razítko je důkazem existence: certifikát, který vypršel nebo byl zneplatněn až po čase razítka, obstojí.
+- **Údaje vydané po expiraci** — na rozdíl od oddílu 7.2 se revokační údaj vydaný po expiraci certifikátu pro podpis kódu přijme, je-li vydán do 10 let od expirace: Baseline Requirements for Code Signing (CA/B Forum, verze 3.11.0, oddíly 7.2 a 4.10.1) ukládají autoritám vést zneplatněné certifikáty v CRL i v odpovědích OCSP nejméně po tuto dobu. Pozdější údaj o zneplatnění nevypovídá a výsledek je „nelze rozhodnout“.
+- **Kryptografická omezení** — podle výchozí politiky DSS (oddíl 10); řetěz se SHA-1 tedy vede k výsledku „nelze rozhodnout“, ačkoli Windows takové starší řetězy u razítek dosud přijímají.
+
+Celkový verdikt je **platný**, obstojí-li integrita, matematika podpisu, certifikát podepisujícího a (je-li razítko) razítko i certifikát jeho autority; **neplatný**, neobstojí-li kterákoli z nich; jinak **nelze rozhodnout**. Bez razítka se certifikát posuzuje k okamžiku ověření.
+
 ## 13 Omezení podle ETSI TS 119 172-1
 
 Tabulka uvádí, jak AnEP naplňuje omezení podle přílohy A.4.2.1 (tabulka A.2) a přílohy C normy ETSI TS 119 172-1.
@@ -383,3 +396,4 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 | 1.7 | 17. 10. 2026 | nový oddíl 6.2: řetěz certifikátů se ověřuje v modelu skořápky (shell) výchozí politiky DSS — čím se liší od modelu řetězu a hybridního modelu a kdy to mění závěr; odkaz na něj v tabulce stavebních bloků (5.2.6); ověřování samo se nemění |
 | ==1.8== | ==17. 10. 2026== | ==beze změny obsahu; číslo verze a stav aplikace sjednocené s verzí 1.8 politiky uchovávání, která mění, jaké revokační údaje vkládá přerazítkování== |
 | ==1.9== | ==17. 10. 2026== | ==beze změny obsahu; číslo verze a stav aplikace sjednocené s verzí 1.9 politiky uchovávání, která upřesňuje, jaké revokační údaje vkládá prodloužení== |
+| ==1.10== | ==30. 10. 2026== | ==nový oddíl 12.8: podpis kódu u programů (.exe, .dll, .msi) — integrita, matematika podpisu a razítka, kotvy z úložiště Windows, revokační údaje vydané po expiraci přijaté po dobu, kterou je autoritám ukládají pravidla CA/B Fóra pro podpis kódu; ověřování elektronických podpisů dokumentů se nemění== |

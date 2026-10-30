@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika uchovávání ověřitelnosti**
 
-==Verze 1.9 · stav ke dni 17. 10. 2026== · AnEP 1.0.0, knihovna DSS 6.5
+==Verze 1.10 · stav ke dni 30. 10. 2026== · AnEP 1.0.0, knihovna DSS 6.5
 
 ## 1 Úvod
 
@@ -35,9 +35,9 @@ Rozdělení je věcné: politika ověřování popisuje **dnešní** ověření,
 | Položka | Hodnota |
 |---|---|
 | Název | Politika uchovávání elektronických podpisů AnEP |
-| Verze | ==1.9 ze dne 17. 10. 2026== |
+| Verze | ==1.10 ze dne 30. 10. 2026== |
 | Platí pro | AnEP 1.0.0 (repozitář signature-analyzer, stav po commitu ==11f98cf==) |
-| Navazuje na | Politika ověřování elektronických podpisů AnEP, verze ==1.9== |
+| Navazuje na | Politika ověřování elektronických podpisů AnEP, verze ==1.10== |
 | Struktura dokumentu | ETSI TS 119 511 V1.1.1 (2019-06) |
 | Pojmy a schéma uchování | ETSI TS 119 512 V1.2.1 (2023-05), schéma F.4 „pds+wos+aug“ |
 | Cílová úroveň podpisů | B-LTA podle ETSI EN 319 142-1 (PAdES), EN 319 122-1 (CAdES), EN 319 132-1 (XAdES), TS 119 182-1 (JAdES) a EN 319 162-1 (ASiC) |
@@ -325,3 +325,4 @@ Z TS 119 512 AnEP odpovídá schématu F.4 se dvěma odchylkami uvedenými v 3.2
 | 1.7 | 17. 10. 2026 | beze změny obsahu; číslo verze a stav aplikace sjednocené s verzí 1.7 politiky ověřování |
 | ==1.8== | ==17. 10. 2026== | ==oddíly 6.2 a 6.4: přerazítkování (a uchování u prvku s volnějším čtením) vkládá jen revokační údaje, které o certifikátu něco vypovídají — odpověď „nerevokován“ vydaná po expiraci bez závazku vydavatele se nevkládá, s odůvodněním ze standardů a z měření; oddíl 8.1: upozornění před úkonem u dokumentu s certifikačním podpisem bez povolených změn (DocMDP P=1); spolu s verzí 1.8 politiky ověřování== |
 | ==1.9== | ==17. 10. 2026== | ==oddíl 6.5: prodloužení doplní revokační informace a certifikáty stejně jako uchování, post-expirační údaje bez závazku vydavatele nevkládá a údaj o certifikátu přidaného razítka ještě nenese; oddíl 6.4: pravidlo pro údaje u prvku s volnějším čtením platí i pro prodloužení; spolu s verzí 1.9 politiky ověřování== |
+| ==1.10== | ==30. 10. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.10 politiky ověřování, která doplňuje ověřování podpisu kódu u programů== |
