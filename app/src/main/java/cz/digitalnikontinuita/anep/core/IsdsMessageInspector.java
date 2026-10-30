@@ -584,6 +584,7 @@ public final class IsdsMessageInspector {
             // plenty of HTML (DetailZpravy.html and the like), so the distinction is worth making.
             case XML  -> looksLikeHtml(data) ? "dokument HTML" : "dokument XML";
             case JSON -> "dokument JSON";
+            case CODE -> "program (spustitelný soubor či instalační balíček Windows)";
             // Certificates and CRLs land here, since neither is a container; naming them is
             // worth doing, because ISDS carries them as attachments more often than not.
             case OTHER -> {

@@ -430,7 +430,9 @@ public class MainView {
                                 // Datové zprávy z datových schránek (ISDS)
                                 "*.zfo",
                                 // Evidence records: .ers/.er for RFC 4998, XMLERS shares *.xml
-                                "*.ers", "*.er"),
+                                "*.ers", "*.er",
+                                // Programy s podpisem kódu — zatím jen výpis podpisu (30. 10. 2026)
+                                "*.exe", "*.msi"),
                         new FileChooser.ExtensionFilter("Všechny soubory", "*.*")),
                 onSigFile, restoreLastButton);
         // With headerExtra: zone→HBox(0)→VBox(0)→Label(1)
@@ -1536,6 +1538,16 @@ public class MainView {
                 // prohlížeč s „Ověřit v AnEP“ a balíček je v něm tlačítkem (15. 10. 2026).
                 // Druhý soubor tu nemá co dělat — u archivu jde o jeho obsah —, do balíčku
                 // ale patří stejně jako dřív.
+                // Program (.exe, .msi…): podpis kódu se zatím jen vypíše, neověřuje (30. 10. 2026).
+                if (ContainerView.openRejectedCode(owner, sf, () ->
+                        ForensicPackageDialog.show(owner, files, sf.getName(),
+                                cz.digitalnikontinuita.anep.core.FixationService.Reason.UNSUPPORTED_FORMAT,
+                                fixationService, appSettings))) {
+                    setStatus("Soubor " + sf.getName() + " je program; podpis kódu aplikace"
+                            + " neověřuje, co obsahuje, je v samostatném okně.");
+                    resetFileZones();
+                    return;
+                }
                 if (ContainerView.openRejectedArchive(owner, sf, () ->
                         ForensicPackageDialog.show(owner, files, sf.getName(),
                                 cz.digitalnikontinuita.anep.core.FixationService.Reason.UNSUPPORTED_FORMAT,

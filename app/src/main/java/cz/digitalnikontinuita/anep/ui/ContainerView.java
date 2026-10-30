@@ -157,6 +157,44 @@ public class ContainerView {
     }
 
     /**
+     * Otevře prohlížeč nad programem (.exe, .dll, .msi…), který DSS odmítla jako nepodporovaný
+     * formát — etapa 1 podpisu kódu (30. 10. 2026): ukáže, co podpis Authenticode obsahuje,
+     * ale neověřuje ho. Okno se otevře i nad nepodepsaným programem: souhrn pak řekne, že
+     * podpis nemá, a to je u programu odpověď, pro kterou ho čtenář předložil.
+     *
+     * @return {@code false}, když soubor program není — volající pokračuje jako dřív
+     */
+    public static boolean openRejectedCode(Window owner, File file, Runnable forensicPackage) {
+        byte[] bytes;
+        try {
+            bytes = Files.readAllBytes(file.toPath());
+        } catch (Exception e) {
+            return false;
+        }
+        if (ContainerInspector.detectKind(bytes) != ContainerInspector.Kind.CODE) return false;
+        return openCode(owner, bytes, file.getName(), forensicPackage);
+    }
+
+    static boolean openCode(Window owner, byte[] bytes, String name, Runnable forensicPackage) {
+        Result result = ContainerInspector.inspect(bytes, name);
+        if (result.error() != null && !result.isBrowsable()) {
+            error("Soubor " + name + " se nepodařilo přečíst:\n" + result.error());
+            return false;
+        }
+        String notice = result.isBrowsable()
+                ? "Soubor je program s podpisem kódu (Authenticode). Ověřovat podpis kódu AnEP"
+                  + " zatím neumí: okno ukazuje, co podpis obsahuje (kdo podepsal, podepsaný otisk"
+                  + " souboru, certifikáty a časová razítka), nikoli zda je platný."
+                : "Soubor je program bez podpisu kódu (Authenticode) — není co ověřovat ani"
+                  + " rozebírat.";
+        Stage stage = new ContainerView(owner, result, name, notice, forensicPackage).stage;
+        OPEN_WINDOWS.add(stage);
+        stage.setOnHidden(e -> OPEN_WINDOWS.remove(stage));
+        stage.show();
+        return true;
+    }
+
+    /**
      * Opens the browser for {@code file}. Returns {@code false} when the file is not a container
      * at all, which lets the caller fall back to the platform viewer.
      */
@@ -779,6 +817,7 @@ public class ContainerView {
             case PDF -> PdfAttachmentInspector.hasAttachments(data) ? "⧉ přílohy" : null;
             case ZIP -> "⧉ kontejner";
             case CMS -> ContainerInspector.isIsdsMessage(data) ? "⧉ datová zpráva ISDS" : "⧉ obálka CMS";
+            case CODE -> "⧉ program";
             default  -> null;
         };
     }
@@ -853,12 +892,18 @@ public class ContainerView {
             addDetail(row, "SHA-256", ContainerInspector.sha256Hex(data));
             addDetail(row, "SHA-1", ContainerInspector.digestHex(data, "SHA-1"));
         } else if (!node.isDirectory()) {
-            addDetail(row, "Obsah", "příliš velký pro zobrazení; použijte rozbalení do adresáře");
+            // „Uložit vše“ takový prvek také přeskočí, takže odkaz na rozbalení do adresáře
+            // (do 30. 10. 2026) posílal čtenáře k tlačítku, které mu nepomůže.
+            addDetail(row, "Obsah", "příliš velký pro načtení do paměti; rozbalte ho z archivu"
+                    + " jiným programem");
         }
 
         boolean hasData = data != null && data.length > 0;
         saveOneBtn.setDisable(!hasData);
-        openExternalBtn.setDisable(!hasData);
+        // Program se z prohlížeče nespouští (30. 10. 2026, podpis kódu): „Otevřít v aplikaci“ by
+        // u .exe či .msi znamenalo spustit cizí kód z rozebíraného podání. Uložit ho jde.
+        openExternalBtn.setDisable(!hasData
+                || ContainerInspector.detectKind(data) == ContainerInspector.Kind.CODE);
         copyHashBtn.setDisable(!hasData);
         openNestedBtn.setDisable(!canOpenNested(data));
         openInAnepBtn.setDisable(!hasData || openInAnepHandler == null);
@@ -1252,6 +1297,9 @@ public class ContainerView {
         if (ContainerInspector.detectKind(data) == ContainerInspector.Kind.PDF) {
             return PdfAttachmentInspector.hasAttachments(data)
                     && openPdfAttachments(stage, data, node.getName(), null);
+        }
+        if (ContainerInspector.detectKind(data) == ContainerInspector.Kind.CODE) {
+            return openCode(stage, data, node.getName(), null);
         }
         return open(stage, data, node.getName(), explain);
     }

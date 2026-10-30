@@ -818,6 +818,7 @@ public final class JadesInspector {
             case JSON -> "dokument JSON";
             case CMS  -> "objekt CMS / PKCS #7";
             case ZFO  -> "datová zpráva ISDS";
+            case CODE -> "program (spustitelný soubor či instalační balíček Windows)";
             case OTHER -> ContainerInspector.looksTextual(payload) ? "text" : "binární data";
         };
     }

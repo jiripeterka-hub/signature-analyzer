@@ -90,6 +90,11 @@ public final class ContainerInspector {
         JSON,
         /** A PDF. Not browsed here: the application shows PDFs in the platform viewer. */
         PDF,
+        /**
+         * Program, který může nést podpis kódu (Authenticode): spustitelný soubor Windows (PE)
+         * nebo balíček Windows Installer (MSI); viz {@link AuthenticodeInspector}.
+         */
+        CODE,
         /** Anything else — nothing to browse. */
         OTHER
     }
@@ -246,6 +251,7 @@ public final class ContainerInspector {
         if (startsWith(bytes, "-----BEGIN")) {
             return startsWith(bytes, "-----BEGIN CERT") ? Kind.OTHER : Kind.CMS;
         }
+        if (AuthenticodeInspector.looksLikeCode(bytes)) return Kind.CODE;
         int i = skipTextPreamble(bytes);
         if (i < bytes.length) {
             if (bytes[i] == '<') return Kind.XML;
@@ -299,7 +305,7 @@ public final class ContainerInspector {
     /** True when {@link #inspect} would produce something the user can browse. */
     public static boolean isContainerKind(Kind kind) {
         return kind == Kind.ZIP || kind == Kind.CMS || kind == Kind.ZFO
-                || kind == Kind.XML || kind == Kind.JSON;
+                || kind == Kind.XML || kind == Kind.JSON || kind == Kind.CODE;
     }
 
     /** The three things a data box hands out as a ZFO. */
@@ -454,6 +460,7 @@ public final class ContainerInspector {
                 case CMS  -> inspectCms(bytes, fileName);
                 case XML  -> inspectXml(bytes, fileName);
                 case JSON -> inspectJson(bytes, fileName);
+                case CODE -> AuthenticodeInspector.inspect(bytes, fileName);
                 default   -> new Result(kind, typeLabelFor(kind), new Node(fileName, "", true, null),
                         new LinkedHashMap<>(), List.of(), null);
             };
@@ -473,6 +480,7 @@ public final class ContainerInspector {
             case XML  -> "dokument XML";
             case JSON -> "dokument JSON";
             case PDF  -> "dokument PDF";
+            case CODE -> "program (spustitelný soubor či instalační balíček Windows)";
             case OTHER -> "neznámý formát";
         };
     }
@@ -486,6 +494,8 @@ public final class ContainerInspector {
         List<String> warnings = new ArrayList<>();
         long totalLoaded = 0;
         int entryCount = 0;
+        List<String> tooLarge = new ArrayList<>();
+        Map<String, Long> readSizes = new LinkedHashMap<>();
 
         try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(bytes))) {
             ZipEntry entry;
@@ -506,11 +516,23 @@ public final class ContainerInspector {
                     long declared = entry.getSize();
                     if (declared >= 0 && declared > MAX_ENTRY_BYTES) {
                         skip(zis);
+                        tooLarge.add(path);
                     } else if (totalLoaded > MAX_TOTAL_BYTES) {
                         skip(zis);
                     } else {
-                        data = readCapped(zis, MAX_ENTRY_BYTES);
-                        totalLoaded += data.length;
+                        long[] actual = new long[1];
+                        data = readCapped(zis, MAX_ENTRY_BYTES, actual);
+                        if (data != null) {
+                            totalLoaded += data.length;
+                        } else {
+                            // Velikost v hlavičce nebyla (deskriptor dat za položkou), a tak se
+                            // na limit přišlo až při čtení. Useknuté bajty se nedrží: dřív se
+                            // ukládaly, hašovaly a předávaly k ověření jako celá položka
+                            // (30. 10. 2026, program o 230 MB v ZIPu z Průzkumníka — ověření
+                            // v něm nenašlo podpis, protože konec souboru s ním chyběl).
+                            tooLarge.add(path);
+                            readSizes.put(path, actual[0]);
+                        }
                     }
                 }
 
@@ -520,6 +542,8 @@ public final class ContainerInspector {
                     node.size = data.length;
                 } else if (entry.getSize() >= 0) {
                     node.size = entry.getSize();
+                } else if (readSizes.containsKey(path)) {
+                    node.size = readSizes.get(path);
                 }
                 if (!dir) {
                     if (entry.getCompressedSize() >= 0) node.compressedSize = entry.getCompressedSize();
@@ -536,6 +560,13 @@ public final class ContainerInspector {
                 }
                 zis.closeEntry();
             }
+        }
+        if (!tooLarge.isEmpty()) {
+            warnings.add((tooLarge.size() == 1 ? "Položka " + tooLarge.get(0) + " je větší"
+                    : "Položky " + String.join(", ", tooLarge) + " jsou větší")
+                    + " než " + formatSize(MAX_ENTRY_BYTES) + "; prohlížeč je do paměti nenačítá,"
+                    + " takže je nelze uložit, ověřit ani otevřít odsud. Rozbalte je z archivu"
+                    + " jiným programem.");
         }
 
         String mimetype = null;
@@ -1233,6 +1264,8 @@ public final class ContainerInspector {
                 {"1.2.840.113549.1.9.16.2.27", "archivní časové razítko (v2)"},
                 {"0.4.0.1733.2.4",             "archivní časové razítko (v3)"},
                 {"1.2.840.113549.1.9.16.2.20", "časové razítko obsahu"},
+                // Podpis kódu Authenticode: razítko RFC 3161 v atributu Microsoftu (30. 10. 2026).
+                {AuthenticodeInspector.MS_RFC3161_TIMESTAMP, "časové razítko podpisu kódu (RFC 3161)"},
         };
         int i = 0;
         for (String[] pair : known) {
@@ -2906,7 +2939,7 @@ public final class ContainerInspector {
         }
     }
 
-    private static String oidName(String oid) {
+    static String oidName(String oid) {
         if (oid == null) return null;
         return switch (oid) {
             case "1.3.14.3.2.26"          -> "SHA-1 (" + oid + ")";
@@ -2972,15 +3005,26 @@ public final class ContainerInspector {
         return i;
     }
 
-    private static byte[] readCapped(java.io.InputStream in, long cap) throws java.io.IOException {
+    /**
+     * Celý proud, nebo {@code null}, když je delší než {@code cap} — useknutý začátek by se
+     * vydával za celou položku. Skutečná délka (dočtená do konce) se vrátí v {@code size[0]}.
+     */
+    private static byte[] readCapped(java.io.InputStream in, long cap, long[] size) throws java.io.IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buf = new byte[16384];
         int read;
+        long total = 0;
         while ((read = in.read(buf)) > 0) {
+            total += read;
+            if (total > cap) {
+                out = null;
+                while ((read = in.read(buf)) > 0) total += read;
+                break;
+            }
             out.write(buf, 0, read);
-            if (out.size() > cap) break;
         }
-        return out.toByteArray();
+        size[0] = total;
+        return out == null ? null : out.toByteArray();
     }
 
     private static void skip(java.io.InputStream in) throws java.io.IOException {
