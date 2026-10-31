@@ -52,6 +52,9 @@ import java.util.List;
  */
 public final class CardSnapshot extends Application {
 
+    /** Obsah externího podpisu ({@code -content}), nebo null. */
+    private static File content;
+
     @Override
     public void start(Stage stage) {
         List<String> args = getParameters().getRaw();
@@ -71,12 +74,16 @@ public final class CardSnapshot extends Application {
                 // zarovnávací logiku (Pos.CENTER_LEFT místo výchozího Pos.TOP_LEFT), takže se
                 // v nich chyby zarovnání projevují jinak, než v Analýze.
                 case "-view" -> view = args.get(++i);
+                // Podepsaný obsah k externímu podpisu; soubor bez přepínače je pak ten podpis.
+                // Bez toho šla vykreslit jen karta podpisu, který nese obsah v sobě
+                // (doplněno 31. 10. 2026 kvůli CB-AdES, který bývá odloučený).
+                case "-content" -> content = new File(args.get(++i));
                 default -> file = args.get(i);
             }
         }
         if (out == null || file == null) {
             System.out.println("usage: CardSnapshot -out <png> [-expand]"
-                    + " [-view analyza|zjednoduseny|rozsireny|kontinuita] <file>");
+                    + " [-view analyza|zjednoduseny|rozsireny|kontinuita] [-content <obsah>] <file>");
             Platform.exit();
             return;
         }
@@ -104,13 +111,14 @@ public final class CardSnapshot extends Application {
         CommonCertificateVerifier verifier =
                 new TrustConfig(settings).buildLotlCertificateVerifier();
         DSSDocument doc = new DocumentLoader().load(new File(file));
+        DSSDocument detached = content == null ? null : new DocumentLoader().load(content);
         // Vzhledy podpisů se musí předat, jinak nástroj vykreslí kartu bez bloku Vizualizace
         // a vypadá to jako chyba aplikace. Zjištěno 4. 9. 2026 při ověřování neviditelného
         // tisknutelného podpisu — snímek blok neměl, protože ho neměl co postavit.
         cz.digitalnikontinuita.anep.core.PdfSource pdfSource =
                 cz.digitalnikontinuita.anep.core.PdfSource.of(new File(file));
         ValidatorFactory.ValidationOutcome outcome =
-                new ValidatorFactory(settings).validate(doc, null, verifier, null);
+                new ValidatorFactory(settings).validate(doc, detached, verifier, null);
         // Které ústupky verdikt opravdu nesly, se zjišťuje přeověřením bez nich — až do
         // 19. 9. 2026 to uměl jedině {@code MainView}, kdežto tenhle nástroj mapoval bez toho
         // a {@code ReportMapper} si musel vypomáhat odvozením. Karta pak nad souborem, který
@@ -120,9 +128,9 @@ public final class CardSnapshot extends Application {
                 outcome, settings,
                 cz.digitalnikontinuita.anep.core.PdfSignatureAppearanceExtractor
                         .extract(pdfSource, null),
-                java.util.List.of(), false, java.util.Map.of(),
+                java.util.List.of(), detached != null, java.util.Map.of(),
                 cz.digitalnikontinuita.anep.core.RelaxationMeasurement.measure(
-                        settings, outcome, doc, null, verifier, null, java.util.List.of()));
+                        settings, outcome, doc, detached, verifier, null, java.util.List.of()));
         // Prázdná podpisová pole nastavuje MainView až za mapováním, takže bez tohohle řádku by
         // snímek ukazoval kartu bez bloku, který v aplikaci je — a nástroj má ukazovat totéž,
         // co uživatel.
@@ -322,7 +330,9 @@ public final class CardSnapshot extends Application {
                                        String file) {
         AdvisorView av = new AdvisorView();
         av.setAppSettings(settings);
-        av.setSourceFile(new File(file), null, null);
+        // Jako v MainView: první je obsah z hlavního pole, druhý externí podpis.
+        if (content != null) av.setSourceFile(content, new File(file), null);
+        else av.setSourceFile(new File(file), null, null);
         var ref = new java.util.concurrent.atomic.AtomicReference<>(verifier);
         av.setFixationService(new FixationService(ref));
         av.setRestampingService(new cz.digitalnikontinuita.anep.core.RestampingService());

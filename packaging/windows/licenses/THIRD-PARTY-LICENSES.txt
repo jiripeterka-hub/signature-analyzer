@@ -4,7 +4,7 @@ Vygenerováno skriptem packaging/collect-licenses.py z JARů, které se
 skutečně balí do distribuce. Obsahuje soubory META-INF/LICENSE
 a META-INF/NOTICE tak, jak je dodávají jejich autoři.
 
-Artefaktů celkem: 129
+Artefaktů celkem: 131
 Z toho s vlastním licenčním textem: 52
 
 Artefakty, které vlastní licenční text v JARu nenesou, jsou vypsané na
@@ -12,7 +12,7 @@ konci. Jejich licence uvádí NOTICE.txt a plná znění jsou v tomto adresáři
 jako samostatné soubory.
 
 ==============================================================================
-com.fasterxml.jackson.core:jackson-annotations:2.21
+com.fasterxml.jackson.core:jackson-annotations:2.22
 ==============================================================================
 
 --- META-INF/LICENSE ---
@@ -245,7 +245,7 @@ in some artifacts (usually source distributions); but is always available
 from the source code management (SCM) system project uses.
 
 ==============================================================================
-com.fasterxml.jackson.core:jackson-core:2.21.1
+com.fasterxml.jackson.core:jackson-core:2.22.3
 ==============================================================================
 
 --- META-INF/LICENSE ---
@@ -485,11 +485,21 @@ under the following copyright.
 
 Copyright © 2023 Werner Randelshofer, Switzerland. MIT License.
 
-See FastDoubleParser-NOTICE for details of other source code included in FastDoubleParser
-and the licenses and copyrights that apply to that code.
+See FastDoubleParser-LICENSE and also FastDoubleParser-ThirdParty-LICENSE for details of other source code
+included in FastDoubleParser and the licenses and copyrights that apply to that code.
+
+## Schubfach
+
+jackson-core bundles a copy of the Schubfach number writing code <https://github.com/c4f7fcce9cb06515/Schubfach>.
+That code is available under an MIT license <https://github.com/c4f7fcce9cb06515/Schubfach/blob/master/todec/LICENSE>
+under the following copyright.
+
+Copyright 2018-2020 Raffaello Giulietti
+
+See Schubfach-LICENSE.
 
 ==============================================================================
-com.fasterxml.jackson.core:jackson-databind:2.21.1
+com.fasterxml.jackson.core:jackson-databind:2.22.3
 ==============================================================================
 
 --- META-INF/LICENSE ---
@@ -2022,7 +2032,7 @@ This product includes software developed at
 The Apache Software Foundation (https://www.apache.org/).
 
 ==============================================================================
-org.apache.commons:commons-lang3:3.20.0
+org.apache.commons:commons-lang3:3.21.0
 ==============================================================================
 
 --- META-INF/LICENSE.txt ---
@@ -2233,13 +2243,13 @@ org.apache.commons:commons-lang3:3.20.0
 --- META-INF/NOTICE.txt ---
 
 Apache Commons Lang
-Copyright 2001-2025 The Apache Software Foundation
+Copyright 2001-2026 The Apache Software Foundation
 
 This product includes software developed at
 The Apache Software Foundation (https://www.apache.org/).
 
 ==============================================================================
-org.apache.httpcomponents.client5:httpclient5:5.6.4
+org.apache.httpcomponents.client5:httpclient5:5.6.5
 ==============================================================================
 
 --- META-INF/DEPENDENCIES ---
@@ -2277,9 +2287,9 @@ From: 'The Apache Software Foundation' (https://www.apache.org/)
     License: Apache-2.0  (https://www.apache.org/licenses/LICENSE-2.0.txt)
   - Apache Commons Lang (https://commons.apache.org/proper/commons-lang/) org.apache.commons:commons-lang3:jar:3.16.0
     License: Apache-2.0  (https://www.apache.org/licenses/LICENSE-2.0.txt)
-  - Apache HttpComponents Core HTTP/1.1 (https://hc.apache.org/httpcomponents-core-5.4.x/5.4.3/httpcore5/) org.apache.httpcomponents.core5:httpcore5:jar:5.4.3
+  - Apache HttpComponents Core HTTP/1.1 (https://hc.apache.org/httpcomponents-core-5.4.x/5.4.4/httpcore5/) org.apache.httpcomponents.core5:httpcore5:jar:5.4.4
     License: Apache License, Version 2.0  (https://www.apache.org/licenses/LICENSE-2.0.txt)
-  - Apache HttpComponents Core HTTP/2 (https://hc.apache.org/httpcomponents-core-5.4.x/5.4.3/httpcore5-h2/) org.apache.httpcomponents.core5:httpcore5-h2:jar:5.4.3
+  - Apache HttpComponents Core HTTP/2 (https://hc.apache.org/httpcomponents-core-5.4.x/5.4.4/httpcore5-h2/) org.apache.httpcomponents.core5:httpcore5-h2:jar:5.4.4
     License: Apache License, Version 2.0  (https://www.apache.org/licenses/LICENSE-2.0.txt)
 
 --- META-INF/LICENSE ---
@@ -2497,7 +2507,7 @@ This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 
 ==============================================================================
-org.apache.httpcomponents.core5:httpcore5:5.4.3
+org.apache.httpcomponents.core5:httpcore5:5.4.4
 ==============================================================================
 
 --- META-INF/DEPENDENCIES ---
@@ -2724,7 +2734,7 @@ This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 
 ==============================================================================
-org.apache.httpcomponents.core5:httpcore5-h2:5.4.3
+org.apache.httpcomponents.core5:httpcore5-h2:5.4.4
 ==============================================================================
 
 --- META-INF/DEPENDENCIES ---
@@ -2742,7 +2752,7 @@ From: 'an unknown organization'
     License: Apache 2  (https://www.apache.org/licenses/LICENSE-2.0)
 
 From: 'The Apache Software Foundation' (https://www.apache.org/)
-  - Apache HttpComponents Core HTTP/1.1 (https://hc.apache.org/httpcomponents-core-5.4.x/5.4.3/httpcore5/) org.apache.httpcomponents.core5:httpcore5:jar:5.4.3
+  - Apache HttpComponents Core HTTP/1.1 (https://hc.apache.org/httpcomponents-core-5.4.x/5.4.4/httpcore5/) org.apache.httpcomponents.core5:httpcore5:jar:5.4.4
     License: Apache License, Version 2.0  (https://www.apache.org/licenses/LICENSE-2.0.txt)
 
 --- META-INF/LICENSE ---
@@ -10273,7 +10283,7 @@ This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 
 ==============================================================================
-org.bouncycastle:bcpkix-jdk18on:1.85
+org.bouncycastle:bcpkix-jdk18on:1.86
 ==============================================================================
 
 --- META-INF/LICENSE.md ---
@@ -10295,7 +10305,7 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.**
 
 ==============================================================================
-org.bouncycastle:bcprov-jdk18on:1.85
+org.bouncycastle:bcprov-jdk18on:1.86
 ==============================================================================
 
 --- META-INF/LICENSE.md ---
@@ -10317,7 +10327,7 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.**
 
 ==============================================================================
-org.bouncycastle:bcutil-jdk18on:1.85
+org.bouncycastle:bcutil-jdk18on:1.86
 ==============================================================================
 
 --- META-INF/LICENSE.md ---
@@ -11487,12 +11497,12 @@ Portions of the number-to-string code are subject to the following:
  THE SOFTWARE.
 
 ==============================================================================
-org.slf4j:slf4j-api:2.0.18
+org.slf4j:slf4j-api:2.0.20
 ==============================================================================
 
 --- META-INF/LICENSE.txt ---
 
-Copyright (c) 2004-2022 QOS.ch Sarl (Switzerland)
+Copyright (c) 2004-2023 QOS.ch
 All rights reserved.
 
 Permission is hereby granted, free  of charge, to any person obtaining
@@ -11547,59 +11557,61 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 BEZ VLASTNÍHO LICENČNÍHO TEXTU V JARU
 ==============================================================================
 
-  com.github.erosb:json-sKema:0.31.0
+  co.nstant.in:cbor:0.9
+  com.github.erosb:json-sKema:0.32.0
   com.sanctionco.jmail:jmail:2.1.0
   com.thoughtworks.qdox:qdox:1.12
-  eu.europa.ec.joinup.sd-dss:dss-alert:6.5
-  eu.europa.ec.joinup.sd-dss:dss-asic-cades:6.5
-  eu.europa.ec.joinup.sd-dss:dss-asic-common:6.5
-  eu.europa.ec.joinup.sd-dss:dss-asic-xades:6.5
-  eu.europa.ec.joinup.sd-dss:dss-cades:6.5
-  eu.europa.ec.joinup.sd-dss:dss-cms:6.5
-  eu.europa.ec.joinup.sd-dss:dss-cms-object:6.5
-  eu.europa.ec.joinup.sd-dss:dss-crl-parser:6.5
-  eu.europa.ec.joinup.sd-dss:dss-crl-parser-x509crl:6.5
-  eu.europa.ec.joinup.sd-dss:dss-detailed-report-jaxb:6.5
-  eu.europa.ec.joinup.sd-dss:dss-diagnostic-jaxb:6.5
-  eu.europa.ec.joinup.sd-dss:dss-document:6.5
-  eu.europa.ec.joinup.sd-dss:dss-enumerations:6.5
-  eu.europa.ec.joinup.sd-dss:dss-evidence-record-asn1:6.5
-  eu.europa.ec.joinup.sd-dss:dss-evidence-record-common:6.5
-  eu.europa.ec.joinup.sd-dss:dss-evidence-record-xml:6.5
-  eu.europa.ec.joinup.sd-dss:dss-i18n:6.5
-  eu.europa.ec.joinup.sd-dss:dss-jades:6.5
-  eu.europa.ec.joinup.sd-dss:dss-jaxb-common:6.5
-  eu.europa.ec.joinup.sd-dss:dss-jaxb-parsers:6.5
-  eu.europa.ec.joinup.sd-dss:dss-json-common:6.5
-  eu.europa.ec.joinup.sd-dss:dss-model:6.5
-  eu.europa.ec.joinup.sd-dss:dss-pades:6.5
-  eu.europa.ec.joinup.sd-dss:dss-pades-pdfbox:6.5
-  eu.europa.ec.joinup.sd-dss:dss-policy-jaxb:6.5
-  eu.europa.ec.joinup.sd-dss:dss-service:6.5
-  eu.europa.ec.joinup.sd-dss:dss-simple-certificate-report-jaxb:6.5
-  eu.europa.ec.joinup.sd-dss:dss-simple-report-jaxb:6.5
-  eu.europa.ec.joinup.sd-dss:dss-spi:6.5
-  eu.europa.ec.joinup.sd-dss:dss-tsl-validation:6.5
-  eu.europa.ec.joinup.sd-dss:dss-utils:6.5
-  eu.europa.ec.joinup.sd-dss:dss-utils-apache-commons:6.5
-  eu.europa.ec.joinup.sd-dss:dss-validation:6.5
-  eu.europa.ec.joinup.sd-dss:dss-validation-job:6.5
-  eu.europa.ec.joinup.sd-dss:dss-xades:6.5
-  eu.europa.ec.joinup.sd-dss:dss-xml-common:6.5
-  eu.europa.ec.joinup.sd-dss:dss-xml-utils:6.5
-  eu.europa.ec.joinup.sd-dss:specs-jades:6.5
-  eu.europa.ec.joinup.sd-dss:specs-jws:6.5
-  eu.europa.ec.joinup.sd-dss:specs-trusted-list:6.5
-  eu.europa.ec.joinup.sd-dss:specs-trusted-list-v211:6.5
-  eu.europa.ec.joinup.sd-dss:specs-validation-report:6.5
-  eu.europa.ec.joinup.sd-dss:specs-xades:6.5
-  eu.europa.ec.joinup.sd-dss:specs-xmldsig:6.5
-  eu.europa.ec.joinup.sd-dss:specs-xmlers:6.5
+  eu.europa.ec.joinup.sd-dss:dss-alert:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-asic-cades:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-asic-common:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-asic-xades:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-cades:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-cb-ades:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-cms:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-cms-object:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-crl-parser:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-crl-parser-x509crl:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-detailed-report-jaxb:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-diagnostic-jaxb:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-document:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-enumerations:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-evidence-record-asn1:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-evidence-record-common:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-evidence-record-xml:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-i18n:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-jades:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-jaxb-common:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-jaxb-parsers:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-json-common:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-model:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-pades:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-pades-pdfbox:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-policy-jaxb:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-service:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-simple-certificate-report-jaxb:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-simple-report-jaxb:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-spi:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-tsl-validation:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-utils:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-utils-apache-commons:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-validation:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-validation-job:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-xades:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-xml-common:6.5.1
+  eu.europa.ec.joinup.sd-dss:dss-xml-utils:6.5.1
+  eu.europa.ec.joinup.sd-dss:specs-jades:6.5.1
+  eu.europa.ec.joinup.sd-dss:specs-jws:6.5.1
+  eu.europa.ec.joinup.sd-dss:specs-trusted-list:6.5.1
+  eu.europa.ec.joinup.sd-dss:specs-trusted-list-v211:6.5.1
+  eu.europa.ec.joinup.sd-dss:specs-validation-report:6.5.1
+  eu.europa.ec.joinup.sd-dss:specs-xades:6.5.1
+  eu.europa.ec.joinup.sd-dss:specs-xmldsig:6.5.1
+  eu.europa.ec.joinup.sd-dss:specs-xmlers:6.5.1
   net.java.dev.stax-utils:stax-utils:20070216
   net.sf.saxon:Saxon-HE:12.5
-  org.bitbucket.b_c:jose4j:0.9.6
+  org.bitbucket.b_c:jose4j:0.9.7
   org.jetbrains:annotations:13.0
-  org.jetbrains.kotlin:kotlin-stdlib:2.3.10
+  org.jetbrains.kotlin:kotlin-stdlib:2.4.20
   org.openjfx:javafx-base:21.0.4
   org.openjfx:javafx-base:21.0.4
   org.openjfx:javafx-controls:21.0.4
@@ -11612,13 +11624,13 @@ BEZ VLASTNÍHO LICENČNÍHO TEXTU V JARU
   org.openjfx:javafx-media:21.0.4
   org.openjfx:javafx-web:21.0.4
   org.openjfx:javafx-web:21.0.4
-  org.verapdf:core-jakarta:1.30.2
-  org.verapdf:feature-reporting-jakarta:1.30.2
-  org.verapdf:metadata-fixer-jakarta:1.30.2
-  org.verapdf:parser:1.30.2
-  org.verapdf:pdf-model:1.30.2
-  org.verapdf:validation-model-jakarta:1.30.2
-  org.verapdf:verapdf-xmp-core-jakarta:1.30.2
+  org.verapdf:core-jakarta:1.30.3
+  org.verapdf:feature-reporting-jakarta:1.30.3
+  org.verapdf:metadata-fixer-jakarta:1.30.3
+  org.verapdf:parser:1.30.3
+  org.verapdf:pdf-model:1.30.3
+  org.verapdf:validation-model-jakarta:1.30.3
+  org.verapdf:verapdf-xmp-core-jakarta:1.30.3
   org.xmlresolver:xmlresolver:5.2.2
   org.xmlresolver:xmlresolver:5.2.2
   org.yaml:snakeyaml:2.6

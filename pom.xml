@@ -58,7 +58,7 @@
          číselnou verzi (major.minor.build), kdežto vydání se jmenuje slovem. -->
     <anep.release>1.0</anep.release>
 
-    <dss.version>6.5</dss.version>
+    <dss.version>6.5.1</dss.version>
     <javafx.version>21.0.4</javafx.version>
     <!-- Nativní knihovny JavaFX, které profil dist přibalí: win, linux, linux-aarch64.
          Výchozí win drží sestavení pro Windows beze změny; linuxový skript předá

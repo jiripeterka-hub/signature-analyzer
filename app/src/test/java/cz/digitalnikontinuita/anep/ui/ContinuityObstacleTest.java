@@ -44,6 +44,22 @@ class ContinuityObstacleTest {
     }
 
     @Test
+    @DisplayName("CB-AdES je překážka i s platným verdiktem a řekne proč")
+    void cbAdesCannotBeExtended() {
+        var sig = SigFixture.sig()
+                .format("CB-AdES-BASELINE-T")
+                .certNotAfter(SigFixture.FUTURE)
+                .bestSignatureTime(SigFixture.PAST)
+                .situations(31, 32, 33, 34)
+                .build();
+
+        String obstacle = AdvisorView.continuityObstacle(sig, NO_TRUSTED_LAST);
+
+        assertNotNull(obstacle, "CB-AdES aplikace rozšiřovat neumí, nabídka ho nesmí slibovat");
+        assertTrue(obstacle.contains("CB-AdES"), obstacle);
+    }
+
+    @Test
     @DisplayName("Situace 41 přidá, že podpis se stane neověřitelným a spravit to nepůjde")
     void situation41AddsTheLossOfRevocationEvidence() {
         var withoutMaterial = AdvisorView.continuityObstacle(

@@ -55,7 +55,12 @@ public final class ForensicPackageDialog {
 
     private ForensicPackageDialog() { }
 
-    public static void show(Window owner, List<File> initialFiles, String unreadableName,
+    /**
+     * @param subject soubor, ke kterému se váže {@code reason}. Předává se výslovně, ne jako
+     *                první v seznamu: s externím podpisem je první obsah z hlavního pole, ale
+     *                odmítnutý byl podpis (31. 10. 2026).
+     */
+    public static void show(Window owner, List<File> initialFiles, File subject,
                             Reason reason, FixationService service, AppSettings settings) {
         Stage stage = new Stage();
         stage.setTitle("Forenzní balíček");
@@ -68,7 +73,7 @@ public final class ForensicPackageDialog {
         root.setPrefWidth(620);
         root.setPrefHeight(460);
 
-        File subject = initialFiles.isEmpty() ? null : initialFiles.get(0);
+        String unreadableName = subject.getName();
         String format = formatName(unreadableName);
         String headlineText;
         String lead;

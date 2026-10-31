@@ -1781,6 +1781,17 @@ public class AdvisorView {
                       + "že tehdy nebyl odvolán"
                     : base;
         }
+        // CB-AdES (podpisy COSE, AnEP je ověřuje od přechodu na DSS 6.5.1, 31. 10. 2026) rozšiřovat
+        // neumí: SignatureExtensionService ho nepřebírá. DSS 6.5.1 by to umělo (modul registruje
+        // CBAdESDocumentExtenderFactory), AnEP ho na rozšíření zatím nepřipojilo — dokud se to
+        // nezmění, platí tahle překážka. Brána přitom vracela null, takže karta pod nadpisem „nabízí pouze
+        // forenzní balíček“ tvrdila „už není možné, nebo účelné, zachovávat ověřitelnost“ bez
+        // důvodu — u platného podpisu s platným razítkem (změřeno na CB-AdES-BASELINE-T
+        // s odloučeným PDF). Nemožné to není, jen to aplikace nesvede, a to se má říct.
+        if (isCbAdes(sig.getFormat())) {
+            return "je ve formátu CB-AdES, do kterého aplikace razítka ani revokační informace "
+                    + "doplňovat neumí";
+        }
         // Vyřazená služba je překážka tam, kde už úkon nemá co prodloužit — nové razítko opravdu
         // zpětně nevyrobí důkaz, že stav existoval, dokud služba kvalifikovaný status měla.
         // Jenže to je odpověď pro toho, kdo razítka posuzuje podle sunsetu. Okruh nástrojů se
@@ -6320,7 +6331,9 @@ public class AdvisorView {
         }
 
         body.getChildren().add(infoRow("Referenční formát:",
-                isReferenceFormat(sig.getFormat()) ? REFERENCE_FORMAT_YES : REFERENCE_FORMAT_NO));
+                isReferenceFormat(sig.getFormat()) ? REFERENCE_FORMAT_YES
+                        : isCbAdes(sig.getFormat()) ? REFERENCE_FORMAT_CBADES
+                        : REFERENCE_FORMAT_NO));
     }
 
     /**
@@ -6431,6 +6444,13 @@ public class AdvisorView {
         if (fmt.startsWith("JADES"))
             return "JAdES (JSON Advanced Electronic Signatures) — formát určený pro data ve"
                  + " formátu JSON, se kterými pracují webové služby a mobilní aplikace.";
+        // Od 31. 10. 2026 (DSS 6.5.1 s modulem dss-cb-ades). Bez téhle větve chyběl u CB-AdES
+        // řádek „Druh formátu:“ a s ním i „Zapouzdření:“, který se ptá, zda formát známe.
+        if (fmt.startsWith("CB-ADES"))
+            return "CB-AdES (CBOR Advanced Electronic Signatures) — formát založený na podpisech"
+                 + " COSE a binárním datovém formátu CBOR, určený především pro zařízení"
+                 + " a sítě s omezenými prostředky (internet věcí); podepsat jím lze ale data"
+                 + " jakéhokoli druhu.";
         return null;
     }
 
@@ -6634,9 +6654,24 @@ public class AdvisorView {
         };
     }
 
-    /** True for the ETSI baseline profiles — the ones Decision (EU) 2015/1506 lists. */
+    /**
+     * True for the ETSI baseline profiles — the ones Decision (EU) 2015/1506 lists.
+     *
+     * <p>CB-AdES mezi ně nepatří, ačkoli DSS ho hlásí jako {@code CB-AdES-BASELINE-*}. Rozhodnutí
+     * 2015/1506 jmenovalo XAdES, CAdES, PAdES a ASiC; prováděcí nařízení (EU) 2026/248, které ho
+     * zrušilo, přidalo v příloze I JAdES, CB-AdES ale nejmenuje ani tam — takový podpis lze
+     * uznat jen alternativní metodou ověřování (čl. 2 a 4). Do 31. 10. 2026 ho AnEP neověřoval,
+     * takže na řádek „Referenční formát“ nedošlo; první karta CB-AdES na něm tvrdila „Ano“.
+     * Text odpovědi viz {@link #REFERENCE_FORMAT_CBADES}.
+     */
     static boolean isReferenceFormat(String format) {
-        return format != null && format.toUpperCase(Locale.ROOT).contains("BASELINE");
+        return format != null && format.toUpperCase(Locale.ROOT).contains("BASELINE")
+                && !isCbAdes(format);
+    }
+
+    /** Podpis CB-AdES (CBOR/COSE), jak ho hlásí DSS: {@code CB-AdES-BASELINE-B/T/LT/LTA}. */
+    static boolean isCbAdes(String format) {
+        return format != null && format.toUpperCase(Locale.ROOT).startsWith("CB-ADES");
     }
 
     /**
@@ -6778,6 +6813,21 @@ public class AdvisorView {
             + " i přeshraničně. V praxi proto počítejte s tím, že takový dokument nemusí být na"
             + " úřadě zpracovatelný, i když je podpis platný. Pokud dokument někam odesíláte, je"
             + " bezpečnější podepsat jej znovu v některém z referenčních formátů.";
+
+    /**
+     * CB-AdES vlastním textem: obecné „Ne“ výš o formátu mluví jako o něčem, co se má nahradit
+     * („podepsat znovu v některém z referenčních formátů“), kdežto CB-AdES je formát nový, který
+     * mezi referenční <b>zatím</b> nepatří (pokyn uživatele 31. 10. 2026). A odkazuje už na
+     * prováděcí nařízení (EU) 2026/248, které rozhodnutí 2015/1506 zrušilo; CB-AdES nejmenuje
+     * ani jeho příloha I, a uznat ho lze jen alternativní metodou ověřování (čl. 2 a 4).
+     */
+    private static final String REFERENCE_FORMAT_CBADES =
+            "Zatím ne. Formát CB-AdES nepatří mezi formáty, které stanoví prováděcí nařízení Komise"
+            + " (EU) 2026/248 (a před ním zrušené rozhodnutí 2015/1506). Povinnost orgánů veřejné"
+            + " moci takový podpis bez dalšího přijmout se na něj proto zatím nevztahuje: podle"
+            + " čl. 2 a 4 nařízení ho uznávají jen tehdy, nabízí-li členský stát poskytovatele"
+            + " podepisující osoby metodu jeho ověřování, na kterou podpis či dokument odkazuje."
+            + " Po technické stránce přitom může být podpis zcela v pořádku.";
 
     // -------------------------------------------------------------------------
     // Helpers

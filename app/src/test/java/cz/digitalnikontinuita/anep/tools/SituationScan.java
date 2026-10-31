@@ -39,7 +39,8 @@ import java.util.stream.Stream;
 public final class SituationScan {
 
     private static final List<String> EXTENSIONS =
-            List.of(".pdf", ".p7s", ".p7m", ".asice", ".asics", ".sce", ".scs", ".xml", ".json");
+            List.of(".pdf", ".p7s", ".p7m", ".asice", ".asics", ".sce", ".scs", ".xml", ".json",
+                    ".cose");
 
     /** What the walk accepts — {@link #EXTENSIONS} unless {@code -ext} narrows it. */
     private static List<String> extensions = EXTENSIONS;

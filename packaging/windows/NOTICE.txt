@@ -22,15 +22,15 @@ POUŽITÉ KNIHOVNY
 ════════════════════════════════════════════════════════════════════════
 
 Úplný výčet je v licenses\THIRD-PARTY-LICENSES.txt — obsahuje licenční texty
-tak, jak je dodávají jejich autoři, vytažené ze 129 balených archivů. Níže jsou
+tak, jak je dodávají jejich autoři, vytažené ze 131 balených archivů. Níže jsou
 jmenovitě licence, pod kterými ty knihovny stojí, a plná znění přiložená vedle.
 
 ────────────────────────────────────────────────────────────────────────
-DSS — Digital Signature Services  (45 modulů)
+DSS — Digital Signature Services  (46 modulů)
 Copyright (c) European Commission / DIGIT
 Licence: GNU Lesser General Public License v2.1 nebo pozdější (LGPL-2.1+)
 Text licence: licenses\LGPL-2.1.txt
-Zdrojový kód: https://github.com/esig/dss  (značka pro verzi 6.5)
+Zdrojový kód: https://github.com/esig/dss  (značka pro verzi 6.5.1)
 
 DSS je do souboru signature-analyzer.jar zabalen spolu s aplikací, nikoli
 připojen jako samostatný archiv. Aby zůstalo možné jej vyměnit za jinou verzi,
@@ -45,7 +45,7 @@ Licence: dvojlicence — GNU General Public License v3 nebo pozdější (GPL-3.0
          anebo Mozilla Public License 2.0 nebo pozdější (MPL-2.0+).
          AnEP ji šíří pod MPL-2.0; volba náleží příjemci stejně jako jemu.
 Text licence: licenses\MPL-2.0.txt
-Zdrojový kód (značky pro verzi 1.30.2):
+Zdrojový kód (značky pro verzi 1.30.3):
   core, verapdf-xmp-core       https://github.com/veraPDF/veraPDF-library
   feature-reporting, metadata-fixer, validation-model
                                https://github.com/veraPDF/veraPDF-validation
@@ -83,8 +83,8 @@ Apache Software Foundation  (přibližně 45 artefaktů)
   Apache PDFBox, Apache FOP, Apache Batik, Apache XML Graphics Commons,
   Apache Santuario (XML Security), Apache HttpComponents, Apache Commons
   (Codec, IO, Lang, Collections, Logging), Woodstox, snakeyaml, xmlresolver,
-  qdox, jose4j, Jackson (Core, Databind, Annotations), Kotlin Standard
-  Library, JetBrains Annotations
+  qdox, jose4j, cbor-java, Jackson (Core, Databind, Annotations), Kotlin
+  Standard Library, JetBrains Annotations
 Licence: Apache License, Version 2.0
 Text licence: licenses\Apache-2.0.txt
 Výslovná uvedení autorství (NOTICE) jsou v licenses\THIRD-PARTY-LICENSES.txt

@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika uchovávání ověřitelnosti**
 
-==Verze 1.10 · stav ke dni 30. 10. 2026== · AnEP 1.0.0, knihovna DSS 6.5
+==Verze 1.11 · stav ke dni 31. 10. 2026== · AnEP 1.0.0, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -35,13 +35,13 @@ Rozdělení je věcné: politika ověřování popisuje **dnešní** ověření,
 | Položka | Hodnota |
 |---|---|
 | Název | Politika uchovávání elektronických podpisů AnEP |
-| Verze | ==1.10 ze dne 30. 10. 2026== |
+| Verze | ==1.11 ze dne 31. 10. 2026== |
 | Platí pro | AnEP 1.0.0 (repozitář signature-analyzer, stav po commitu ==11f98cf==) |
-| Navazuje na | Politika ověřování elektronických podpisů AnEP, verze ==1.10== |
+| Navazuje na | Politika ověřování elektronických podpisů AnEP, verze ==1.11== |
 | Struktura dokumentu | ETSI TS 119 511 V1.1.1 (2019-06) |
 | Pojmy a schéma uchování | ETSI TS 119 512 V1.2.1 (2023-05), schéma F.4 „pds+wos+aug“ |
 | Cílová úroveň podpisů | B-LTA podle ETSI EN 319 142-1 (PAdES), EN 319 122-1 (CAdES), EN 319 132-1 (XAdES), TS 119 182-1 (JAdES) a EN 319 162-1 (ASiC) |
-| Kryptografická omezení | výchozí politika DSS 6.5 podle ETSI TS 119 312 (politika ověřování, kapitola 10) |
+| Kryptografická omezení | výchozí politika DSS 6.5.1 podle ETSI TS 119 312 (politika ověřování, kapitola 10) |
 | Identifikátor (OID) | nepřidělen |
 
 Politika popisuje chování aplikace. Kde se aplikace změní, mění se i politika; každá verze uvádí, k jakému stavu aplikace se vztahuje, a všechny verze zůstávají k dispozici.
@@ -240,6 +240,7 @@ Lhůta k úkonu je **konec ověřitelnosti dokumentu podle AnEP** — dokud je c
 - **PDF:** validační data se zapíší do slovníku DSS a archivní razítko se přidá jako dokumentové časové razítko v nové přírůstkové revizi. Dokument, který se hlásí k normě PDF/A a splňuje ji, úkon v archivní podobě zachová; změřeno na 80 vyhovujících dokumentech ve 157 průchodech uchováním i přerazítkováním bez jediné ztráty shody. Jde o tvrzení o měření, ne o záruku. ==Nese-li dokument certifikační podpis, který nepovoluje žádné změny (DocMDP P=1), aplikace před úkonem upozorní: EN 319 142-1 (5.4.2.3, 5.4.3) i ISO 32000-2 (DocMDP, tabulka 257) přírůstkovou revizi jen se slovníkem DSS a dokumentovým časovým razítkem za změnu nepovažují, některé čtečky PDF (při měření Adobe Acrobat Reader) ho však mohou vyhodnotit jako nepovolenou změnu a certifikační podpis označit za neplatný. Úkon se nezakazuje, protože ověřovatelé, kterým je určen, mohou výsledek uznat.==
 - **CAdES, XAdES, JAdES a kontejnery ASiC** rozšiřuje knihovna DSS na úroveň B-LTA. PDF uložené v kontejneru ASiC se uchovává jako podpis kontejneru, ne jako PDF.
 - **Oddělený podpis** se rozšiřuje jen s podepsanými daty, protože archivní razítko kryje i je.
+- ==**CB-AdES** (podpis COSE) aplikace ověří, rozšiřovat ho ale neumí; nabízí u něj jen forenzní balíček.==
 
 ### 8.2 Kryptografie (OVR-6.5-03, 6.5-04)
 
@@ -326,3 +327,4 @@ Z TS 119 512 AnEP odpovídá schématu F.4 se dvěma odchylkami uvedenými v 3.2
 | ==1.8== | ==17. 10. 2026== | ==oddíly 6.2 a 6.4: přerazítkování (a uchování u prvku s volnějším čtením) vkládá jen revokační údaje, které o certifikátu něco vypovídají — odpověď „nerevokován“ vydaná po expiraci bez závazku vydavatele se nevkládá, s odůvodněním ze standardů a z měření; oddíl 8.1: upozornění před úkonem u dokumentu s certifikačním podpisem bez povolených změn (DocMDP P=1); spolu s verzí 1.8 politiky ověřování== |
 | ==1.9== | ==17. 10. 2026== | ==oddíl 6.5: prodloužení doplní revokační informace a certifikáty stejně jako uchování, post-expirační údaje bez závazku vydavatele nevkládá a údaj o certifikátu přidaného razítka ještě nenese; oddíl 6.4: pravidlo pro údaje u prvku s volnějším čtením platí i pro prodloužení; spolu s verzí 1.9 politiky ověřování== |
 | ==1.10== | ==30. 10. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.10 politiky ověřování, která doplňuje ověřování podpisu kódu u programů== |
+| ==1.11== | ==31. 10. 2026== | ==oddíl 8.1: podpis CB-AdES aplikace ověří, ale neuchovává; číslo verze sjednocené s verzí 1.11 politiky ověřování, která doplňuje ověřování CB-AdES a přechod na knihovnu DSS 6.5.1== |

@@ -1,7 +1,7 @@
 # AnEP — pokyny pro práci na projektu
 
 AnEP (Analyzátor elektronických podpisů) je desktopová aplikace v Javě (JavaFX), která ověřuje
-elektronické podpisy, pečetě a časová razítka nad knihovnou DSS 6.5 a vykládá výsledek česky.
+elektronické podpisy, pečetě a časová razítka nad knihovnou DSS 6.5.1 a vykládá výsledek česky.
 Uživatel je odborník na elektronické podpisy; s aplikací řeší i právní účinky podpisu.
 
 ## Kde co je

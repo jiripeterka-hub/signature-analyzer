@@ -52,6 +52,14 @@
       <artifactId>dss-jades</artifactId>
     </dependency>
 
+    <!-- CB-AdES: podpisy CBOR/COSE (ETSI TS 119 152-1), v DSS od 6.5. Přidáno s přechodem
+         na 6.5.1 (31. 10. 2026), které opravuje tři odchylky DSS 6.5 od normy právě
+         v CB-AdES; do té doby AnEP soubor .cose odmítal jako nepodporovaný formát. -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-cb-ades</artifactId>
+    </dependency>
+
     <!-- Evidence records: RFC 6283 XMLERS and RFC 4998 ERS.
          Validation only - DSS cannot create evidence records, only verify them and
          compute the data-object digests a preservation service would need.
@@ -182,7 +190,7 @@
     <dependency>
       <groupId>org.verapdf</groupId>
       <artifactId>validation-model-jakarta</artifactId>
-      <version>1.30.2</version>
+      <version>1.30.3</version>
     </dependency>
 
   </dependencies>

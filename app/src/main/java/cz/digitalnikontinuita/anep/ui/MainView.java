@@ -1518,13 +1518,18 @@ public class MainView {
             // souboru. Musí zmizet dřív, než se otevře okno níž — jinak by vedle něj stál
             // verdikt o jiném dokumentu po celou dobu, co ho čtenář čte.
             clearResults();
-            var peek = cz.digitalnikontinuita.anep.core.OfficeSignaturePeek.peek(sf);
+            // Se zadaným externím podpisem DSS čte ten druhý soubor, ne obsah v hlavním poli.
+            // Hláška dřív jmenovala vždy hlavní pole, takže u nepodepsaného PDF a podpisu .cose
+            // tvrdila, že aplikace nepodporuje PDF (nález uživatele 31. 10. 2026). Proto se
+            // všechny větve níž ptají na soubor, který DSS skutečně odmítlo.
+            File rejected = rejectedFile(sf, of);
+            var peek = cz.digitalnikontinuita.anep.core.OfficeSignaturePeek.peek(rejected);
             if (peek != null) {
-                setStatus("Podpis v souboru " + sf.getName() + " aplikace neověřuje;"
+                setStatus("Podpis v souboru " + rejected.getName() + " aplikace neověřuje;"
                         + " co se o něm dá zjistit, je v samostatném okně.");
                 OfficePeekDialog.show(getRoot().getScene() != null
                                 ? getRoot().getScene().getWindow() : null,
-                        sf, peek, verifierRef, fixationService, appSettings);
+                        rejected, peek, verifierRef, fixationService, appSettings);
                 resetFileZones();
                 return;
             }
@@ -1540,20 +1545,20 @@ public class MainView {
                 // ale patří stejně jako dřív.
                 // Program (.exe, .msi…): podpis kódu se vypíše a ověří se integrita a matematika,
                 // certifikát zatím ne (30. 10. 2026).
-                if (ContainerView.openRejectedCode(owner, sf, () ->
-                        ForensicPackageDialog.show(owner, files, sf.getName(),
+                if (ContainerView.openRejectedCode(owner, rejected, () ->
+                        ForensicPackageDialog.show(owner, files, rejected,
                                 cz.digitalnikontinuita.anep.core.FixationService.Reason.UNSUPPORTED_FORMAT,
                                 fixationService, appSettings))) {
-                    setStatus("Soubor " + sf.getName() + " je program; rozbor jeho podpisu kódu"
+                    setStatus("Soubor " + rejected.getName() + " je program; rozbor jeho podpisu kódu"
                             + " je v samostatném okně.");
                     resetFileZones();
                     return;
                 }
-                if (ContainerView.openRejectedArchive(owner, sf, () ->
-                        ForensicPackageDialog.show(owner, files, sf.getName(),
+                if (ContainerView.openRejectedArchive(owner, rejected, () ->
+                        ForensicPackageDialog.show(owner, files, rejected,
                                 cz.digitalnikontinuita.anep.core.FixationService.Reason.UNSUPPORTED_FORMAT,
                                 fixationService, appSettings))) {
-                    setStatus("Soubor " + sf.getName() + " je obyčejný archiv ZIP, ne kontejner"
+                    setStatus("Soubor " + rejected.getName() + " je obyčejný archiv ZIP, ne kontejner"
                             + " podpisu; jeho obsah je v samostatném okně.");
                     resetFileZones();
                     return;
@@ -1561,13 +1566,13 @@ public class MainView {
                 // Kancelářský dokument sem dojde jen bez podpisu — podepsaný otevřelo nahlédnutí
                 // výše. Tvrdit u něj, že formát aplikace nepodporuje, by nebyla pravda.
                 cz.digitalnikontinuita.anep.core.FixationService.Reason reason =
-                        cz.digitalnikontinuita.anep.core.OfficeSignaturePeek.isCandidate(sf)
+                        cz.digitalnikontinuita.anep.core.OfficeSignaturePeek.isCandidate(rejected)
                                 ? cz.digitalnikontinuita.anep.core.FixationService.Reason.OFFICE_UNSIGNED
                                 : cz.digitalnikontinuita.anep.core.FixationService.Reason.UNSUPPORTED_FORMAT;
                 setStatus(reason == cz.digitalnikontinuita.anep.core.FixationService.Reason.OFFICE_UNSIGNED
-                        ? "Soubor " + sf.getName() + " není podepsaný."
-                        : "Formát souboru " + sf.getName() + " aplikace nepodporuje.");
-                ForensicPackageDialog.show(owner, files, sf.getName(), reason,
+                        ? "Soubor " + rejected.getName() + " není podepsaný."
+                        : "Formát souboru " + rejected.getName() + " aplikace nepodporuje.");
+                ForensicPackageDialog.show(owner, files, rejected, reason,
                         fixationService, appSettings);
                 resetFileZones();
                 return;
@@ -1804,6 +1809,18 @@ public class MainView {
                 outcome.reports().getDiagnosticData(), sf.length()));
         StartupTrace.mark("report mapped");
         return mapped;
+    }
+
+    /**
+     * Soubor, který DSS dostalo k ověření — tentýž výběr jako ve {@link #validateFiles}:
+     * bez druhého souboru hlavní pole, s externím podpisem ten podpis, a je-li druhý soubor
+     * evidenční záznam, zase hlavní pole. (Evidenční záznam v hlavním poli a dokument ve druhém
+     * dává také druhý soubor.)
+     */
+    private static File rejectedFile(File sf, File of) {
+        if (of == null) return sf;
+        return cz.digitalnikontinuita.anep.core.EvidenceRecordDetector.isEvidenceRecord(
+                new eu.europa.esig.dss.model.FileDocument(of)) ? sf : of;
     }
 
     /**

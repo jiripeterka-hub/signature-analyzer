@@ -1470,6 +1470,8 @@ public class ResultView {
                 if (fmt.startsWith("CAdES")) return "P7M";
                 if (fmt.startsWith("XAdES")) return "XML";
                 if (fmt.startsWith("JAdES")) return "JSON";
+                // Obalující podpis COSE (CB-AdES), ověřovaný od 31. 10. 2026.
+                if (fmt.startsWith("CB-AdES")) return "COSE";
             }
             return null;
         }

@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika ověřování podpisu**
 
-==Verze 1.10== · stav ke dni 30. 10. 2026 · AnEP 1.0.0, knihovna DSS 6.5
+==Verze 1.11== · stav ke dni 31. 10. 2026 · AnEP 1.0.0, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -17,7 +17,7 @@ Dokument je stavěný jako politika ověřování podpisu ve smyslu ETSI TS 119 
 ### 1.2 AnEP v kostce
 
 - Ověřuje **lokálně**. Dokument ani jeho otisk nikam neodcházejí; po síti se stahují jen důvěryhodné seznamy, revokační informace (OCSP, CRL) a chybějící certifikáty vydavatelů.
-- Ověřuje **podle ETSI EN 319 102-1** prostřednictvím knihovny DSS Evropské komise (verze 6.5), vždy až po úroveň dlouhodobého ověření s archivními daty.
+- Ověřuje **podle ETSI EN 319 102-1** prostřednictvím knihovny DSS Evropské komise (verze 6.5.1), vždy až po úroveň dlouhodobého ověření s archivními daty.
 - Důvěru odvozuje z **evropských důvěryhodných seznamů** (LOTL a národní seznamy) a z **vlastního úložiště certifikátů**, které spravuje uživatel.
 - Ve dvou věcech je **mírnější než výchozí politika DSS**: nevyžaduje, aby podpis nesl deklarovaný čas podpisu (atribut signing-time), a nevyžaduje, aby tento čas ležel v době platnosti certifikátu. Obojí jen oznámí jako poznámku k výsledku.
 - Čtyři další odchylky od standardů jsou **ústupky**, které si uživatel zapíná výslovně, vždy jen pro jedno ověření, a které se ve výsledku vykazují.
@@ -28,13 +28,13 @@ Dokument je stavěný jako politika ověřování podpisu ve smyslu ETSI TS 119 
 | Položka | Hodnota |
 |---|---|
 | Název | Politika ověřování elektronických podpisů AnEP |
-| Verze | ==1.10== ze dne 30. 10. 2026 |
+| Verze | ==1.11== ze dne 31. 10. 2026 |
 | Platí pro | AnEP 1.0.0 (repozitář signature-analyzer, stav po commitu ==11f98cf==) |
-| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.10== |
-| Ověřovací jádro | knihovna DSS (Digital Signature Service) 6.5 Evropské komise |
+| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.11== |
+| Ověřovací jádro | knihovna DSS (Digital Signature Service) 6.5.1 Evropské komise |
 | Postup ověřování | ETSI EN 319 102-1 V1.4.0 (2024-03) |
 | Struktura dokumentu | ETSI TS 119 172-1 (politika ověřování podpisu) |
-| Kryptografická omezení | výchozí politika DSS 6.5 podle ETSI TS 119 312 |
+| Kryptografická omezení | výchozí politika DSS 6.5.1 podle ETSI TS 119 312 |
 | Identifikátor (OID) | nepřidělen |
 
 Politika popisuje chování aplikace. Kde se aplikace změní, mění se i politika; každá verze uvádí, k jakému stavu aplikace se vztahuje. Co aplikace dělá s dokumentem, aby zůstal ověřitelný, popisuje samostatná Politika uchovávání elektronických podpisů AnEP; obě politiky se vydávají se shodným číslem verze a vztahují se k témuž stavu aplikace.
@@ -69,6 +69,7 @@ Při ověřování externího podpisu se posuzuje jen externí podpis. Podpisy, 
 | CAdES, CMS, PKCS#7 | B-B až B-LTA, starší úrovně (BES, T, C, X, XL, A) | včetně datových zpráv ISDS (.zfo) |
 | XAdES | B-B až B-LTA, starší úrovně | |
 | JAdES | B-B až B-LTA | |
+| ==CB-AdES (podpis COSE)== | ==B-B až B-LTA== | ==ověřuje se od verze 6.5.1 knihovny DSS; podpis odloučený i obalující; doplnit do něj razítka či revokační informace aplikace neumí== |
 | ASiC-S, ASiC-E (CAdES i XAdES) | B-B až B-LTA | včetně samostatných časových razítek a evidenčních záznamů uvnitř kontejneru |
 | OpenDocument (ODF) | podle vloženého XAdES | ověřuje se jako kontejner ASiC s XAdES |
 | Office Open XML (DOCX, XLSX, PPTX) | — | **neověřuje se**; AnEP jen přečte, co v podpisu stojí. DSS nezná transformaci, kterou OOXML ke krytí obsahu potřebuje |
@@ -102,7 +103,7 @@ Certifikáty tuzemských komerčních autorit má AnEP přibalené jako **doplň
 
 ## 6 Základní stavební bloky
 
-Ověřování probíhá podle EN 319 102-1, kap. 5.2 a 5.3, s politikou, kterou tvoří výchozí politika DSS 6.5 s úpravami podle tabulky níže. Úpravy uvedené jako **trvalé** platí vždy; **ústupky** jen tehdy, když si je uživatel zapne (kapitola 11).
+Ověřování probíhá podle EN 319 102-1, kap. 5.2 a 5.3, s politikou, kterou tvoří výchozí politika DSS 6.5.1 s úpravami podle tabulky níže. Úpravy uvedené jako **trvalé** platí vždy; **ústupky** jen tehdy, když si je uživatel zapne (kapitola 11).
 
 | Stavební blok (EN 319 102-1) | Realizace v AnEP | Odchylka od výchozí politiky DSS |
 |---|---|---|
@@ -127,7 +128,7 @@ Chybí-li atribut, je-li zapsán v podobě, kterou knihovna nepřečte (Generali
 
 ### 6.2 Model ověření řetězu certifikátů
 
-Řetěz certifikátů se ověřuje v **modelu skořápky** (shell model). Je to model výchozí politiky DSS 6.5 (`<Model Value="SHELL"/>`); AnEP ho nemění a žádný ústupek ho nepřepíná. Stejně se ověřují i řetězy certifikátů TSA u časových razítek.
+Řetěz certifikátů se ověřuje v **modelu skořápky** (shell model). Je to model výchozí politiky DSS 6.5.1 (`<Model Value="SHELL"/>`); AnEP ho nemění a žádný ústupek ho nepřepíná. Stejně se ověřují i řetězy certifikátů TSA u časových razítek.
 
 Modely se liší tím, k jakému okamžiku musí platit certifikáty autorit nad podpisovým certifikátem. Podpisový certifikát sám musí ve všech třech platit k rozhodnému okamžiku — k času ověření, nebo, dokládá-li důkaz existence dřívější vznik podpisu, k okamžiku tohoto důkazu (8.4).
 
@@ -202,7 +203,7 @@ Ověřuje se vždy nejvyšším procesem, tedy **procesem pro podpisy s archivn�
 
 ## 10 Kryptografická omezení
 
-AnEP přebírá kryptografická omezení beze změny z výchozí politiky DSS 6.5 (ETSI TS 119 312). Algoritmus se posuzuje k okamžiku, kdy je jeho použití doloženo; pozdější razítko se silnějším algoritmem může podpis se slabším algoritmem udržet.
+AnEP přebírá kryptografická omezení beze změny z výchozí politiky DSS 6.5.1 (ETSI TS 119 312). Algoritmus se posuzuje k okamžiku, kdy je jeho použití doloženo; pozdější razítko se silnějším algoritmem může podpis se slabším algoritmem udržet.
 
 Data v tabulce jsou okamžiky, od kterých ETSI TS 119 312 algoritmus za spolehlivý nepovažuje. Co ověření udělá s algoritmem použitým po takovém datu, záleží na tom, zda datum leží před poslední aktualizací kryptografické sady ve výchozí politice DSS (1. 2. 2026), nebo za ní:
 
@@ -301,7 +302,7 @@ Posouzení je odhadem na základě výsledku ověření, ne rozhodnutím podatel
 
 ### 12.6 Změny dokumentu PDF po podpisu
 
-Podpis v PDF nekryje celý soubor, nýbrž tu jeho podobu (revizi), která existovala v okamžiku podpisu. Co přibylo přírůstkovou aktualizací potom, kryté není. AnEP přebírá posouzení takových změn z výchozí politiky DSS 6.5 beze změny:
+Podpis v PDF nekryje celý soubor, nýbrž tu jeho podobu (revizi), která existovala v okamžiku podpisu. Co přibylo přírůstkovou aktualizací potom, kryté není. AnEP přebírá posouzení takových změn z výchozí politiky DSS 6.5.1 beze změny:
 
 | Změna po podpisu | Úroveň v politice DSS | Dopad na verdikt |
 |---|---|---|
@@ -368,7 +369,7 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 
 | Pravidlo | AnEP | SecuSign Validation (Software602) | QVerify (I.CA, NCA) |
 |---|---|---|---|
-| Ověřovací jádro | DSS 6.5 | vlastní | vlastní knihovny I.CA |
+| Ověřovací jádro | DSS 6.5.1 | vlastní | vlastní knihovny I.CA |
 | Dostupnost | aplikace pro kohokoli | veřejná služba | jen na smlouvu |
 | Deklarovaný čas (signing-time) | nevyžaduje, jen poznámka | čte i nestandardní zápis | nezpracovává |
 | Deklarovaný čas mimo platnost certifikátu | nevadí, jen poznámka | neuvedeno | nezpracovává |
@@ -397,3 +398,4 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 | ==1.8== | ==17. 10. 2026== | ==beze změny obsahu; číslo verze a stav aplikace sjednocené s verzí 1.8 politiky uchovávání, která mění, jaké revokační údaje vkládá přerazítkování== |
 | ==1.9== | ==17. 10. 2026== | ==beze změny obsahu; číslo verze a stav aplikace sjednocené s verzí 1.9 politiky uchovávání, která upřesňuje, jaké revokační údaje vkládá prodloužení== |
 | ==1.10== | ==30. 10. 2026== | ==nový oddíl 12.8: podpis kódu u programů (.exe, .dll, .msi) — integrita, matematika podpisu a razítka, kotvy z úložiště Windows, revokační údaje vydané po expiraci přijaté po dobu, kterou je autoritám ukládají pravidla CA/B Fóra pro podpis kódu; ověřování elektronických podpisů dokumentů se nemění== |
+| ==1.11== | ==31. 10. 2026== | ==oddíl 4: nově se ověřují podpisy CB-AdES (COSE); ověřovacím jádrem je knihovna DSS 6.5.1 — jádro ověřování i výchozí politika se proti 6.5 nezměnily, novější jsou knihovny, na kterých stojí (mj. Bouncy Castle 1.86)== |

@@ -92,7 +92,7 @@ final class OfficePeekDialog {
             stage.close();
             List<File> files = new ArrayList<>();
             files.add(file);
-            ForensicPackageDialog.show(owner, files, file.getName(),
+            ForensicPackageDialog.show(owner, files, file,
                     cz.digitalnikontinuita.anep.core.FixationService.Reason.OFFICE_SIGNED, fixationService, settings);
         });
 

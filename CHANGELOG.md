@@ -5,6 +5,19 @@ pro soupis změn ke každé nové vydané verzi.
 
 ## Připravovaná verze (změny oproti 1.0.0)
 
+### Ověřování
+
+- **Knihovna DSS 6.5.1.** Ověřovacím jádrem je nově opravné vydání DSS 6.5.1. Samotné
+  ověřování podpisů a výchozí politika se proti verzi 6.5 nemění; novější jsou knihovny, na
+  kterých stojí (mimo jiné Bouncy Castle 1.86 a veraPDF 1.30.3).
+- **Podpisy CB-AdES.** AnEP nově ověřuje podpisy ve formátu CB-AdES (ETSI TS 119 152-1),
+  založené na podpisech COSE a datovém formátu CBOR — odloučené (soubor .cose s podepsaným
+  dokumentem v hlavním poli) i obalující. Dosud je odmítal jako nepodporovaný formát.
+  Karta Analýzy u nich uvádí, že zatím nejde o referenční formát: CB-AdES nejmenuje
+  rozhodnutí (EU) 2015/1506 ani prováděcí nařízení (EU) 2026/248, které je nahradilo. Prodloužit ani
+  uchovat podpis CB-AdES aplikace neumí; záložka Digitální kontinuita u něj nabízí forenzní
+  balíček a řekne proč.
+
 ### Výklad výsledku ověření
 
 - **Druh podpisu či pečeti s porušenou integritou.** Když se podepsaný obsah po podpisu
@@ -19,6 +32,11 @@ pro soupis změn ke každé nové vydané verzi.
   ani zákona č. 297/2016 Sb. Verdikt „neplatný (porušení integrity)“ a důvod 7 zůstávají beze
   změny. U ostatních příčin neplatnosti (například odvolání certifikátu před podpisem) zůstává
   dosavadní znění.
+- **Nepodporovaný formát externího podpisu.** Když byl v hlavním poli dokument a jako externí
+  podpis soubor ve formátu, který aplikace nepodporuje, uváděla verze 1.0.0 ve stavovém řádku
+  i v nabídce forenzního balíčku, že nepodporuje formát dokumentu (například PDF). Nově jmenuje
+  soubor externího podpisu, který skutečně přečíst nedokázala; totéž jméno nese i popis
+  ve vytvořeném forenzním balíčku.
 
 ### Prohlížeč kontejnerů
 
