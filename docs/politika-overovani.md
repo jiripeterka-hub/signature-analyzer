@@ -96,6 +96,8 @@ Uživatel může do vlastního úložiště vložit certifikáty, kterým má ap
 
 Certifikáty tuzemských komerčních autorit má AnEP přibalené jako **doplňkový materiál** pro sestavení řetězu, ne jako kotvy: důvěru k nim zakládá teprve vložení do vlastního úložiště.
 
+Stejně je přibalený kořenový certifikát „SignMaster CA“ (Software602 a.s.), pod nímž služba Podepsat.online vydává jednorázové certifikáty pro zaručené elektronické podpisy. Ve výchozím stavu kotvou není; vkládá jej jen uživatel, a to tlačítkem v okně vlastních důvěryhodných certifikátů. Identitu podepisující osoby služba neověřuje (je pouze deklarovaná a ověřená zprávou na zadaný e-mail a kódem v SMS), takže důvěra v tuto autoritu je rozhodnutím ověřovatele.
+
 ### 5.3 Zvláštní případy kotev
 
 - Je-li kotvou sám podpisový certifikát (seznam jej vede jako identitu služby), neposuzuje se jeho doba platnosti ani revokace; platí, dokud je služba v kladném stavu.

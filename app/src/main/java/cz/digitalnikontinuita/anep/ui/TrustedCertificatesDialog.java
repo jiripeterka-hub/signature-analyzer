@@ -2,11 +2,13 @@ package cz.digitalnikontinuita.anep.ui;
 
 import cz.digitalnikontinuita.anep.core.CustomTrustStore;
 import cz.digitalnikontinuita.anep.core.CzechCommercialCATrust;
+import cz.digitalnikontinuita.anep.core.PodepsatOnline;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -41,7 +43,7 @@ public class TrustedCertificatesDialog {
         VBox root = new VBox(10);
         root.setPadding(new Insets(20));
         root.setPrefWidth(560);
-        root.setPrefHeight(480);
+        root.setPrefHeight(500);
 
         Label hint = new Label(
                 "Certifikáty v tomto seznamu se při ověřování považují za důvěryhodné navíc " +
@@ -124,7 +126,7 @@ public class TrustedCertificatesDialog {
                 showError(failed + " certifikát(ů) se nepodařilo vložit — zkuste to prosím znovu.");
             }
         });
-        Label bulkImportHint = new Label(
+        HBox bulkImportRow = buttonWithExplanation(stage, btnBulkImport,
                 "Vloží certifikáty vydávajících (mezilehlých) autorit komerčních linek I.CA, " +
                 "PostSignum, eIdentity, NCA (SSSVD) a Komerční banky, jejichž komerční " +
                 "(nekvalifikované) certifikáty nejsou " +
@@ -132,8 +134,27 @@ public class TrustedCertificatesDialog {
                 "omezí právě na ně a nevztáhne se na vše ostatní pod týmž kořenem. U vložené " +
                 "autority se ale přestane zjišťovat revokace a při její obměně je nutné seznam " +
                 "doplnit. Lze spustit opakovaně — již vložené certifikáty se nezdvojí.");
-        bulkImportHint.setWrapText(true);
-        bulkImportHint.setStyle("-fx-text-fill:#666666;-fx-font-size:11px;");
+
+        // Kořen služby Podepsat.online se vkládá jen tímhle tlačítkem, nikdy sám — služba
+        // identitu podepsaného neověřuje, a důvěřovat jí je rozhodnutí uživatele (31. 10. 2026).
+        // Na rozdíl od komerčních autorit jde o kořen: vydávající autorita tu žádná mezi ním
+        // a jednorázovým certifikátem není. Viz javadoc PodepsatOnline.
+        Button btnPodepsatOnline = new Button("Vložit kořenový certifikát služby Podepsat.online");
+        btnPodepsatOnline.setOnAction(e -> {
+            CertificateToken podepsatRoot = PodepsatOnline.loadRoot();
+            try {
+                if (podepsatRoot == null) throw new java.io.IOException("certifikát chybí v balíku aplikace");
+                CustomTrustStore.addCertificateBytes(podepsatRoot.getEncoded());
+            } catch (Exception ex) {
+                showError("Certifikát se nepodařilo vložit:\n" + ex.getMessage());
+            }
+            refreshList(list);
+        });
+        HBox podepsatOnlineRow = buttonWithExplanation(stage, btnPodepsatOnline,
+                "Vloží kořenový certifikát „SignMaster CA“ (Software602 a.s.), pod nímž služba " +
+                "Podepsat.online vydává jednorázové certifikáty pro zaručené elektronické podpisy. " +
+                "Vkládejte jej jen tehdy, pokud službě důvěřujete. Lze spustit opakovaně — " +
+                "již vložený certifikát se nezdvojí.");
 
         Button btnClose = new Button("Zavřít");
         btnClose.setOnAction(e -> stage.close());
@@ -142,10 +163,36 @@ public class TrustedCertificatesDialog {
         HBox.setHgrow(buttons.getChildren().get(2), Priority.ALWAYS);
 
         root.getChildren().addAll(hint, list, buttons,
-                new javafx.scene.control.Separator(), btnBulkImport, bulkImportHint);
+                new javafx.scene.control.Separator(), bulkImportRow,
+                new javafx.scene.control.Separator(), podepsatOnlineRow);
 
         stage.setScene(new Scene(root));
         stage.showAndWait();
+    }
+
+    /**
+     * Tlačítko a vpravo od něj odkaz „Co se stane?“, který vysvětlení otevře ve vlastním okně.
+     * Vysvětlení dřív stála pod tlačítky celá; nezalamovala se a zalomená by zabrala víc místa
+     * než seznam certifikátů (pokyn uživatele 31. 10. 2026).
+     */
+    private static HBox buttonWithExplanation(Stage owner, Button button, String explanation) {
+        Hyperlink what = new Hyperlink("Co se stane?");
+        what.setOnAction(e -> {
+            what.setVisited(false);
+            Alert info = new Alert(Alert.AlertType.INFORMATION);
+            info.initOwner(owner);
+            info.setTitle("Co se stane?");
+            info.setHeaderText(button.getText());
+            Label text = new Label(explanation);
+            text.setWrapText(true);
+            text.setMaxWidth(460);
+            text.setPrefWidth(460);
+            info.getDialogPane().setContent(text);
+            info.showAndWait();
+        });
+        HBox row = new HBox(8, button, what);
+        row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        return row;
     }
 
     /** Opens the certificate in the OS's standard certificate viewer (poklepání = double-click). */

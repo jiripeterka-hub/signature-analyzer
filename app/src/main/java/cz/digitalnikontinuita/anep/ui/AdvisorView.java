@@ -164,6 +164,8 @@ public class AdvisorView {
     private Runnable landRegistryVerifyCallback;
     /** Otevře Nastavení; {@code true} = rovnou pokročilou stránku. Viz {@link #solutionParagraph}. */
     private java.util.function.Consumer<Boolean> settingsOpener;
+    /** Otevře okno Vlastní důvěryhodné certifikáty. Viz {@link #solutionParagraph}. */
+    private Runnable trustStoreOpener;
     /** Snapshot of the custom validation time, taken before AppSettings clears its one-shot flag. */
     private java.time.LocalDateTime customValidationTime = null;
 
@@ -400,6 +402,7 @@ public class AdvisorView {
     public void setSettingsOpener(java.util.function.Consumer<Boolean> opener) {
         this.settingsOpener = opener;
     }
+    public void setTrustStoreOpener(Runnable opener) { this.trustStoreOpener = opener; }
 
     public void setCustomValidationTime(java.time.LocalDateTime v) { this.customValidationTime = v; }
 
@@ -3647,6 +3650,14 @@ public class AdvisorView {
         // čtenáře posílala hledat, co už v dokumentu má (nález uživatele 2. 10. 2026). Tutéž
         // podmínku má znění [4/kryto], viz reasonProblem().
         if (rn == 4 && sig.getCoveringProofDetail() != null) return null;
+        // U služby Podepsat.online se ví, čí kořen vložit, a rada vede k tlačítku, které ho
+        // vloží. Patří mezi rady pro zkušenější, ne do „Co může pomoci“: důvěřovat službě, která
+        // identitu neověřuje, je rozhodnutí, které má čtenář udělat vědomě (pokyn uživatele
+        // 31. 10. 2026). Nahrazuje obecné „vyjádřit důvěru příslušnému certifikátu“.
+        if (rn == 3 && isPodepsatOnline(sig)) {
+            String service = ReasonTexts.get("3/podepsat-online", "zkusenejsi");
+            if (service != null) return service;
+        }
         if (rn == 21) {
             java.util.List<SignatureSummary.TimestampFailure> causes = timestampFailures(sig);
             if (causes.size() == 1) {
@@ -3770,6 +3781,9 @@ public class AdvisorView {
         return solutionParagraph(text, null);
     }
 
+    /** Název okna, jak ho píše rada v {@code duvody.txt}; v radě se z něj stane proklik. */
+    static final String TRUST_STORE_WINDOW = "Vlastní důvěryhodné certifikáty";
+
     /**
      * Totéž, jen se za radu ještě přidá odkaz <b>Podrobněji …</b> na okno „kde vzít CRL“.
      *
@@ -3778,9 +3792,16 @@ public class AdvisorView {
      * z jaké — jako tlačítko pod odstavcem by se od ní odtrhl na vlastní řádek.
      */
     private javafx.scene.Node solutionParagraph(String text, String crlHelp) {
-        java.util.List<String> anchors = java.util.List.of(
-                "v rámci pokročilého nastavení", "v Nastavení");
-        boolean settingsLinks = settingsOpener != null && anchors.stream().anyMatch(text::contains);
+        // Třetí odkaz vede rovnou do okna vlastních kotev důvěry, ne do Nastavení, odkud by se
+        // tam čtenář musel proklikat sám. Rada u podpisu od služby Podepsat.online jmenuje
+        // tlačítko právě v tom okně (31. 10. 2026, pokyn uživatele).
+        java.util.List<String> anchors = new java.util.ArrayList<>();
+        if (settingsOpener != null) {
+            anchors.add("v rámci pokročilého nastavení");
+            anchors.add("v Nastavení");
+        }
+        if (trustStoreOpener != null) anchors.add(TRUST_STORE_WINDOW);
+        boolean settingsLinks = anchors.stream().anyMatch(text::contains);
         if (!settingsLinks && crlHelp == null) {
             return ResultView.selectable(text, "-fx-text-fill: #111111; -fx-font-size: 12px;");
         }
@@ -3796,13 +3817,19 @@ public class AdvisorView {
             if (hit == null) break;
             appendRun(flow, new StringBuilder(), text.substring(pos, at));
             boolean advanced = hit.startsWith("v rámci");
+            boolean trustStore = hit.equals(TRUST_STORE_WINDOW);
             Hyperlink link = new Hyperlink(hit);
             link.setStyle("-fx-font-size: 12px; -fx-text-fill: #0a5ca8; -fx-padding: 0;"
                     + " -fx-border-width: 0;");
-            Tooltip.install(link, new Tooltip(advanced
+            Tooltip.install(link, new Tooltip(trustStore
+                    ? "Otevře okno Vlastní důvěryhodné certifikáty"
+                    : advanced
                     ? "Otevře Nastavení na stránce pokročilého nastavení"
                     : "Otevře Nastavení"));
-            link.setOnAction(e -> settingsOpener.accept(advanced));
+            link.setOnAction(e -> {
+                if (trustStore) trustStoreOpener.run();
+                else settingsOpener.accept(advanced);
+            });
             flow.getChildren().add(link);
             pos = at + hit.length();
         }
@@ -3838,8 +3865,8 @@ public class AdvisorView {
     private TextFlow certLinkParagraph(String text, byte[] der, String detail) {
         TextFlow flow = new TextFlow();
         // Odkazy stojí hned za větou, která certifikát jmenuje, ne až za důsledkem, který z toho
-        // plyne (pokyn uživatele 24. 9. 2026). Druhá věta začíná ve všech třech zněních důvodu 3
-        // jinak, proto se hledá kterýkoli z obou začátků; nenajde-li se, jdou odkazy na konec.
+        // plyne (pokyn uživatele 24. 9. 2026). Druhá věta začíná ve zněních důvodu 3 (i ve znění
+        // pro Podepsat.online) jinak, proto se hledá kterýkoli z obou začátků; nenajde-li se, jdou odkazy na konec.
         int split = -1;
         for (String next : java.util.List.of(" Aplikace proto ", " Proto neví")) {
             int i = text.indexOf(next);
@@ -6952,6 +6979,14 @@ public class AdvisorView {
         // cases are deliberately excluded: there the identity is vouched for by a qualified
         // certificate, so the caveat below would be misleading.
         if ("zaručený elektronický podpis".equals(simplified)) {
+            // U platného podpisu od služby Podepsat.online se ví, jak identitu „ověřila“, a to
+            // čtenáři řekne víc než obecná věta o certifikační politice (pokyn uživatele
+            // 31. 10. 2026). Jen u platného: u neznámé platnosti o tom mluví důvod 3.
+            if (valid && isPodepsatOnline(sig)) {
+                block.getChildren().add(labelledRichParagraphs("Upozornění:",
+                        podepsatOnlineNote(sig.getPdfReason())));
+                return block;
+            }
             String caveat = ADES_IDENTITY_NOTE + " "
                     + (sig.isCertSelfSigned() ? SELF_SIGNED_NOTE : CA_POLICY_NOTE);
             block.getChildren().add(labelledRow("Upozornění:", caveat, false));
@@ -7801,6 +7836,24 @@ public class AdvisorView {
         return row;
     }
 
+    /**
+     * {@link #labelledRichRow} o více odstavcích: prázdný řádek ({@code \n\n}) dělí odstavce
+     * stejně jako v {@link #unlabelledRichRow}.
+     */
+    private static HBox labelledRichParagraphs(String labelText, String markup) {
+        Label lbl = new Label(labelText);
+        lbl.setStyle("-fx-font-weight: bold; -fx-text-fill: #111111; -fx-font-size: 12px;");
+        lbl.setMinWidth(170);
+        lbl.setMaxWidth(170);
+        lbl.setWrapText(true);
+        VBox paragraphs = new VBox(5);
+        for (String part : markup.split("\n\n")) paragraphs.getChildren().add(richParagraph(part));
+        HBox.setHgrow(paragraphs, Priority.ALWAYS);
+        HBox row = new HBox(8, lbl, paragraphs);
+        row.setAlignment(Pos.TOP_LEFT);
+        return row;
+    }
+
     /** One row of the "Jde o:" block: bold label in the usual 170px column, then the text. */
     private static HBox labelledRow(String labelText, String value, boolean boldValue) {
         Label lbl = new Label(labelText);
@@ -7829,6 +7882,29 @@ public class AdvisorView {
             "U certifikátů od certifikačních autorit jsou tyto podmínky popsány v dokumentu"
             + " nazývaném Certifikační politika. Pro každý druh certifikátu bývá samostatná"
             + " Certifikační politika.";
+
+    /**
+     * Upozornění u platného podpisu od služby Podepsat.online, místo {@link #ADES_IDENTITY_NOTE}.
+     * Znění dodal uživatel 31. 10. 2026. E-mail a telefon jsou ty, které služba zapsala do /Reason
+     * — tedy ty, na které skutečně poslala ověřovací zprávy, ne ty z certifikátu.
+     */
+    static String podepsatOnlineNote(String pdfReason) {
+        cz.digitalnikontinuita.anep.core.PodepsatOnline.Contact contact =
+                cz.digitalnikontinuita.anep.core.PodepsatOnline.contact(pdfReason);
+        String email = contact != null ? contact.email() : null;
+        String phone = contact != null ? contact.phone() : null;
+        return "Tento zaručený elektronický podpis pochází od služby [Podepsat.online]("
+                + cz.digitalnikontinuita.anep.core.PodepsatOnline.URL + "). Identita podepsané"
+                + " osoby je zde pouze deklarovaná (vepsaná do formuláře na webových stránkách"
+                + " služby), a její ověření je prováděno pouze prostřednictvím schopnosti přijmout"
+                + " zprávu, zaslanou na zadanou emailovou adresu"
+                + (email != null ? " (zde konkrétně se jednalo o adresu: " + email + ")" : "")
+                + " a schopnosti přečíst si obsah SMS zprávy, zaslané na zadané číslo"
+                + (phone != null ? " (zde konkrétně se jednalo o tel. číslo " + phone + ")" : "")
+                + ".\n\nTento způsob autentizace nedokáže zabránit tomu, aby se uživatel služby"
+                + " úspěšně vydával za někoho jiného - stačí mu účelově zřízený e-mailový účet"
+                + " a anonymní SIM karta.";
+    }
 
     /** Continuation of {@link #ADES_IDENTITY_NOTE} for a self-signed certificate. */
     private static final String SELF_SIGNED_NOTE =
@@ -8054,6 +8130,16 @@ public class AdvisorView {
      * nezná a může ji poznat.
      */
     private static String unknownCertProblem(SignatureSummary sig, ResultView.ReasonEntry re) {
+        // Podpis od služby Podepsat.online: vydavatele známe jménem i tím, komu patří, a čtenáři
+        // je víc platné vědět, že jde o vlastní autoritu té služby, než jen její CN.
+        if (isPodepsatOnline(sig)) {
+            String service = ReasonTexts.get("3/podepsat-online", "problem");
+            if (service != null) {
+                String issuer = certIssuerName(sig);
+                return ReasonTexts.fill(service, "{vydavatel}",
+                        issuer != null ? issuer : "SignMaster CA");
+            }
+        }
         // Certifikát s vlastním podpisem vydavatele nemá: v DN stojí podepsaný sám, takže věta
         // „vydala jej autorita …" by jmenovala jeho a zněla by jako doporučení od sebe samého.
         if (sig.isCertSelfSigned()) {
@@ -8130,6 +8216,15 @@ public class AdvisorView {
      * <p>Jeden zdroj pro dvě místa — odstavec „Kotva důvěry" v Průběhu ověřování a větu u důvodu 3.
      * Dvě znění téhož údaje by se časem rozešla a čtenář by četl dvě jména na jedné kartě.
      */
+    /**
+     * Pochází prvek od služby Podepsat.online? Viz {@link
+     * cz.digitalnikontinuita.anep.core.PodepsatOnline#isServiceSignature}.
+     */
+    static boolean isPodepsatOnline(SignatureSummary sig) {
+        return !sig.isSeal() && cz.digitalnikontinuita.anep.core.PodepsatOnline
+                .isServiceSignature(sig.getCertIssuerDN(), sig.getPdfReason());
+    }
+
     static String certIssuerName(SignatureSummary sig) {
         String cn = DnUtil.dnField(sig.getCertIssuerDN(), "2.5.4.3", "CN");
         return cn != null && !cn.isBlank() ? cn : null;

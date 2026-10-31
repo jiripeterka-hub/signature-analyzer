@@ -605,6 +605,9 @@ public class MainView {
                     this::refreshTrustListsFromSettings, advanced, timestampingService);
             refreshValidateButton();
         });
+        // Rada u podpisu od služby Podepsat.online vede rovnou do okna vlastních kotev důvěry.
+        advisorView.setTrustStoreOpener(() ->
+                TrustedCertificatesDialog.show(root.getScene().getWindow()));
         wireServices(advisorView);
 
         // Protokol umí přiložit ověřovaný soubor a nechat si přidat razítko; obojí se uživatele

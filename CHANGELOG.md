@@ -54,6 +54,20 @@ pro soupis změn ke každé nové vydané verzi.
   přijímá elektronicky podepsaná podání jen ve formátu PDF. U platné
   kvalifikované či uznávané elektronické pečeti stejně, jen jde o úkon právnické osoby podle
   § 9 téhož zákona. Paragraf je odkazem na znění zákona.
+- **Podpisy od služby Podepsat.online.** AnEP pozná zaručený elektronický podpis vytvořený
+  službou Podepsat.online. Ta podepisuje certifikátem od vlastní, nekvalifikované autority
+  provozovatele („SignMaster CA“, Software602 a.s.), která není v důvěryhodných seznamech EU,
+  takže ověření skončí neznámou platností. Karta Analýzy to nově u důvodu 3 vysvětlí a v radě
+  pro zkušenější uživatele nabídne — pokud uživatel službě důvěřuje — vložit kořenový
+  certifikát služby mezi důvěryhodné, s proklikem přímo do okna Vlastní důvěryhodné certifikáty. V tom okně přibylo
+  tlačítko „Vložit kořenový certifikát služby Podepsat.online“; certifikát je součástí
+  aplikace, ve výchozím stavu ale mezi důvěryhodnými není. U platného podpisu od této služby
+  stojí v řádku „Upozornění“ nové znění: identita podepsané osoby je jen deklarovaná a služba
+  ji ověřuje pouze zprávou na zadaný e-mail a kódem v SMS na zadané číslo (obojí karta uvádí
+  podle údajů, které služba zapsala do důvodu podpisu), což nezabrání tomu, aby se uživatel
+  služby vydával za někoho jiného. Vysvětlení k oběma tlačítkům pro vložení certifikátů
+  (komerčních autorit i služby Podepsat.online) už nestojí pod nimi, ale otevírá se ve vlastním
+  okně odkazem „Co se stane?“ vpravo od tlačítka.
 
 ### Prohlížeč kontejnerů
 

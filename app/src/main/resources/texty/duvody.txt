@@ -634,6 +634,27 @@ problem =
   Podpis (či pečeť) je založen na certifikátu, který není této aplikaci znám. Proto neví, zda může
   jeho obsahu důvěřovat a pracovat s ním.
 
+# Zaručený podpis od služby Podepsat.online — certifikát vydala autorita SignMaster CA
+# společnosti Software602 a v položce Reason stojí e-mail a telefon, jak je služba zapisuje.
+# Kořen té autority aplikace nese, ale mezi důvěryhodné ho vkládá jen uživatel. Platí přednostně
+# před oběma zněními výše. Slova „Vlastní důvěryhodné certifikáty“ v radě jsou proklikem
+# do toho okna; nechte je ve větě přesně takto. Odkazy na certifikát se vkládají před
+# „ Aplikace proto “, tedy hned za větu, která autoritu jmenuje.
+[3/podepsat-online]
+problem =
+  Jde o zaručený elektronický podpis od služby Podepsat.online, založený na certifikátu, který
+  nevydala kvalifikovaná certifikační autorita, ale vlastní autorita provozovatele služby
+  „{vydavatel}“ (Software602 a.s.), jež není součástí důvěryhodných seznamů EU. Aplikace proto
+  tuto autoritu ve výchozím nastavení nemá mezi důvěryhodnými a neví, zda může obsahu
+  certifikátu důvěřovat a pracovat s ním.
+# pomoc =   (rada stojí mezi radami pro zkušenější uživatele, pokyn uživatele 31. 10. 2026)
+zkusenejsi =
+  Pokud službě Podepsat.online důvěřujete, vložte její kořenový certifikát mezi důvěryhodné:
+  v okně Vlastní důvěryhodné certifikáty stiskněte tlačítko „Vložit kořenový certifikát služby
+  Podepsat.online“ a ověření opakujte. Důvěra se tím vztáhne na všechny podpisy od této služby,
+  ačkoli identitu podepisujících osob služba neověřuje: je pouze deklarovaná a ověřená jen
+  zprávou na zadaný e-mail a kódem v SMS zaslaným na zadané telefonní číslo.
+
 # Důvod 9 mluví o čase razítka. Není-li žádný důkaz existence a rozhodným okamžikem
 # zůstává čas ověření, platí místo něj tohle.
 # zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
