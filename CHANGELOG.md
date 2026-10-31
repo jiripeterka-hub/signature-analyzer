@@ -17,6 +17,12 @@ pro soupis změn ke každé nové vydané verzi.
   rozhodnutí (EU) 2015/1506 ani prováděcí nařízení (EU) 2026/248, které je nahradilo. Prodloužit ani
   uchovat podpis CB-AdES aplikace neumí; záložka Digitální kontinuita u něj nabízí forenzní
   balíček a řekne proč.
+- **Referenční formáty podle prováděcího nařízení (EU) 2026/248.** Výklad o referenčním
+  formátu na kartě Analýzy, v Rozšířeném přehledu i v dokumentaci se nově opírá o nařízení
+  2026/248, které k 22. 2. 2026 zrušilo dosud citované rozhodnutí (EU) 2015/1506. JAdES je
+  referenčním formátem s poznámkou, že podle nařízení formálně až od 23. 2. 2027; poznámka po
+  tomto dni sama zmizí. Rozšířený přehled dřív posuzoval referenční formát jen podle označení
+  „Baseline“ a u CB-AdES by tvrdil, že jde o referenční formát; nově píše „zatím nejde“.
 
 ### Výklad výsledku ověření
 

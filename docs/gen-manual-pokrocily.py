@@ -417,7 +417,7 @@ def kapitola_6(doc):
                   'dokumentu co říct:')
     odrazky(doc, [
         '**Formát podpisu** — druh formátu, zapouzdření, úroveň a odpověď na otázku, jde-li '
-        'o referenční formát podle prováděcího rozhodnutí Komise (EU) 2015/1506. Řádek '
+        'o referenční formát podle prováděcího nařízení Komise (EU) 2026/248. Řádek '
         'o druhu formátu se ukáže jen u formátů z rodin AdES.',
         '**Zjištěné důvody a doporučení** — očíslované důvody: co se stalo a co pomůže '
         '(kapitola 7).',
@@ -1241,7 +1241,7 @@ POJMY = [
     ('Důvod',
      'Číslovaný výklad nálezu pro čtenáře: co se stalo, co to znamená a co s tím.'),
     ('Referenční formát',
-     'Formát, který jako referenční stanoví prováděcí rozhodnutí Komise (EU) 2015/1506; orgány '
+     'Formát, který jako referenční stanoví prováděcí nařízení Komise (EU) 2026/248; orgány '
      'veřejné moci s ním musí umět pracovat.'),
     ('Protipodpis (kontrasignatura)',
      'Podpis, jehož předmětem není dokument, nýbrž jiný podpis pod ním.'),

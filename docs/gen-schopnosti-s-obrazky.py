@@ -315,7 +315,7 @@ def kapitola_4(doc):
             ['Blok', 'Co v něm stojí'],
             [['Formát podpisu',
               'Druh formátu, zapouzdření, úroveň a odpověď na otázku, jestli jde o referenční '
-              'formát podle prováděcího rozhodnutí Komise (EU) 2015/1506.'],
+              'formát podle prováděcího nařízení Komise (EU) 2026/248.'],
              ['Zjištěné důvody a doporučení',
               'Očíslované důvody — co se stalo a co s tím. Celá kapitola 5.'],
              ['Průběh ověřování',
@@ -1081,7 +1081,7 @@ POJMY = [
      'Jak je podpis vybaven pro budoucnost: B je holý podpis, T má časové razítko, LT nese '
      'i revokační údaje, LTA navíc archivní razítko.'),
     ('Referenční formát',
-     'Formát, který jako referenční stanoví prováděcí rozhodnutí Komise (EU) 2015/1506; orgány '
+     'Formát, který jako referenční stanoví prováděcí nařízení Komise (EU) 2026/248; orgány '
      'veřejné moci s ním musí umět pracovat.'),
     ('Digitální kontinuita',
      'Schopnost dokumentu zůstat ověřitelný i po letech — a to, co je pro ni třeba udělat, '

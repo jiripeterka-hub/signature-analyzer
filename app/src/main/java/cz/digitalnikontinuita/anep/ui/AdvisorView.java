@@ -6331,7 +6331,10 @@ public class AdvisorView {
         }
 
         body.getChildren().add(infoRow("Referenční formát:",
-                isReferenceFormat(sig.getFormat()) ? REFERENCE_FORMAT_YES
+                isReferenceFormat(sig.getFormat())
+                        ? REFERENCE_FORMAT_YES
+                          + (jadesNotYetFormal(sig.getFormat(), java.time.LocalDate.now())
+                                ? REFERENCE_FORMAT_JADES_NOTE : "")
                         : isCbAdes(sig.getFormat()) ? REFERENCE_FORMAT_CBADES
                         : REFERENCE_FORMAT_NO));
     }
@@ -6363,7 +6366,7 @@ public class AdvisorView {
             + " přibírá. O jeho vlastní ověřitelnost v čase se stará až další razítko nad ním.";
 
     private static final String TS_REFERENCE_FORMAT =
-            "Netýká se. Prováděcí rozhodnutí Komise (EU) 2015/1506 vyjmenovává referenční formáty"
+            "Netýká se. Prováděcí nařízení Komise (EU) 2026/248 vyjmenovává referenční formáty"
             + " elektronických podpisů a pečetí; o časových razítkách nemluví a žádný jejich"
             + " formát tedy jako referenční stanoven není. Kvalifikovanému elektronickému"
             + " časovému razítku přiznává nařízení eIDAS (čl. 41) domněnku správnosti data"
@@ -6655,7 +6658,8 @@ public class AdvisorView {
     }
 
     /**
-     * True for the ETSI baseline profiles — the ones Decision (EU) 2015/1506 lists.
+     * True for the ETSI baseline profiles — the ones Implementing Regulation (EU) 2026/248 lists
+     * (it repealed Decision (EU) 2015/1506).
      *
      * <p>CB-AdES mezi ně nepatří, ačkoli DSS ho hlásí jako {@code CB-AdES-BASELINE-*}. Rozhodnutí
      * 2015/1506 jmenovalo XAdES, CAdES, PAdES a ASiC; prováděcí nařízení (EU) 2026/248, které ho
@@ -6793,11 +6797,31 @@ public class AdvisorView {
         };
     }
 
+    // Texty o referenčním formátu se 31. 10. 2026 převedly z prováděcího rozhodnutí (EU)
+    // 2015/1506 na prováděcí nařízení (EU) 2026/248, které ho k 22. 2. 2026 zrušilo (pokyn
+    // uživatele). Příloha I nařízení jmenuje základní profily XAdES, CAdES, PAdES, JAdES a ASiC.
     private static final String REFERENCE_FORMAT_YES =
-            "Ano. Jde o jeden z formátů, které jako referenční stanoví prováděcí rozhodnutí Komise"
-            + " (EU) 2015/1506. Orgány veřejné moci v celé EU musí umět takový podpis přijmout"
-            + " a ověřit, pokud pro danou službu zaručený nebo kvalifikovaný podpis vyžadují"
-            + " (čl. 27 a 37 nařízení eIDAS).";
+            "Ano. Jde o jeden z formátů, které jako referenční stanoví prováděcí nařízení Komise"
+            + " (EU) 2026/248 (příloha I); to nahradilo dřívější rozhodnutí (EU) 2015/1506."
+            + " Orgány veřejné moci v celé EU musí umět takový podpis přijmout a ověřit, pokud"
+            + " pro danou službu zaručený nebo kvalifikovaný podpis vyžadují (čl. 27 a 37"
+            + " nařízení eIDAS).";
+
+    /**
+     * Dovětek u JAdES. JAdES přibyl mezi referenční formáty teprve s nařízením 2026/248 a jeho
+     * čl. 1 odst. 1, který ho jmenuje, se podle čl. 6 použije až od 23. 2. 2027. Pokyn uživatele
+     * 31. 10. 2026: psát, že referenční je, a připojit, že formálně až od toho dne. Po tom dni
+     * dovětek mizí sám, aby karta netvrdila o minulém datu „až od“.
+     */
+    static final java.time.LocalDate JADES_REFERENCE_FROM = java.time.LocalDate.of(2027, 2, 23);
+
+    static boolean jadesNotYetFormal(String format, java.time.LocalDate today) {
+        return format != null && format.toUpperCase(Locale.ROOT).startsWith("JADES")
+                && today.isBefore(JADES_REFERENCE_FROM);
+    }
+
+    private static final String REFERENCE_FORMAT_JADES_NOTE =
+            " U formátu JAdES to podle nařízení 2026/248 platí formálně až od 23. 2. 2027.";
 
     /**
      * Deliberately does not say the signature is invalid or that a public body must refuse it —
@@ -6806,13 +6830,13 @@ public class AdvisorView {
      */
     private static final String REFERENCE_FORMAT_NO =
             "Ne. Po technické stránce může být podpis zcela v pořádku, ale nepoužívá žádný"
-            + " z formátů, které jako referenční stanoví prováděcí rozhodnutí Komise (EU)"
-            + " 2015/1506. Povinnost orgánů veřejné moci takový podpis bez dalšího přijmout se na"
-            + " něj nevztahuje — přijmout ho mohou, ale musí být schopny jej ověřit; podle čl. 2"
-            + " zmíněného rozhodnutí k tomu má být k dispozici možnost ověření použitelná"
-            + " i přeshraničně. V praxi proto počítejte s tím, že takový dokument nemusí být na"
-            + " úřadě zpracovatelný, i když je podpis platný. Pokud dokument někam odesíláte, je"
-            + " bezpečnější podepsat jej znovu v některém z referenčních formátů.";
+            + " z formátů, které jako referenční stanoví prováděcí nařízení Komise (EU)"
+            + " 2026/248. Povinnost orgánů veřejné moci takový podpis bez dalšího přijmout se na"
+            + " něj nevztahuje — podle čl. 2 a 4 nařízení ho uznávají jen tehdy, nabízí-li"
+            + " členský stát poskytovatele podepisující osoby metodu jeho ověřování, na kterou"
+            + " podpis či dokument odkazuje. V praxi proto počítejte s tím, že takový dokument"
+            + " nemusí být na úřadě zpracovatelný, i když je podpis platný. Pokud dokument někam"
+            + " odesíláte, je bezpečnější podepsat jej znovu v některém z referenčních formátů.";
 
     /**
      * CB-AdES vlastním textem: obecné „Ne“ výš o formátu mluví jako o něčem, co se má nahradit

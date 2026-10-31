@@ -2594,8 +2594,13 @@ public class ExtendedView {
     static String formatSignatureLabel(String raw) {
         if (raw == null) return "";
         String display = AdvisorView.formatLabel(raw).replaceAll("-BASELINE-", " Baseline-");
-        boolean isRef = raw.toUpperCase().contains("BASELINE");
-        return display + (isRef ? " (jde o referenční formát)" : " (nejde o referenční formát)");
+        // Totéž rozhodnutí jako řádek „Referenční formát:“ v Analýze. Dřív se tu četlo jen slovo
+        // BASELINE, a CB-AdES-BASELINE-* by tak vyšel referenční (31. 10. 2026).
+        if (AdvisorView.isCbAdes(raw)) return display + " (zatím nejde o referenční formát)";
+        if (!AdvisorView.isReferenceFormat(raw)) return display + " (nejde o referenční formát)";
+        return display + (AdvisorView.jadesNotYetFormal(raw, java.time.LocalDate.now())
+                ? " (jde o referenční formát, podle nařízení 2026/248 formálně až od 23. 2. 2027)"
+                : " (jde o referenční formát)");
     }
 
     static String simplifyLegalType(String raw) {

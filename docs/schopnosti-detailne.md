@@ -65,7 +65,7 @@
 
 ## Záložka Analýza — bloky
 
-* **Formát podpisu** — druh, zapouzdření, úroveň a odpověď na otázku, jde-li o referenční formát podle prováděcího rozhodnutí Komise (EU) 2015/1506
+* **Formát podpisu** — druh, zapouzdření, úroveň a odpověď na otázku, jde-li o referenční formát podle prováděcího nařízení Komise (EU) 2026/248
 * **Zjištěné důvody a doporučení** — očíslované důvody: co se stalo a co pomůže
 * **Průběh ověřování** — za jakých pravidel se ověřovalo, jak aplikace postupovala a čím to skončilo; uvnitř podrobný výčet revokačních údajů s odkazy „Ukaž“ a „Ulož“ u každého
 * **Poznámky k výsledku** — co verdikt nezměnilo, ale čtenář to má znát; uvnitř podblok s připomínkami samotné knihovny DSS
