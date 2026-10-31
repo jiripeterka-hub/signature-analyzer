@@ -47,6 +47,13 @@ pro soupis změn ke každé nové vydané verzi.
   i v nabídce forenzního balíčku, že nepodporuje formát dokumentu (například PDF). Nově jmenuje
   soubor externího podpisu, který skutečně přečíst nedokázala; totéž jméno nese i popis
   ve vytvořeném forenzním balíčku.
+- **Podání vůči OVM.** U platného kvalifikovaného či uznávaného elektronického podpisu karta
+  Analýzy nově na začátku výkladu o tom, co podpis zaručuje, uvádí, že postačuje pro podání
+  (úkon fyzické osoby) vůči OVM v elektronické podobě podle § 6 zákona č. 297/2016 Sb.,
+  a — nejde-li o podpis dokumentu ve formátu PDF, ať interní, nebo externí — že většina OVM
+  přijímá elektronicky podepsaná podání jen ve formátu PDF. U platné
+  kvalifikované či uznávané elektronické pečeti stejně, jen jde o úkon právnické osoby podle
+  § 9 téhož zákona. Paragraf je odkazem na znění zákona.
 
 ### Prohlížeč kontejnerů
 

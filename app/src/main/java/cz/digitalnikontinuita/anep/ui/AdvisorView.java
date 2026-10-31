@@ -2353,7 +2353,7 @@ public class AdvisorView {
     private VBox buildValidCard(SignatureSummary sig, String header) {
         VBox card = new VBox(0);
         card.setStyle(CARD_STYLE);
-        card.getChildren().add(typeBlock(sig, header, "#1a7a1a", true));
+        card.getChildren().add(typeBlock(sig, header, "#1a7a1a", true, signsPdfDocument(sig)));
         String headerMsg = "✓  Proces ověřování se podařilo úspěšně dokončit. Výsledkem je zjištění, že "
                 + gendered(sig, "podpis je platný", "pečeť je platná", "razítko je platné") + ".";
         card.getChildren().add(coloredHeader(headerMsg, "#1a7a1a", "#ffffff"));
@@ -2872,7 +2872,7 @@ public class AdvisorView {
 
         String headerMsg = "Proces ověřování se podařilo úspěšně dokončit. Výsledkem je zjištění, že "
                 + gendered(sig, "podpis je neplatný", "pečeť je neplatná", "razítko je neplatné") + ".";
-        card.getChildren().add(typeBlock(sig, header, "#cc0000", false));
+        card.getChildren().add(typeBlock(sig, header, "#cc0000", false, false));
         card.getChildren().add(coloredHeader(headerMsg, "#cc0000", "#ffffff"));
         addCounterSignatureBlock(card, sig);
         addCertificationBlock(card, sig);
@@ -2949,7 +2949,7 @@ public class AdvisorView {
         // Main message goes into the header strip; "? Neznámý" not shown
         String headerMsg = "Proces ověřování se nepodařilo dokončit, stav platnosti "
                 + genitiveType(sig) + " tak zůstává neznámý.";
-        card.getChildren().add(typeBlock(sig, header, "#9a6700", false));
+        card.getChildren().add(typeBlock(sig, header, "#9a6700", false, false));
         card.getChildren().add(coloredHeader(headerMsg, "#9a6700", "#ffffff"));
         addCounterSignatureBlock(card, sig);
         addCertificationBlock(card, sig);
@@ -6906,7 +6906,7 @@ public class AdvisorView {
      * the verdict below.
      */
     private static VBox typeBlock(SignatureSummary sig, String header, String headerColor,
-                                  boolean valid) {
+                                  boolean valid, boolean pdfDocument) {
         VBox block = new VBox(4);
         block.setPadding(new Insets(10, 12, 8, 12));
         if (header != null) {
@@ -6943,8 +6943,8 @@ public class AdvisorView {
         // signature that passed — on a failed or unknown verdict the guarantees do not hold,
         // so printing them next to the verdict would read as reassurance the card cannot give.
         if (valid) {
-            String guarantee = guaranteeNote(simplified);
-            if (guarantee != null) block.getChildren().add(unlabelledRow(guarantee));
+            String guarantee = guaranteeNote(simplified, pdfDocument);
+            if (guarantee != null) block.getChildren().add(unlabelledRichRow(guarantee));
         }
 
         // "zaručený elektronický podpis" is what simplifyLegalType() leaves of ADESIG — the
@@ -7684,33 +7684,92 @@ public class AdvisorView {
      * remaining types — a plain advanced signature is already covered by the "Upozornění:" row,
      * and for electronic marks and timestamps the sentence would not be true as written.
      */
-    private static String guaranteeNote(String simplified) {
+    private static String guaranteeNote(String simplified, boolean pdfDocument) {
         return switch (simplified) {
             case "kvalifikovaný elektronický podpis" ->
-                "Platné kvalifikované elektronické podpisy zaručují jak identitu podepsané osoby,"
+                submissionNote("Tento podpis postačuje",
+                        "úkon fyzické osoby", 6, pdfDocument)
+                + "\n\nPlatné kvalifikované elektronické podpisy obecně zaručují jak identitu podepsané osoby,"
                 + " tak i neporušenou integritu (neměnnost, autenticitu) podepsaného obsahu."
                 + " Oproti uznávaným elektronickým podpisům je u nich menší riziko zneužití díky"
                 + " povinné ochraně soukromého klíče proti okopírování (jeho umístěním"
                 + " v kvalifikovaném prostředku / QSCD).";
             case "uznávaný elektronický podpis" ->
-                "Platné uznávané elektronické podpisy zaručují jak identitu podepsané osoby, tak"
+                submissionNote("Tento podpis postačuje",
+                        "úkon fyzické osoby", 6, pdfDocument)
+                + "\n\nPlatné uznávané elektronické podpisy obecně zaručují jak identitu podepsané osoby, tak"
                 + " i neporušenou integritu (neměnnost, autenticitu) podepsaného obsahu. Oproti"
                 + " kvalifikovaným elektronickým podpisům je u nich větší riziko zneužití (protože"
                 + " soukromý klíč nemusí být chráněn proti okopírování).";
             case "kvalifikovanou elektronickou pečeť" ->
-                "Platné kvalifikované elektronické pečeti zaručují jak identitu původce obsahu"
+                submissionNote("Tato pečeť postačuje",
+                        "úkon právnické osoby", 9, pdfDocument)
+                + "\n\nPlatné kvalifikované elektronické pečeti obecně zaručují jak identitu původce obsahu"
                 + " (pečetící osoby), tak i neporušenou integritu (neměnnost, autenticitu)"
                 + " podepsaného obsahu. Oproti uznávaným elektronickým pečetím je u nich menší"
                 + " riziko zneužití díky povinné ochraně soukromého klíče proti okopírování"
                 + " (jeho umístěním v kvalifikovaném prostředku / QSCD / HSM).";
             case "uznávanou elektronickou pečeť" ->
-                "Platné uznávané elektronické pečeti zaručují jak identitu původce obsahu"
+                submissionNote("Tato pečeť postačuje",
+                        "úkon právnické osoby", 9, pdfDocument)
+                + "\n\nPlatné uznávané elektronické pečeti obecně zaručují jak identitu původce obsahu"
                 + " (pečetící osoby), tak i neporušenou integritu (neměnnost, autenticitu)"
                 + " podepsaného obsahu. Oproti kvalifikovaným elektronickým pečetím je u nich"
                 + " větší riziko zneužití (protože soukromý klíč nemusí být chráněn proti"
                 + " okopírování).";
             default -> null;
         };
+    }
+
+    /**
+     * Úvodní věta {@link #guaranteeNote}: k čemu platný podpis či pečeť stačí vůči OVM
+     * (31. 10. 2026, na přání uživatele). Paragraf zákona č. 297/2016 Sb. je odkaz —
+     * § 6 pro podpis (úkon fyzické osoby), § 9 pro pečeť (úkon právnické osoby). Upozornění
+     * na formát PDF jen tam, kde podepsaný dokument PDF není ({@link #signsPdfDocument}).
+     */
+    private static String submissionNote(String subject, String actor, int paragraph,
+                                         boolean pdfDocument) {
+        return subject + " pro podání (" + actor + ") vůči OVM v elektronické podobě (dle ["
+                + "§ " + paragraph + " zákona č. 297/2016 Sb.](https://www.zakonyprolidi.cz/cs/2016-297#p"
+                + paragraph + "))."
+                + (pdfDocument ? "" : " Většina OVM ale přijímá elektronicky podepsaná podání jen"
+                        + " v datovém formátu PDF.");
+    }
+
+    /**
+     * Podepisuje prvek dokument ve formátu PDF? Interní podpis v PDF ano, ať je PAdES, PKCS #7
+     * či PDF-NOT-ETSI; externí podpis tehdy, když podepsaný dokument v hlavním poli je PDF.
+     * Pokyn uživatele 31. 10. 2026: upozornění, že OVM přijímají podání hlavně v PDF, tam nepatří.
+     * Obalující podpis s PDF uvnitř (např. .pdf.p7m) se nepočítá — podání v PDF to není.
+     */
+    private boolean signsPdfDocument(SignatureSummary sig) {
+        if (isPdfSignature(sig.getFormat())) return true;
+        File content = detachedContentFile();
+        return content != null && startsWithPdfHeader(content);
+    }
+
+    /** Hlavička {@code %PDF-} v prvním kilobajtu, kde ji hledají i čtečky PDF. */
+    private static boolean startsWithPdfHeader(File file) {
+        try (java.io.InputStream in = new java.io.FileInputStream(file)) {
+            String head = new String(in.readNBytes(1024), java.nio.charset.StandardCharsets.ISO_8859_1);
+            return head.contains("%PDF-");
+        } catch (java.io.IOException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Řádek bloku „Jde o:“ bez popisku, jehož text umí odkazy {@code [text](url)}. Prázdný řádek
+     * ({@code \n\n}) dělí odstavce s menším odstupem, než by dal celý prázdný řádek textu
+     * (31. 10. 2026, na přání uživatele).
+     */
+    private static HBox unlabelledRichRow(String markup) {
+        VBox paragraphs = new VBox(5);
+        for (String part : markup.split("\n\n")) paragraphs.getChildren().add(richParagraph(part));
+        HBox.setHgrow(paragraphs, Priority.ALWAYS);
+        HBox box = new HBox(paragraphs);
+        box.setPadding(new Insets(3, 0, 1, 0));
+        return box;
     }
 
     /** Row of the "Jde o:" block without a label: the text runs across the full width. */
