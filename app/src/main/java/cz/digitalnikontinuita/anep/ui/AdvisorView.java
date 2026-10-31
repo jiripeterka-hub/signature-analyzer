@@ -1781,17 +1781,6 @@ public class AdvisorView {
                       + "že tehdy nebyl odvolán"
                     : base;
         }
-        // CB-AdES (podpisy COSE, AnEP je ověřuje od přechodu na DSS 6.5.1, 31. 10. 2026) rozšiřovat
-        // neumí: SignatureExtensionService ho nepřebírá. DSS 6.5.1 by to umělo (modul registruje
-        // CBAdESDocumentExtenderFactory), AnEP ho na rozšíření zatím nepřipojilo — dokud se to
-        // nezmění, platí tahle překážka. Brána přitom vracela null, takže karta pod nadpisem „nabízí pouze
-        // forenzní balíček“ tvrdila „už není možné, nebo účelné, zachovávat ověřitelnost“ bez
-        // důvodu — u platného podpisu s platným razítkem (změřeno na CB-AdES-BASELINE-T
-        // s odloučeným PDF). Nemožné to není, jen to aplikace nesvede, a to se má říct.
-        if (isCbAdes(sig.getFormat())) {
-            return "je ve formátu CB-AdES, do kterého aplikace razítka ani revokační informace "
-                    + "doplňovat neumí";
-        }
         // Vyřazená služba je překážka tam, kde už úkon nemá co prodloužit — nové razítko opravdu
         // zpětně nevyrobí důkaz, že stav existoval, dokud služba kvalifikovaný status měla.
         // Jenže to je odpověď pro toho, kdo razítka posuzuje podle sunsetu. Okruh nástrojů se
@@ -3289,6 +3278,9 @@ public class AdvisorView {
         // Otisk z rodiny SHA3 — i SHA3-256 a vyšší, které AnEP ověří. Ty nástroje, na které
         // nabídka míří především, je zatím nepodporují (pokyn uživatele 4. 10. 2026).
         if (ContinuityHorizon.unsupportedDigest(sig)) return true;
+        // Formát CB-AdES — s ním CzechPOINT ani podatelny pracovat neumějí (údaj uživatele
+        // 31. 10. 2026), takže by blok posílal čtenáře tam, kde neuspěje.
+        if (ContinuityHorizon.unsupportedFormat(sig)) return true;
         return sig.isTrustedViaCustomStore();
     }
 

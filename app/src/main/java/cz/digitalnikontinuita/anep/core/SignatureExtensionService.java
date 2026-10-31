@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Uchování pro formáty, které DSS rozšiřuje samo — CAdES, XAdES, JAdES a kontejnery ASiC.
+ * Uchování pro formáty, které DSS rozšiřuje samo — CAdES, XAdES, JAdES, CB-AdES a kontejnery ASiC.
  *
  * <p>The PDF path in {@link AugmentationService} exists because PAdES preservation is not a
  * signature extension at all: the revocation material goes into a PDF-level DSS dictionary that
@@ -83,7 +83,10 @@ public class SignatureExtensionService {
     public static boolean handles(ValidationResult result, File signatureFile) {
         if (isTimestampOnlyContainer(result)) return true;
         SignatureForm form = signatureForm(result);
-        if (form == SignatureForm.CAdES || form == SignatureForm.XAdES) return true;
+        // CB-AdES od 31. 10. 2026: DSS 6.5.1 ho rozšiřuje stejně jako ostatní formáty
+        // (CBAdESService.extendDocument, úrovně CB_AdES_BASELINE_T/LT/LTA).
+        if (form == SignatureForm.CAdES || form == SignatureForm.XAdES
+                || form == SignatureForm.CBAdES) return true;
         if (form != SignatureForm.JAdES) return false;
         return signatureFile == null || jwsSerializationType(signatureFile) != null;
     }
@@ -338,6 +341,7 @@ public class SignatureExtensionService {
             case CAdES -> new CAdESService(verifier);
             case XAdES -> new XAdESService(verifier);
             case JAdES -> new JAdESService(verifier);
+            case CBAdES -> new eu.europa.esig.dss.cbades.signature.CBAdESService(verifier);
             default -> throw new ExtensionException("Formát " + form + " uchovat neumíme");
         };
     }
@@ -382,6 +386,15 @@ public class SignatureExtensionService {
                 p.getArchiveTimestampParameters().setDigestAlgorithm(algorithm);
                 return p;
             }
+            case CBAdES -> {
+                eu.europa.esig.dss.cbades.signature.CBAdESSignatureParameters p =
+                        new eu.europa.esig.dss.cbades.signature.CBAdESSignatureParameters();
+                p.setSignatureLevel(target);
+                if (detached != null) p.setDetachedContents(detached);
+                p.getSignatureTimestampParameters().setDigestAlgorithm(algorithm);
+                p.getArchiveTimestampParameters().setDigestAlgorithm(algorithm);
+                return p;
+            }
             default -> {
                 JAdESSignatureParameters p = new JAdESSignatureParameters();
                 p.setSignatureLevel(target);
@@ -405,6 +418,7 @@ public class SignatureExtensionService {
         return switch (form) {
             case CAdES -> SignatureLevel.CAdES_BASELINE_T;
             case XAdES -> SignatureLevel.XAdES_BASELINE_T;
+            case CBAdES -> SignatureLevel.CB_AdES_BASELINE_T;
             default    -> SignatureLevel.JAdES_BASELINE_T;
         };
     }
@@ -413,6 +427,7 @@ public class SignatureExtensionService {
         return switch (form) {
             case CAdES -> SignatureLevel.CAdES_BASELINE_LTA;
             case XAdES -> SignatureLevel.XAdES_BASELINE_LTA;
+            case CBAdES -> SignatureLevel.CB_AdES_BASELINE_LTA;
             default    -> SignatureLevel.JAdES_BASELINE_LTA;
         };
     }

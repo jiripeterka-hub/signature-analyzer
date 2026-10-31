@@ -421,6 +421,7 @@ public final class ContinuityHorizon {
         // tenhle okruh nástrojů podpis neověří kvůli rodině SHA3 jako celku, ne kvůli tomu, že
         // ji neuvádějí standardy. Text bloku to pozná z {@link #unsupportedDigest}.
         if (unsupportedDigest(sig)) return new Horizon(Kind.LOST, null, Limit.NONE);
+        if (unsupportedFormat(sig)) return new Horizon(Kind.LOST, null, Limit.NONE);
         if (hopeless(sig)) return new Horizon(Kind.LOST, null, Limit.NONE);
         if (sig.isTrustedViaCustomStore()) return new Horizon(Kind.LOST, null, Limit.NONE);
 
@@ -713,6 +714,15 @@ public final class ContinuityHorizon {
      */
     public static boolean unsupportedDigest(SignatureSummary sig) {
         return isSha3Family(sig.getDigestAlgorithm());
+    }
+
+    /**
+     * Podpis je ve formátu, se kterým CzechPOINT ani podatelny pracovat neumějí — CB-AdES.
+     * Údaj uživatele z 31. 10. 2026, týž druh jako u {@link #unsupportedDigest}: AnEP takový
+     * podpis ověří, takže by jinak karta uváděla datum, do kdy ho ověří i oni.
+     */
+    public static boolean unsupportedFormat(SignatureSummary sig) {
+        return AdvisorView.isCbAdes(sig.getFormat());
     }
 
     /**

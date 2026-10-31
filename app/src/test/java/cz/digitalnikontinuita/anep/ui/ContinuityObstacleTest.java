@@ -44,8 +44,10 @@ class ContinuityObstacleTest {
     }
 
     @Test
-    @DisplayName("CB-AdES je překážka i s platným verdiktem a řekne proč")
-    void cbAdesCannotBeExtended() {
+    @DisplayName("Platný CB-AdES bránou projde jako ostatní formáty")
+    void cbAdesIsExtendedLikeTheOthers() {
+        // Do 31. 10. 2026 tu byla překážka „aplikace neumí“; od připojení CBAdESService
+        // (změřeno na CB-AdES-BASELINE-T s odloučeným PDF: T → LTA, platný) už neplatí.
         var sig = SigFixture.sig()
                 .format("CB-AdES-BASELINE-T")
                 .certNotAfter(SigFixture.FUTURE)
@@ -53,10 +55,24 @@ class ContinuityObstacleTest {
                 .situations(31, 32, 33, 34)
                 .build();
 
-        String obstacle = AdvisorView.continuityObstacle(sig, NO_TRUSTED_LAST);
+        assertNull(AdvisorView.continuityObstacle(sig, NO_TRUSTED_LAST));
+    }
 
-        assertNotNull(obstacle, "CB-AdES aplikace rozšiřovat neumí, nabídka ho nesmí slibovat");
-        assertTrue(obstacle.contains("CB-AdES"), obstacle);
+    @Test
+    @DisplayName("CB-AdES: CzechPOINT a podatelny ho neověří a jiné ověřovatele karta nenabízí")
+    void cbAdesIsLostForTolerantValidators() {
+        // Údaj uživatele 31. 10. 2026: s formátem CB-AdES tyto nástroje pracovat neumějí.
+        var sig = SigFixture.sig()
+                .format("CB-AdES-BASELINE-T")
+                .certNotAfter(SigFixture.FUTURE)
+                .bestSignatureTime(SigFixture.PAST)
+                .situations(31, 32, 33, 34)
+                .build();
+
+        assertTrue(ContinuityHorizon.unsupportedFormat(sig));
+        org.junit.jupiter.api.Assertions.assertEquals(ContinuityHorizon.Kind.LOST,
+                ContinuityHorizon.tolerant(sig, "TOTAL_PASSED").kind());
+        org.junit.jupiter.api.Assertions.assertFalse(AdvisorView.shouldOfferOtherValidators(sig));
     }
 
     @Test

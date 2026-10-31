@@ -14,9 +14,13 @@ pro soupis změn ke každé nové vydané verzi.
   založené na podpisech COSE a datovém formátu CBOR — odloučené (soubor .cose s podepsaným
   dokumentem v hlavním poli) i obalující. Dosud je odmítal jako nepodporovaný formát.
   Karta Analýzy u nich uvádí, že zatím nejde o referenční formát: CB-AdES nejmenuje
-  rozhodnutí (EU) 2015/1506 ani prováděcí nařízení (EU) 2026/248, které je nahradilo. Prodloužit ani
-  uchovat podpis CB-AdES aplikace neumí; záložka Digitální kontinuita u něj nabízí forenzní
-  balíček a řekne proč.
+  rozhodnutí (EU) 2015/1506 ani prováděcí nařízení (EU) 2026/248, které je nahradilo.
+  Záložka Digitální kontinuita nabízí u podpisu CB-AdES uchování stejně jako u ostatních
+  formátů AdES: doplní chybějící revokační informace a archivní časové razítko až na úroveň
+  LTA (odloučený podpis jen spolu s podepsaným dokumentem). S formátem CB-AdES ale CzechPOINT
+  ani podatelny pracovat neumějí: blok o nich proto u takového podpisu neuvádí datum, nýbrž
+  že platnost neověří, a výsledek uchování slibuje ověřitelnost jen ve validátorech, které
+  formát CB-AdES podporují.
 - **Referenční formáty podle prováděcího nařízení (EU) 2026/248.** Výklad o referenčním
   formátu na kartě Analýzy, v Rozšířeném přehledu i v dokumentaci se nově opírá o nařízení
   2026/248, které k 22. 2. 2026 zrušilo dosud citované rozhodnutí (EU) 2015/1506. JAdES je

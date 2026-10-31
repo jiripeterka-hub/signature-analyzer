@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika ověřování podpisu**
 
-==Verze 1.11== · stav ke dni 31. 10. 2026 · AnEP 1.0.0, knihovna DSS 6.5.1
+==Verze 1.12== · stav ke dni 31. 10. 2026 · AnEP 1.0.0, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -28,9 +28,9 @@ Dokument je stavěný jako politika ověřování podpisu ve smyslu ETSI TS 119 
 | Položka | Hodnota |
 |---|---|
 | Název | Politika ověřování elektronických podpisů AnEP |
-| Verze | ==1.11== ze dne 31. 10. 2026 |
+| Verze | ==1.12== ze dne 31. 10. 2026 |
 | Platí pro | AnEP 1.0.0 (repozitář signature-analyzer, stav po commitu ==11f98cf==) |
-| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.11== |
+| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.12== |
 | Ověřovací jádro | knihovna DSS (Digital Signature Service) 6.5.1 Evropské komise |
 | Postup ověřování | ETSI EN 319 102-1 V1.4.0 (2024-03) |
 | Struktura dokumentu | ETSI TS 119 172-1 (politika ověřování podpisu) |
@@ -69,7 +69,7 @@ Při ověřování externího podpisu se posuzuje jen externí podpis. Podpisy, 
 | CAdES, CMS, PKCS#7 | B-B až B-LTA, starší úrovně (BES, T, C, X, XL, A) | včetně datových zpráv ISDS (.zfo) |
 | XAdES | B-B až B-LTA, starší úrovně | |
 | JAdES | B-B až B-LTA | |
-| ==CB-AdES (podpis COSE)== | ==B-B až B-LTA== | ==ověřuje se od verze 6.5.1 knihovny DSS; podpis odloučený i obalující; doplnit do něj razítka či revokační informace aplikace neumí== |
+| ==CB-AdES (podpis COSE)== | ==B-B až B-LTA== | ==ověřuje se od verze 6.5.1 knihovny DSS; podpis odloučený i obalující; uchovává se jako ostatní formáty AdES (politika uchovávání, 8.1)== |
 | ASiC-S, ASiC-E (CAdES i XAdES) | B-B až B-LTA | včetně samostatných časových razítek a evidenčních záznamů uvnitř kontejneru |
 | OpenDocument (ODF) | podle vloženého XAdES | ověřuje se jako kontejner ASiC s XAdES |
 | Office Open XML (DOCX, XLSX, PPTX) | — | **neověřuje se**; AnEP jen přečte, co v podpisu stojí. DSS nezná transformaci, kterou OOXML ke krytí obsahu potřebuje |
@@ -399,3 +399,4 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 | ==1.9== | ==17. 10. 2026== | ==beze změny obsahu; číslo verze a stav aplikace sjednocené s verzí 1.9 politiky uchovávání, která upřesňuje, jaké revokační údaje vkládá prodloužení== |
 | ==1.10== | ==30. 10. 2026== | ==nový oddíl 12.8: podpis kódu u programů (.exe, .dll, .msi) — integrita, matematika podpisu a razítka, kotvy z úložiště Windows, revokační údaje vydané po expiraci přijaté po dobu, kterou je autoritám ukládají pravidla CA/B Fóra pro podpis kódu; ověřování elektronických podpisů dokumentů se nemění== |
 | ==1.11== | ==31. 10. 2026== | ==oddíl 4: nově se ověřují podpisy CB-AdES (COSE); ověřovacím jádrem je knihovna DSS 6.5.1 — jádro ověřování i výchozí politika se proti 6.5 nezměnily, novější jsou knihovny, na kterých stojí (mj. Bouncy Castle 1.86)== |
+| ==1.12== | ==31. 10. 2026== | ==oddíl 4: podpisy CB-AdES aplikace nově i uchovává; ověřování samo se nemění; číslo verze sjednocené s verzí 1.12 politiky uchovávání== |

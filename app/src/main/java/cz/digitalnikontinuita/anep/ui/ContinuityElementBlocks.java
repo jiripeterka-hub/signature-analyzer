@@ -1296,7 +1296,10 @@ final class ContinuityElementBlocks {
                     + " nemění."));
         }
 
-        if (h.kind() != Kind.INVALID) {
+        // U CB-AdES není co odhadovat: s formátem tyhle nástroje neumějí pracovat (údaj uživatele
+        // 31. 10. 2026), a poznámka o jejich zásobách revokačních informací by tu mátla.
+        if (h.kind() != Kind.INVALID
+                && !(h.kind() == Kind.LOST && ContinuityHorizon.unsupportedFormat(sig))) {
             body.getChildren().add(AdvisorView.continuityNote(
                     "Jde o odhad, ne o jistotu. Aplikace nezná verzi ani nastavení těchto"
                     + " nástrojů, natož obsah jejich zásob revokačních informací; odhad vychází"
@@ -1315,6 +1318,12 @@ final class ContinuityElementBlocks {
                     + " stojí na hashovací funkci " + sig.getDigestAlgorithm() + " z rodiny SHA3."
                     + " Tu CzechPOINT a nejspíš ani podatelny zatím nepodporují, takže by platnost "
                     + gen + " neověřily — bez ohledu na revokační informace a na časová razítka.";
+        }
+        if (ContinuityHorizon.unsupportedFormat(sig)) {
+            return AdvisorView.capitalize(AdvisorView.gendered(sig, "podpis", "pečeť", "razítko"))
+                    + " je ve formátu CB-AdES, se kterým CzechPOINT ani podatelny pracovat"
+                    + " neumějí, takže by platnost " + gen + " neověřily — bez ohledu na"
+                    + " revokační informace a na časová razítka.";
         }
         if (sig.isTrustedViaCustomStore()) {
             return "Důvěra ke " + gen + " tu stojí na certifikátu z vlastního úložiště aplikace."
@@ -1391,6 +1400,10 @@ final class ContinuityElementBlocks {
         // která uplynula.
         if (h.kind() == Kind.LOST && ContinuityHorizon.unsupportedDigest(sig)) {
             return "CzechPOINT a podatelny platnost nejspíš neověří";
+        }
+        // Jako u SHA3 ne „dnes již": formát CB-AdES tyhle nástroje nepřečetly nikdy.
+        if (h.kind() == Kind.LOST && ContinuityHorizon.unsupportedFormat(sig)) {
+            return "CzechPOINT a podatelny platnost neověří";
         }
         return switch (h.kind()) {
             case UNTIL -> "Jak dlouho dokáží ověřit platnost CzechPOINT, podatelny a další"
@@ -2731,6 +2744,13 @@ final class ContinuityElementBlocks {
                         ? which + " by mělo být možné ověřit ve validátorech podle standardů —"
                           + " ne však v CzechPOINTu a nejspíš ani v podatelnách, které hashovací"
                           + " funkce SHA3 zatím nepodporují"
+                        // CB-AdES: „ve všech obvyklých" by odporovalo bloku o CzechPOINTu nad
+                        // tímhle — ten ani podatelny s formátem pracovat neumějí (údaj uživatele
+                        // 31. 10. 2026, viz ContinuityHorizon.unsupportedFormat).
+                        : ContinuityHorizon.unsupportedFormat(sig)
+                        ? which + " by mělo být možné ověřit ve validátorech podle standardů,"
+                          + " které formát CB-AdES podporují — ne však v CzechPOINTu ani"
+                          + " v podatelnách, které s ním pracovat neumějí"
                         : which + " by mělo být možné ověřit ve všech obvyklých validátorech")
                     + "; viz [varianta „uchování“ a „prodloužení“](PRESERVE_PROLONG)"
                     + " ve výkladu na začátku záložky.", open));
