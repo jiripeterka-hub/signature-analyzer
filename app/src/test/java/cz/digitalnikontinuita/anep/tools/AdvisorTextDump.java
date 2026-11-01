@@ -66,16 +66,18 @@ public final class AdvisorTextDump extends Application {
     private void run(List<String> args) throws Exception {
         List<File> files = new ArrayList<>();
         File trust = null;
+        boolean tolerant = false;
         for (int i = 0; i < args.size(); i++) {
             if ("-trust".equals(args.get(i))) trust = new File(args.get(++i));
+            // -t: všechny čtyři ústupky, jako v EnvelopeProofSmoke — bez ohledu na Nastavení.
+            else if ("-t".equals(args.get(i))) tolerant = true;
             else if ("-envelope".equals(args.get(i))) {
                 File container = new File(args.get(++i));
                 String entry = args.get(++i);
                 byte[] envelopeBytes = java.nio.file.Files.readAllBytes(container.toPath());
-                byte[] element;
-                try (java.util.zip.ZipFile z = new java.util.zip.ZipFile(container)) {
-                    element = z.getInputStream(z.getEntry(entry)).readAllBytes();
-                }
+                // Týž strom jako prohlížeč obalu — i příloha PDF („prilohy/…") nebo ZFO.
+                byte[] element = EnvelopeProofSmoke.extract(envelopeBytes, container.getName(),
+                        entry);
                 File tmp = java.nio.file.Files.createTempDirectory("anep-prvek-")
                         .resolve(new File(entry).getName()).toFile();
                 java.nio.file.Files.write(tmp.toPath(), element);
@@ -86,6 +88,12 @@ public final class AdvisorTextDump extends Application {
             else files.add(new File(args.get(i)));
         }
         AppSettings settings = AppSettings.load();
+        if (tolerant) {
+            settings.setAcceptNewerOcsp(true);
+            settings.setAcceptExpiredRevocationSources(true);
+            settings.setIgnoreSha1Deprecated(true);
+            settings.setAcceptPdfNotEtsi(true);
+        }
         CommonCertificateVerifier verifier =
                 new TrustConfig(settings).buildLotlCertificateVerifier();
         if (trust != null) {

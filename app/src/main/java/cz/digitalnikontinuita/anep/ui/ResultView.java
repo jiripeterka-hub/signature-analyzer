@@ -706,6 +706,13 @@ public class ResultView {
                 String bstNote;
                 if (sig.isBestSignatureTimeFromEvidenceRecord()) {
                     bstNote = "čas archivního razítka evidenčního záznamu";
+                } else if (sig.getEnvelopeProofTime() != null
+                        && Math.abs(java.time.Duration.between(bst,
+                                sig.getEnvelopeProofTime()).toSeconds()) <= 1) {
+                    // Důkaz z obalu (situace 57): u prvku bez vlastního razítka tu stálo
+                    // „deklarovaný čas", ačkoli čas doložilo razítko obalu (příloha datové
+                    // zprávy, 1. 11. 2026).
+                    bstNote = "čas časového razítka obalu, z něhož byl dokument předán k ověření";
                 } else if (sig.hasValidTimestamp()) {
                     bstNote = "čas časového razítka";
                 } else if (sig.isUsedCustomValidationTime()) {

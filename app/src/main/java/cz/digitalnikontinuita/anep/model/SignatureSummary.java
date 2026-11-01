@@ -1051,12 +1051,23 @@ public class SignatureSummary {
      * {@link #coveringProofTimestamp}; mezi {@link #allTimestamps} nepatří ze stejného důvodu.
      */
     private TimestampEntry envelopeProofTimestamp;
+    /**
+     * Situace 57 — okamžik důkazu existence z obalu (čas krycího razítka obalu). K němu, ne
+     * k dnešku, se posuzuje certifikát autority posledního vlastního razítka prvku; nález
+     * uživatele z 1. 11. 2026 nad přílohou PDF v PDF s razítky: certifikát autority platil
+     * do 21. 12. 2014, krycí razítko obalu je z 19. 2. 2014, a Rozšířený přehled přesto
+     * tvrdil, že razítko drží jen kotva důvěry.
+     */
+    private java.time.Instant envelopeProofTime;
 
     public String getEnvelopeProofDetail()               { return envelopeProofDetail; }
     public TimestampEntry getEnvelopeProofTimestamp()    { return envelopeProofTimestamp; }
-    public void setEnvelopeProof(String detail, TimestampEntry timestamp) {
+    public java.time.Instant getEnvelopeProofTime()      { return envelopeProofTime; }
+    public void setEnvelopeProof(String detail, TimestampEntry timestamp,
+                                 java.time.Instant when) {
         this.envelopeProofDetail = detail;
         this.envelopeProofTimestamp = timestamp;
+        this.envelopeProofTime = when;
     }
 
     /** True when at least one evidence record actually proves this signature's earlier existence. */

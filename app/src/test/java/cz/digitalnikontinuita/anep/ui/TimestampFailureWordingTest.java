@@ -89,6 +89,25 @@ class TimestampFailureWordingTest {
         assertFalse(ExtendedView.provenInTime(List.of(failing, tooLate), 0));
     }
 
+    /**
+     * Důkaz existence z obalu (1. 11. 2026): krycí razítko obalu stojí u posledního razítka
+     * prvku na místě toho následujícího. Bez něj se poslední razítko posuzovalo k dnešku.
+     */
+    @Test
+    @DisplayName("Poslední razítko se posuzuje k okamžiku důkazu z obalu")
+    void envelopeProofStandsInForTheNextTimestamp() {
+        Instant signed = NOW.minus(1200, ChronoUnit.DAYS);
+        Instant tsaExpiry = NOW.minus(300, ChronoUnit.DAYS);
+        TimestampEntry failing = ts(signed, false, tsaExpiry);
+
+        assertTrue(ExtendedView.provenInTime(List.of(failing), 0,
+                        NOW.minus(600, ChronoUnit.DAYS)),
+                "Razítko obalu vzniklo ještě za platnosti certifikátu autority");
+        assertFalse(ExtendedView.provenInTime(List.of(failing), 0,
+                        NOW.minus(100, ChronoUnit.DAYS)),
+                "Razítko obalu až po expiraci certifikátu autority důkazem včas není");
+    }
+
     private static TimestampEntry ts(Instant time, boolean passed, Instant notAfter) {
         return new TimestampEntry(time, passed, "TSA", notAfter, "sig", true, true);
     }

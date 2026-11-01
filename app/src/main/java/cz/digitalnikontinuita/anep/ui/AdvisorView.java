@@ -1719,6 +1719,18 @@ public class AdvisorView {
             return "obsah dokumentu neodpovídá tomu, co bylo podepsáno, a razítko by stvrdilo "
                     + "právě tenhle stav";
         }
+        // Důkaz z obalu (situace 57). Platnost stojí na razítku obalu, které vyjmutý dokument
+        // nemá, a nové razítko na dokumentu ho nenahradí: dokládalo by existenci až dnes.
+        // Dokud tu nebyla tahle věta, odůvodňovala nabídku forenzního balíčku „přerušeným
+        // řetězem razítek" — nad přílohou PDF vyňatou z PDF s razítky, jejíž řetěz přerušený
+        // není (nález uživatele 1. 11. 2026).
+        if (found.contains(57) && sig.getEnvelopeProofTime() != null) {
+            return gendered(sig, "jeho", "její", "jeho")
+                    + " platnost stojí na důkazu existence z obalu, z něhož byl dokument předán"
+                    + " k ověření, a nové razítko na samotném dokumentu by ho nenahradilo;"
+                    + " ověřitelnost je proto třeba udržovat na celém obalu (ten lze v AnEP"
+                    + " otevřít a ověřit samostatně)";
+        }
         if (!"TOTAL_PASSED".equals(displayedIndication(sig)) && !tolerantReaderMaySucceed(sig)
                 && !tolerantReadingStillWorks(sig)) {
             // Dva zcela různé případy pod jednou větou. Prvek se situací 45 má pokrytí úplné až na
@@ -3199,6 +3211,10 @@ public class AdvisorView {
      * <p>Zabalený schválně: výsledek to nemění, jen říká, kde se o něm bude smýšlet jinak.
      */
     private void addSunsetOnlyBlock(VBox card, SignatureSummary sig) {
+        if (sig.getDetectedSituations().contains(57) && sig.getEnvelopeProofTime() != null) {
+            addEnvelopeOnlyBlock(card, sig);
+            return;
+        }
         // Karta se staví jen pro kladný verdikt, takže ho sem lze předat natvrdo.
         if (!shouldWarnSunsetOnly(sig, "TOTAL_PASSED")) return;
 
@@ -3240,6 +3256,56 @@ public class AdvisorView {
                           "samotné razítko nevyhodnotily jako platné")
                 + " — ale " + gendered(sig, "jeho", "její", "jeho")
                 + " platnost by zůstala neznámá."));
+
+        card.getChildren().add(collapsibleBlock("Kde ověření nebude úspěšné", block, false));
+        card.getChildren().add(blockSeparator());
+    }
+
+    /**
+     * „Kde ověření nebude úspěšné“ u prvku, který obstál díky důkazu existence z obalu
+     * (situace 57). Samostatně ověřený neobstojí — to prvek se situací 57 má vždy, jinak by
+     * důkaz z obalu nebyl potřeba —, a jinde se ověřuje samostatně: kdo dostane dokument bez
+     * obalu, o důkazu neví, a kdo dostane obal, nemusí ho k dokumentu uvnitř připsat.
+     *
+     * <p>Do 1. 11. 2026 se tu u takového prvku vypisoval blok o sunsetu, jako by obal nebyl —
+     * nález uživatele nad přílohou PDF v PDF s razítky, kde razítko obalu vzniklo ještě
+     * za platnosti certifikátu autority a sunset nehrál roli. Kde razítko obalu přišlo až po
+     * konci řady vlastních razítek, stojí výsledek na obou, a blok to řekne jednou větou.
+     */
+    private void addEnvelopeOnlyBlock(VBox card, SignatureSummary sig) {
+        String genitiv = genitiveType(sig);
+        VBox block = new VBox(8);
+        block.setPadding(new Insets(8, 12, 10, 12));
+
+        block.getChildren().add(unlabelledRow(
+                "Aplikace AnEP dokázala ověřit platnost " + genitiv + " díky důkazu existence"
+                + " z obalu, z něhož byl dokument předán k ověření: časové razítko obalu s časem "
+                + shortDateTime(sig.getEnvelopeProofTime()) + " dokládá, že dokument i s "
+                + gendered(sig, "podpisem", "pečetí", "razítkem")
+                + " existoval nejpozději v ten okamžik. Samotný dokument bez obalu by jako"
+                + " platný ověřen nebyl."
+                + (envelopeHoldsTimestamps(sig) ? ""
+                        : " Navíc se tu uplatnilo i posuzování časových razítek podle tzv."
+                          + " sunsetu: razítko obalu vzniklo až po skončení platnosti certifikátů"
+                          + " vlastních časových razítek, a ta obstála jen proto, že jejich"
+                          + " služba je na důvěryhodných seznamech dosud vedena jako"
+                          + " kvalifikovaná.")));
+
+        block.getChildren().add(unlabelledRow(
+                "Jiné nástroje a služby pro ověřování elektronických podpisů (tzv. validátory)"
+                + " o tomto důkazu vědět nemusí. Předloží-li se jim samotný dokument vyjmutý"
+                + " z obalu, obal nemají k dispozici vůbec. Předloží-li se jim celý obal, mohou"
+                + " ověřit jeho vlastní podpisy a razítka, ale dokument uvnitř nemusí posoudit"
+                + " s razítkem obalu jako důkazem existence."));
+
+        block.getChildren().add(unlabelledRow(
+                "Takové validátory by pak " + gendered(sig,
+                        "samotný podpis nevyhodnotily jako platný",
+                        "samotnou pečeť nevyhodnotily jako platnou",
+                        "samotné razítko nevyhodnotily jako platné")
+                + " — " + gendered(sig, "jeho", "její", "jeho")
+                + " platnost by u nich zůstala neznámá. Proto je třeba uchovávat dokument"
+                + " i s celým obalem."));
 
         card.getChildren().add(collapsibleBlock("Kde ověření nebude úspěšné", block, false));
         card.getChildren().add(blockSeparator());
@@ -4333,13 +4399,18 @@ public class AdvisorView {
             boolean one = all.size() == 1;
             SignatureSummary.TimestampEntry ownValid = earliestValidOwnTimestamp(sig);
             OwnTimestampStatus status = ownTimestampStatus(sig, vc.provenExistence());
+            // Rozhodný okamžik dodalo samo razítko obalu (situace 57) — vlastní razítka prvku
+            // ani s ním neobstála, nebo ho nepředcházejí. Bez téhle věty odstavec skončil
+            // „dřívější existenci nedokládají" a o obalu, na kterém závěr stojí, mlčel.
+            boolean byEnvelope = found57(sig);
             if (status == OwnTimestampStatus.NONE_VALID) {
-                return sb.append(" ")
+                sb.append(" ")
                         .append(gendered(sig, "Podpis nese ", "Pečeť nese ", "Prvek nese "))
                         .append(count)
                         .append(one ? ", ověřit jako platné se ho ale nepodařilo"
-                                    : ", ověřit jako platné se ale nepodařilo ani jedno")
-                        .append(", takže dřívější existenci ").append(genitiveType(sig))
+                                    : ", ověřit jako platné se ale nepodařilo ani jedno");
+                if (byEnvelope) return sb.append(".").append(ENVELOPE_DECIDES).toString();
+                return sb.append(", takže dřívější existenci ").append(genitiveType(sig))
                         .append(one ? " nedokládá." : " nedokládají.")
                         .toString();
             }
@@ -4365,7 +4436,8 @@ public class AdvisorView {
                 // vysvětluje situace 52; zdejší věta ji nemá opakovat.
                 case PROVES_NOTHING -> sb.append(" Dřívější existenci ").append(genitiveType(sig))
                         .append(one ? " ale nedokládá." : " ale nedokládá žádné z nich.");
-                default -> sb.append(" Rozhodný okamžik se ale opírá o jiný údaj než o razítka,"
+                default -> sb.append(byEnvelope ? ENVELOPE_DECIDES
+                        : " Rozhodný okamžik se ale opírá o jiný údaj než o razítka,"
                         + " která nese sám prvek.");
             }
             return sb.toString();
@@ -4380,7 +4452,10 @@ public class AdvisorView {
 
         java.time.Instant tsuEnd = validTimestampChainReach(sig);
         boolean tsuGone = tsuEnd != null && !tsuEnd.isAfter(java.time.Instant.now());
-        boolean rejectedByStrictMode = !timestampStandardsMode && tsuGone;
+        // Razítko obalu, které vzniklo ještě za platnosti certifikátu autority, drží razítka
+        // samo — přísný režim, který sunset neuznává, je pak nemá proč odmítnout.
+        boolean heldByEnvelope = envelopeHoldsTimestamps(sig);
+        boolean rejectedByStrictMode = !timestampStandardsMode && tsuGone && !heldByEnvelope;
 
         if (rejectedByStrictMode) {
             // Razítko sice knihovna ověřila jako platné, ale zdejší nastavení je neuznává. Tvrdit
@@ -4430,7 +4505,28 @@ public class AdvisorView {
         // Proč razítko platí, přestože certifikát autority už skončil. Bez téhle věty výklad
         // zamlčel celý důvod, na kterém výsledek stojí — a čtenář, který ví jen tolik, že
         // certifikátu skončila platnost, musí zdejší verdikt považovat za omyl.
-        if (tsuExpired) {
+        if (tsuExpired && heldByEnvelope) {
+            // Důkaz z obalu (situace 57). Věta o sunsetu tu lhala: razítko obstálo, protože obal
+            // dokládá jeho existenci ještě za platnosti certifikátu autority — nález uživatele
+            // z 1. 11. 2026 nad přílohou PDF v PDF s razítky (certifikát autority do 21. 12. 2014,
+            // razítko obalu z 19. 2. 2014). Že obal hraje roli, se dosud dalo vyčíst jen
+            // z poznámky k výsledku.
+            boolean many = all.size() > 1;
+            sb.append(many
+                    ? " Certifikátům platných časových razítek sice už skončila platnost,"
+                      + " naposledy ("
+                    : " Certifikát časového razítka sice už expiroval (")
+              .append(shortDate(tsuUntil))
+              .append(many ? "), razítka ale **obstála díky obalu**" : "), razítko ale"
+                      + " **obstálo díky obalu**")
+              .append(": časové razítko obalu, z něhož byl dokument předán k ověření, s časem ")
+              .append(shortDateTime(sig.getEnvelopeProofTime()))
+              .append(", dokládá, že dokument i s ")
+              .append(many ? "nimi" : "ním")
+              .append(" existoval ještě za platnosti ")
+              .append(many ? "jejich certifikátů" : "toho certifikátu")
+              .append(" — viz poznámku k výsledku. Vyjmutý z obalu tento důkaz dokument ztrácí.");
+        } else if (tsuExpired) {
             // U více razítek je to konec krytí celé řady, kdežto věta nad tím jmenovala to
             // nejstarší razítko, které rozhodlo o čase. Bez upřesnění by čtenář datum přiřadil
             // jednomu razítku.
@@ -5563,6 +5659,28 @@ public class AdvisorView {
      * a Úschovna Czech POINT týž dokument téhož dne uznala. Pravidlo drží
      * {@link cz.digitalnikontinuita.anep.model.TimestampChain}.
      */
+    /**
+     * Drží vlastní razítka prvku důkaz existence z obalu (situace 57)? Ano, když razítko obalu
+     * vzniklo nejpozději v okamžiku, kam ještě sahá řada platných razítek prvku — pak razítka
+     * obstála díky obalu, ne díky sunsetu. Prvek bez platného vlastního razítka drží obal přímo.
+     */
+    /** Situace 57 s doloženým okamžikem důkazu z obalu. */
+    private static boolean found57(SignatureSummary sig) {
+        return sig.getEnvelopeProofTime() != null && sig.getDetectedSituations().contains(57);
+    }
+
+    private static final String ENVELOPE_DECIDES =
+            " Dřívější existenci ale dokládá časové razítko obalu, z něhož byl dokument předán"
+            + " k ověření, a **rozhodným okamžikem se stal čas, který doložilo** — viz poznámku"
+            + " k výsledku. Vyjmutý z obalu tento důkaz dokument ztrácí.";
+
+    static boolean envelopeHoldsTimestamps(SignatureSummary sig) {
+        java.time.Instant proof = sig.getEnvelopeProofTime();
+        if (proof == null || !sig.getDetectedSituations().contains(57)) return false;
+        java.time.Instant reach = validTimestampChainReach(sig);
+        return reach == null || !proof.isAfter(reach);
+    }
+
     private static java.time.Instant validTimestampChainReach(SignatureSummary sig) {
         List<SignatureSummary.TimestampEntry> chain = sig.getAllTimestamps().stream()
                 .filter(ts -> ts.time() != null && ts.passed())
@@ -6373,7 +6491,7 @@ public class AdvisorView {
         String family = adesFamilyApplies(sig.getFormat()) ? formatFamilyText(sig) : null;
         if (family != null) body.getChildren().add(infoRow("Druh formátu:", family));
 
-        String packaging = packagingText(sig);
+        String packaging = withEnvelopeCaveat(sig, packagingText(sig));
         if (packaging != null) body.getChildren().add(infoRow("Zapouzdření:", packaging));
 
         String level = levelKey(sig.getFormat());
@@ -6404,7 +6522,7 @@ public class AdvisorView {
     private void addTimestampFormatRows(VBox body, SignatureSummary sig) {
         body.getChildren().add(infoRow("Druh formátu:", TS_FAMILY));
 
-        String packaging = timestampPackagingText(sig);
+        String packaging = withEnvelopeCaveat(sig, timestampPackagingText(sig));
         if (packaging != null) body.getChildren().add(infoRow("Zapouzdření:", packaging));
 
         body.getChildren().add(infoRow("Úroveň:", TS_LEVEL));
@@ -6512,6 +6630,26 @@ public class AdvisorView {
                  + " a sítě s omezenými prostředky (internet věcí); podepsat jím lze ale data"
                  + " jakéhokoli druhu.";
         return null;
+    }
+
+    /**
+     * „K ověření stačí tento jediný soubor“ platí o formátu, ne o výsledku, když prvek obstál
+     * jen díky důkazu existence z obalu (situace 57): bez obalu by jako platný ověřen nebyl.
+     * Nález uživatele z 1. 11. 2026 nad přílohou PDF vyňatou z PDF s razítky — řádek
+     * „Zapouzdření“ tvrdil opak toho, co o několik bloků níž říká blok „Kde ověření nebude
+     * úspěšné“.
+     */
+    private static String withEnvelopeCaveat(SignatureSummary sig, String packaging) {
+        if (packaging == null || sig.getEnvelopeProofTime() == null
+                || !sig.getDetectedSituations().contains(57)) {
+            return packaging;
+        }
+        return packaging + " To ale platí jen o formátu: platnost " + genitiveType(sig)
+                + " stojí na důkazu existence z obalu, z něhož byl dokument předán k ověření,"
+                + " a bez obalu by " + gendered(sig, "jako platný ověřen nebyl",
+                        "jako platná ověřena nebyla", "jako platné ověřeno nebylo")
+                + ". Dokument je proto třeba uchovávat"
+                + " spolu s obalem.";
     }
 
     /**
@@ -8555,7 +8693,7 @@ public class AdvisorView {
         for (int i = 0; i < all.size(); i++) {
             SignatureSummary.TimestampEntry ts = all.get(i);
             if (!ts.passed() && ts.failureCause() == cause) {
-                return ExtendedView.provenInTime(all, i);
+                return ExtendedView.provenInTime(all, i, ExtendedView.lastAssessedAt(sig));
             }
         }
         return false;

@@ -605,6 +605,14 @@ final class ContinuityElementBlocks {
                     + " neposuzuje ani jeho doba platnosti, ani jeho revokace.";
             case NONE -> "";
         });
+        // Důkaz z obalu u prvku, jehož závěr stojí na staženém údaji: první věta mluví jen
+        // o dostupnosti toho údaje, a že dokument vyjmutý z obalu důkaz ztrácí, by se čtenář
+        // nedozvěděl (nález nad přílohou datové zprávy, 1. 11. 2026).
+        if (actNow && sig.getEnvelopeProofTimestamp() != null) {
+            sb.append(" Dřívější existenci ").append(gen).append(" přitom prokazují časová"
+                    + " razítka obalu, z něhož byl dokument předán k ověření; uchovávat je proto"
+                    + " třeba celý obal, ne jen dokument z něj vyjmutý.");
+        }
         return sb.toString();
     }
 
@@ -1338,6 +1346,22 @@ final class ContinuityElementBlocks {
                     + " zůstal neznámý — bez ohledu na revokační informace a na časová razítka.";
         }
         if (h.limit() == Limit.TIMESTAMP_CERT) {
+            // Důkaz z obalu (situace 57): razítko obalu prvek kryje, a jeho certifikát může platit
+            // dodnes — věta „certifikátům všech razítek, která ho kryjí, skončila platnost" by
+            // tu nebyla pravda. Tyto nástroje neuspějí z jiného důvodu: s obalem nepracují tak,
+            // jako AnEP (nález uživatele 1. 11. 2026, příloha PDF vyňatá z PDF s razítky).
+            if (sig.getEnvelopeProofTime() != null && sig.getDetectedSituations().contains(57)) {
+                return "Certifikátům vlastních časových razítek " + gen + " už skončila řádná"
+                        + " doba platnosti a tyto nástroje razítko po expiraci jeho certifikátu"
+                        + " za platné nepovažují. Důkaz existence " + gen + " v dřívější době tu"
+                        + " nese obal, z něhož byl dokument předán k ověření"
+                        + (AdvisorView.envelopeHoldsTimestamps(sig)
+                                ? ", a jeho razítko vzniklo ještě za platnosti těch certifikátů"
+                                : "")
+                        + ". Nástroj, kterému se předá jen dokument, o obalu neví a stav"
+                        + " platnosti by mu zůstal neznámý; jak naloží s celým obalem, se předem"
+                        + " říct nedá.";
+            }
             if (ContinuityHorizon.isTimestampElement(sig)) {
                 return "Certifikát razítkovací autority, která toto razítko vydala, už expiroval."
                         + " Tyto nástroje razítko po expiraci jeho certifikátu za platné"

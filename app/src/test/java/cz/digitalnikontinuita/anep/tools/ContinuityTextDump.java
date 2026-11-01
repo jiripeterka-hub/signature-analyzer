@@ -39,6 +39,9 @@ import java.util.List;
  *        --module-path "%JAVAFX%" --add-modules javafx.controls,javafx.graphics \
  *        cz.digitalnikontinuita.anep.tools.ContinuityTextDump "cesta\k\souboru.pdf"
  * </pre>
+ *
+ * <p>{@code -t} zapne všechny čtyři ústupky; {@code -envelope obal prvek} (1. 11. 2026) ověří
+ * prvek s důkazem existence z obalu jako {@link AdvisorTextDump}.
  */
 public final class ContinuityTextDump extends Application {
 
@@ -60,11 +63,37 @@ public final class ContinuityTextDump extends Application {
         }, "continuity-dump").start();
     }
 
+    private final java.util.Map<File, cz.digitalnikontinuita.anep.core.EnvelopeProof.Source>
+            envelopes = new java.util.HashMap<>();
+
     private void run(List<String> args) throws Exception {
         AppSettings settings = AppSettings.load();
+        List<String> rest = new ArrayList<>();
+        for (int i = 0; i < args.size(); i++) {
+            if ("-t".equals(args.get(i))) {
+                settings.setAcceptNewerOcsp(true);
+                settings.setAcceptExpiredRevocationSources(true);
+                settings.setIgnoreSha1Deprecated(true);
+                settings.setAcceptPdfNotEtsi(true);
+            } else if ("-envelope".equals(args.get(i))) {
+                File container = new File(args.get(++i));
+                String entry = args.get(++i);
+                byte[] envelopeBytes = java.nio.file.Files.readAllBytes(container.toPath());
+                byte[] element = EnvelopeProofSmoke.extract(envelopeBytes, container.getName(),
+                        entry);
+                File tmp = java.nio.file.Files.createTempDirectory("anep-prvek-")
+                        .resolve(new File(entry).getName()).toFile();
+                java.nio.file.Files.write(tmp.toPath(), element);
+                envelopes.put(tmp, new cz.digitalnikontinuita.anep.core.EnvelopeProof.Source(
+                        envelopeBytes, container.getName(), entry, element));
+                rest.add(tmp.getPath());
+            } else {
+                rest.add(args.get(i));
+            }
+        }
         CommonCertificateVerifier verifier =
                 new TrustConfig(settings).buildLotlCertificateVerifier();
-        for (File file : expand(args)) {
+        for (File file : expand(rest)) {
             System.out.println("═══ " + file + " ═══");
             try {
                 dump(file, settings, verifier);
@@ -109,8 +138,13 @@ public final class ContinuityTextDump extends Application {
             throws Exception {
         DSSDocument doc = new DocumentLoader().load(file);
         var pdfSource = cz.digitalnikontinuita.anep.core.PdfSource.of(file);
+        ValidatorFactory factory = new ValidatorFactory(settings);
+        var outcome = factory.validate(doc, null, verifier, null);
+        if (envelopes.containsKey(file)) {
+            outcome = factory.withEnvelopeProof(outcome, envelopes.get(file), verifier);
+        }
         ValidationResult result = new ReportMapper().map(file.getName(), null,
-                new ValidatorFactory(settings).validate(doc, null, verifier, null), settings,
+                outcome, settings,
                 cz.digitalnikontinuita.anep.core.PdfSignatureAppearanceExtractor
                         .extract(pdfSource, null));
 

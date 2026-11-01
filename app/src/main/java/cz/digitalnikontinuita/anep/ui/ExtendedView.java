@@ -225,8 +225,16 @@ public class ExtendedView {
         //   – the last timestamp:      assessed at current time
         Map<String, java.util.List<Boolean>> tsExpiredFlagsBySig = new HashMap<>();
         if (!timestampStandardsMode && dd != null) {
-            java.util.Date now = new java.util.Date();
+            Map<String, java.util.Date> lastAssessed = new HashMap<>();
+            for (SignatureSummary s : result.getSignatures()) {
+                if (s.getSignatureId() != null) {
+                    lastAssessed.put(s.getSignatureId(), java.util.Date.from(lastAssessedAt(s)));
+                }
+            }
             for (eu.europa.esig.dss.diagnostic.SignatureWrapper sig : dd.getSignatures()) {
+                // Poslední razítko se posuzuje k dnešku, leda by prvek měl důkaz existence
+                // z obalu — pak k němu (viz lastAssessedAt).
+                java.util.Date now = lastAssessed.getOrDefault(sig.getId(), new java.util.Date());
                 java.util.List<TimestampWrapper> allTs = sig.getTimestampList().stream()
                         .filter(ts -> ts.getProductionTime() != null)
                         .sorted(java.util.Comparator.comparing(TimestampWrapper::getProductionTime))
@@ -1357,7 +1365,8 @@ public class ExtendedView {
             // Certifikát razítkovací autority se posuzuje k okamžiku, ke kterému se na platnost
             // tohohle razítka ptáme — u posledního teď, u ostatních ke vzniku toho následujícího,
             // které jim dalo důkaz existence. Totéž pravidlo, jakým se počítají tsExpiredFlags.
-            boolean sunset = e.passed() && heldBySunset(e.notAfter(), assessedAt(entries, i));
+            java.time.Instant assessed = assessedAt(entries, i, lastAssessedAt(sig));
+            boolean sunset = e.passed() && heldBySunset(e.notAfter(), assessed);
             // Při vypnutém „Ověřování časových razítek podle standardů" si takové razítko
             // aplikace sama nezapočítá — pruh nad kartou hlásí zpřísnění na neznámý výsledek —
             // a slovo „platné" by mu odporovalo. Zůstane holý řádek jako dosud.
@@ -1367,9 +1376,10 @@ public class ExtendedView {
             body.getChildren().add(timestampRow(label, e.qualified(), valid,
                     valid && sunset, val.toString(),
                     "vri_bare".equals(kind) ? VRI_BARE_NOTE : null,
-                    trustListNotes(e, valid, assessedAt(entries, i))));
+                    trustListNotes(e, valid, assessed)));
             if (!e.passed()) {
-                Label errLbl = new Label(timestampFailureLine(e, provenInTime(entries, i)));
+                Label errLbl = new Label(timestampFailureLine(e,
+                        provenInTime(entries, i, lastAssessedAt(sig))));
                 errLbl.setStyle("-fx-text-fill: #cc0000;");
                 Region indent = new Region();
                 indent.setMinWidth(LBL_WIDTH + 4);
@@ -1421,7 +1431,7 @@ public class ExtendedView {
 
     /**
      * @param assessedAt okamžik, k němuž se posuzuje platnost certifikátu — u razítka kryté
-     *        dalším razítkem vznik toho následujícího ({@link #assessedAt(List, int)}), jinak
+     *        dalším razítkem vznik toho následujícího ({@link #assessedAt(List, int, java.time.Instant)}), jinak
      *        současnost. Bez tohohle parametru věta o kotvě důvěry lhala: razítko kryté
      *        nepřerušeným řetězem obstojí, i když jeho certifikát dneska už neplatí, protože
      *        v okamžiku, kdy dostalo důkaz existence, ještě platil — s kotvou důvěry to nemá
@@ -1469,12 +1479,27 @@ public class ExtendedView {
      * existence a jeho certifikát tedy nemusí platit dodnes — táž úvaha, jakou dělá výpočet
      * {@code tsExpiredFlags} nad DiagnosticData.
      */
-    private static java.time.Instant assessedAt(List<TimestampEntry> entries, int i) {
+    private static java.time.Instant assessedAt(List<TimestampEntry> entries, int i,
+                                                java.time.Instant last) {
         if (i + 1 < entries.size()) {
             TimestampEntry next = entries.get(i + 1);
             if (next.passed() && next.time() != null) return next.time();
         }
-        return java.time.Instant.now();
+        return last;
+    }
+
+    /**
+     * Okamžik, k němuž se posuzuje certifikát autority posledního razítka prvku: okamžik důkazu
+     * existence z obalu, má-li ho prvek (situace 57), jinak současnost. Krycí razítko obalu je
+     * pro poslední razítko prvku tím „následujícím razítkem“ z {@link #assessedAt} — jen leží
+     * mimo dokument. Bez toho Rozšířený přehled u přílohy PDF vyňaté z PDF s razítky (nález
+     * uživatele z 1. 11. 2026) tvrdil, že razítko drží jen kotva důvěry a sunset, ačkoli
+     * certifikát jeho autority v okamžiku důkazu z obalu ještě platil.
+     */
+    static java.time.Instant lastAssessedAt(SignatureSummary sig) {
+        java.time.Instant now = java.time.Instant.now();
+        java.time.Instant proof = sig == null ? null : sig.getEnvelopeProofTime();
+        return proof != null && proof.isBefore(now) ? proof : now;
     }
 
     /**
@@ -1485,9 +1510,14 @@ public class ExtendedView {
      * a to důkaz není, proto ta podmínka na {@code isBefore(now)}.
      */
     static boolean provenInTime(List<TimestampEntry> entries, int i) {
+        return provenInTime(entries, i, java.time.Instant.now());
+    }
+
+    /** @param last okamžik pro poslední razítko — viz {@link #lastAssessedAt}. */
+    static boolean provenInTime(List<TimestampEntry> entries, int i, java.time.Instant last) {
         if (entries == null || i < 0 || i >= entries.size()) return false;
         TimestampEntry e = entries.get(i);
-        java.time.Instant when = assessedAt(entries, i);
+        java.time.Instant when = assessedAt(entries, i, last);
         return e.notAfter() != null && when != null
                 && !when.isAfter(e.notAfter())
                 && when.isBefore(java.time.Instant.now());

@@ -514,7 +514,7 @@ public class ReportMapper {
                     signingTool,
                     buildValidationCourse(id, dd, simpleReport, settings, bestSigTime,
                             tsTimesAsc, outcome.skippedRevocations(), strayPrefixBytes,
-                            reports.getXmlDetailedReport()),
+                            reports.getXmlDetailedReport(), envelopeProof),
                     mapEvidenceRecords(dd.getEvidenceRecords(), id, simpleReport, fileName),
                     situations.contains(43)
                             ? withdrawnTimestampServiceDetail(
@@ -559,7 +559,8 @@ public class ReportMapper {
             ));
             if (envelopeProof != null) {
                 summaries.get(summaries.size() - 1).setEnvelopeProof(
-                        envelopeProofDetail(envelopeProof, bestSigTime), envelopeProof.newest());
+                        envelopeProofDetail(envelopeProof, bestSigTime), envelopeProof.newest(),
+                        envelopeProof.when());
             }
         }
 
@@ -3834,7 +3835,8 @@ public class ReportMapper {
                                                     Instant provenExistence,
                                                     List<TimestampEntry> timestamps,
                                                     List<SkippedRevocation> skippedRevocations,
-                                                    int strayPrefixBytes, String detailedReportXml) {
+                                                    int strayPrefixBytes, String detailedReportXml,
+                                                    EnvelopeProof envelope) {
         SignatureWrapper sw = dd.getSignatureById(sigId);
         if (sw == null) return null;
 
@@ -3854,6 +3856,16 @@ public class ReportMapper {
             provenNote = source == null
                     ? evidenceRecordProofLabel(sigId, dd, simpleReport, provenExistence)
                     : null;
+            // Důkaz z obalu (situace 57), kde rozhodl čas razítka obalu sám. Do 1. 11. 2026 tu
+            // stálo holé „časové razítko", jako by ho nesl prvek (příloha datové zprávy).
+            if (provenNote == null && source == null && envelope != null
+                    && Math.abs(java.time.Duration.between(envelope.when(), provenExistence)
+                            .toSeconds()) <= 1) {
+                provenNote = "časové razítko obalu " + envelope.envelopeName()
+                        + (envelope.timestamp() != null && envelope.timestamp().issuer() != null
+                                && !envelope.timestamp().issuer().isBlank()
+                                ? " od " + envelope.timestamp().issuer() : "");
+            }
             if (provenNote == null) provenNote = tsKindLabel(source);
             // A second of slack: DSS reports the same instant with lower precision in places.
             if (dssBst != null && dssBst.isAfter(provenExistence.plusSeconds(1))) {
