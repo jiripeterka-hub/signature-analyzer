@@ -5786,19 +5786,44 @@ public class ReportMapper {
      * razítko z roku 2014 — věta „a právě k němu se posuzovala" by o roce 2019 lhala.
      */
     static String envelopeProofDetail(EnvelopeProof proof, Instant decisive) {
-        String head = "Dokument byl k ověření předán z obalu " + proof.envelopeName()
-                + ", který nese platné časové razítko z "
-                + formatRevDate(java.util.Date.from(proof.when()))
-                + ", a to razítko dokument kryje: " + proof.how()
-                + ". Z toho plyne, že dokument i s tímto podpisem existoval nejpozději v ten okamžik";
+        String date = formatRevDate(java.util.Date.from(proof.when()));
+        String head;
+        if (proof.detached()) {
+            // Externí podpis: dokument v něm neleží, je jeho odloučeným obsahem.
+            head = "Dokument je podepsán i externím podpisem " + proof.envelopeName()
+                    + ", který nese platné časové razítko z " + date
+                    + ", a to razítko dokument kryje: " + proof.how()
+                    + ". Z toho plyne, že dokument i s tímto podpisem existoval nejpozději v ten okamžik";
+        } else if (proof.via() != null) {
+            head = "Dokument byl k ověření předán z obalu " + proof.via() + ", který sám leží"
+                    + " v obalu " + proof.envelopeName() + ". Ten nese platné časové razítko z "
+                    + date + ", a to razítko " + proof.how()
+                    + ". Z toho plyne, že dokument i s tímto podpisem existoval nejpozději v ten okamžik";
+        } else {
+            head = "Dokument byl k ověření předán z obalu " + proof.envelopeName()
+                    + ", který nese platné časové razítko z " + date
+                    + ", a to razítko dokument kryje: " + proof.how()
+                    + ". Z toho plyne, že dokument i s tímto podpisem existoval nejpozději v ten okamžik";
+        }
+        String tail = proof.detached()
+                ? " Ověřený bez externího podpisu tento důkaz dokument nemá."
+                : " Vyjmutý z obalu tento důkaz dokument ztrácí.";
+        // Razítko, které samo už neobstálo a podrželo ho razítko obalu o úroveň výš: čtenář se
+        // musí dozvědět, že důkaz stojí i na tom vnějším obalu.
+        if (proof.support() != null) {
+            EnvelopeProof support = proof.support();
+            tail = " Razítko obalu " + proof.envelopeName() + " by samo už neobstálo; podrželo ho"
+                    + " platné časové razítko obalu " + support.envelopeName() + " z "
+                    + formatRevDate(java.util.Date.from(support.when())) + ", v němž obal leží."
+                    + (proof.detached() ? tail
+                            : " Vyjmutý z vnějšího obalu tento důkaz dokument ztrácí.");
+        }
         if (decisive != null && decisive.isBefore(proof.when())) {
             return head + ". Díky tomu obstálo i vlastní časové razítko podpisu z "
                     + formatRevDate(java.util.Date.from(decisive))
-                    + ", a rozhodným okamžikem se proto stal tento dřívější čas. Vyjmutý z obalu"
-                    + " tento důkaz dokument ztrácí.";
+                    + ", a rozhodným okamžikem se proto stal tento dřívější čas." + tail;
         }
-        return head + ", a právě k němu se jeho platnost posuzovala. Vyjmutý z obalu tento důkaz"
-                + " dokument ztrácí.";
+        return head + ", a právě k němu se jeho platnost posuzovala." + tail;
     }
 
     /** Věta situace 54 — který prvek ten důkaz nese a k jakému okamžiku. */

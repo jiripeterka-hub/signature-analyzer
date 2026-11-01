@@ -24,7 +24,7 @@ class EnvelopeProofDetailTest {
 
     private static EnvelopeProof proof() {
         return new EnvelopeProof(COVER, "kontejner.asice", "dokument.pdf",
-                "dokument je uveden otiskem v manifestu kontejneru", null, null, null, null);
+                "dokument je uveden otiskem v manifestu kontejneru", null, null, null, null, null, false);
     }
 
     @Test
@@ -56,5 +56,41 @@ class EnvelopeProofDetailTest {
                         .contains("Vyjmutý z obalu")),
                 () -> assertTrue(ReportMapper.envelopeProofDetail(proof(), COVER)
                         .contains("Vyjmutý z obalu")));
+    }
+
+    @Test
+    @DisplayName("u vnořeného obalu věta jmenuje oba obaly a řekne, co razítko kryje")
+    void nestedEnvelopeNamesBoth() {
+        String text = ReportMapper.envelopeProofDetail(proof().through("vnitrni.asice"), COVER);
+        assertAll(
+                () -> assertTrue(text.contains("z obalu vnitrni.asice, který sám leží v obalu"
+                        + " kontejner.asice"), text),
+                () -> assertTrue(text.contains("kryje obal vnitrni.asice, v němž dokument leží"), text),
+                () -> assertTrue(text.contains("ten je uveden otiskem"), text));
+    }
+
+    @Test
+    @DisplayName("razítko podržené vnějším obalem: věta to řekne a jmenuje vnější obal")
+    void supportedTimestampNamesOuterEnvelope() {
+        EnvelopeProof outer = new EnvelopeProof(Instant.parse("2021-03-01T08:00:00Z"),
+                "zprava.zfo", "kontejner.asice", "dokument leží jako příloha v podepsaném obsahu",
+                null, null, null, null, null, false);
+        String text = ReportMapper.envelopeProofDetail(proof().supportedBy(outer), COVER);
+        assertAll(
+                () -> assertTrue(text.contains("by samo už neobstálo"), text),
+                () -> assertTrue(text.contains("obalu zprava.zfo z 1. 3. 2021"), text),
+                () -> assertTrue(text.contains("Vyjmutý z vnějšího obalu"), text));
+    }
+
+    @Test
+    @DisplayName("u externího podpisu věta nemluví o obalu, z něhož byl dokument předán")
+    void detachedSignatureSentence() {
+        EnvelopeProof detached = new EnvelopeProof(COVER, "podpis.p7s", "dokument.pdf",
+                "otisk dokumentu je v tomto podpisu", null, null, null, null, null, true);
+        String text = ReportMapper.envelopeProofDetail(detached, COVER);
+        assertAll(
+                () -> assertTrue(text.contains("externím podpisem podpis.p7s"), text),
+                () -> assertTrue(text.contains("bez externího podpisu"), text),
+                () -> assertFalse(text.contains("předán z obalu"), text));
     }
 }

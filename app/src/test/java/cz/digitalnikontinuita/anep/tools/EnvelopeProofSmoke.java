@@ -35,6 +35,7 @@ public final class EnvelopeProofSmoke {
     public static void main(String[] args) throws Exception {
         List<String> a = new java.util.ArrayList<>(List.of(args));
         boolean tolerant = a.remove("-t");
+        boolean detached = a.remove("-detached");
         Path container = Path.of(a.get(0));
         String entry = a.get(1);
 
@@ -47,17 +48,41 @@ public final class EnvelopeProofSmoke {
         var verifier = new TrustConfig(settings).buildLotlCertificateVerifier();
         var factory = new ValidatorFactory(settings);
 
-        byte[] envelope = Files.readAllBytes(container);
-        byte[] element = extract(envelope, container.getFileName().toString(), entry);
-        if (element == null) {
-            System.out.println("prvek " + entry + " v obalu není");
-            System.exit(1);
+        // -detached podpis.p7s dokument.pdf: dokument je odloučeným obsahem externího podpisu.
+        // Jinak se prvek zadává cestou v obalu; „vnitřní.sce::dokument.pdf" sestoupí do
+        // vnořeného obalu a sestaví řetěz zdrojů, jaký předává vnořený prohlížeč.
+        byte[] bytes = Files.readAllBytes(container);
+        String name = container.getFileName().toString();
+        EnvelopeProof.Source source;
+        byte[] element;
+        if (detached) {
+            element = Files.readAllBytes(Path.of(entry));
+            source = new EnvelopeProof.Source(bytes, name, Path.of(entry).getFileName().toString(),
+                    element, true, null);
+        } else {
+            EnvelopeProof.Source parent = null;
+            String[] segments = entry.split("::");
+            for (int i = 0; i < segments.length - 1; i++) {
+                byte[] child = extract(bytes, name, segments[i]);
+                if (child == null) {
+                    System.out.println("obal " + segments[i] + " není");
+                    System.exit(1);
+                }
+                parent = new EnvelopeProof.Source(bytes, name, segments[i], child, false, parent);
+                bytes = child;
+                name = segments[i];
+            }
+            String last = segments[segments.length - 1];
+            element = extract(bytes, name, last);
+            if (element == null) {
+                System.out.println("prvek " + last + " v obalu není");
+                System.exit(1);
+            }
+            source = new EnvelopeProof.Source(bytes, name, last, element, false, parent);
         }
         var outcome = factory.validate(new InMemoryDocument(element, entry), null, verifier, null);
         print("samostatně", outcome, settings, entry);
-        var withProof = factory.withEnvelopeProof(outcome,
-                new EnvelopeProof.Source(envelope, container.getFileName().toString(), entry, element),
-                verifier);
+        var withProof = factory.withEnvelopeProof(outcome, source, verifier);
         print("s důkazem z obalu", withProof, settings, entry);
         System.exit(0);
     }

@@ -1,8 +1,14 @@
 # Důkaz existence z obalu — návrh implementace
 
-Stav: implementováno 1. 11. 2026 (kroky 1–4: ASiC, obalující podpisy, datové zprávy včetně razítka
-podání, přílohy PDF). Zbývá vnoření obalů a odloučené podpisy (bod 6 a 7). Vnitřní podklad, ne
-dokument pro čtenáře.
+Stav: implementováno 1. 11. 2026 — ASiC, obalující podpisy, datové zprávy včetně razítka podání,
+přílohy PDF, vnořené obaly a odloučené podpisy (odkaz na kartě u PDF s vlastními podpisy).
+Nezměřeno na skutečném vzorku: obalující CMS/XAdES/JAdES s podepsaným dokumentem uvnitř, vnoření
+s podepsaným dokumentem ve vnitřním obalu a celá cesta u externího podpisu (ve sbírkách takové
+dokumenty nejsou; krytí externím podpisem ověřeno přímo na dvojici s nepodepsaným dokumentem).
+Doplněno týž den: razítko vnitřního obalu, které by samo už neobstálo, se přepočte s důkazem
+z vnějšího obalu a obstojí-li, nabídne se jako důkaz s oporou (`EnvelopeProof.support`);
+při přepočtu dokumentu se připisuje celý řetěz. Na skutečném vzorku nezměřeno. Vnitřní podklad,
+ne dokument pro čtenáře.
 
 Poznámka k implementaci: razítko podání datové zprávy ověřené samostatně DSS označí jako
 CONTENT_TIMESTAMP, a obsahové razítko best-signature-time nesnižuje. Při připsání do dat prvku se

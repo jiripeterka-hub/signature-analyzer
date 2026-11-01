@@ -506,7 +506,10 @@ text =
   Tento dokument byl předán k ověření z obalu, v němž je uložen — z kontejneru ASiC, z datové
   zprávy, z obalujícího podpisu nebo z dokumentu PDF, jehož je přílohou —, a obal nese platné
   časové razítko, které jeho bajty kryje. U datové zprávy je to kvalifikované časové razítko
-  podání, případně razítko pečeti připojené při stažení. Z toho plyne, že dokument v dnešní
+  podání, případně razítko pečeti připojené při stažení. Leží-li obal sám v dalším obalu,
+  poslouží i razítko vnějšího obalu; to může podržet i razítko vnitřního obalu, které by samo
+  už neobstálo. Stejně se využije razítko externího podpisu, ke kterému
+  byl dokument předložen a jehož otisk ho kryje. Z toho plyne, že dokument v dnešní
   podobě existoval nejpozději v čase onoho razítka, a k tomuto okamžiku (nebo k ještě dřívějšímu,
   pokud díky tomu obstálo vlastní razítko podpisu) se posuzovala platnost podpisového certifikátu.
   Technické standardy s takovým údajem počítají: ETSI EN 319 102-1 uvádí mezi vstupy ověřování

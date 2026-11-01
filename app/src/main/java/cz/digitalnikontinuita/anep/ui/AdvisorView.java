@@ -399,6 +399,10 @@ public class AdvisorView {
     public void setLenientVerifyCallback(Runnable r) { this.lenientVerifyCallback = r; }
     /** Ověření s ústupky podatelny katastru, z bloku o vkladové listině. */
     public void setLandRegistryVerifyCallback(Runnable r) { this.landRegistryVerifyCallback = r; }
+
+    /** Odkaz „Ověřit dokument s důkazem existence z externího podpisu" (1. 11. 2026). */
+    private Runnable detachedProofVerifyCallback;
+    public void setDetachedProofVerifyCallback(Runnable r) { this.detachedProofVerifyCallback = r; }
     public void setSettingsOpener(java.util.function.Consumer<Boolean> opener) {
         this.settingsOpener = opener;
     }
@@ -535,6 +539,18 @@ public class AdvisorView {
             between.setPadding(new Insets(12, 0, 4, 0));
             cardsBox.getChildren().add(between);
             cardsBox.getChildren().add(ResultView.authCountHeader(result, false));
+        }
+        // Dokument PDF k externímu podpisu nese i vlastní podpisy, které se v tomhle režimu
+        // neověřují (věta o nich stojí v záhlaví). Ověřit se dají samostatně — a razítko
+        // externího podpisu je pro ně důkazem existence, protože kryje celý dokument i s nimi.
+        if (result.getContentPdfSignatures() > 0 && detachedProofVerifyCallback != null) {
+            Hyperlink link = new Hyperlink(
+                    "Ověřit podpisy dokumentu PDF s důkazem existence z externího podpisu");
+            link.setOnAction(e -> detachedProofVerifyCallback.run());
+            link.setTooltip(new javafx.scene.control.Tooltip("Ověří samotný dokument PDF; časové"
+                    + " razítko externího podpisu, které ho kryje, se mu předá jako důkaz, že"
+                    + " dokument existoval nejpozději v jeho čase."));
+            cardsBox.getChildren().add(link);
         }
 
         if (!result.getSignatures().isEmpty()) {

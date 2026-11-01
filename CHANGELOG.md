@@ -12,7 +12,12 @@ pro soupis změn ke každé nové vydané verzi.
   příloha PDF — nově využije časové razítko obalu, které jeho obsah kryje, jako důkaz, že
   dokument existoval nejpozději v čase onoho razítka. U datové zprávy je to kvalifikované
   časové razítko podání, případně razítko připojené při stažení; u přílohy PDF razítko té
-  verze dokumentu, která přílohu už obsahovala. Podpis, jehož platnost
+  verze dokumentu, která přílohu už obsahovala. Leží-li obal v dalším obalu (třeba kontejner
+  v datové zprávě), poslouží i razítko vnějšího obalu, a to i k podržení razítka vnitřního
+  obalu, které by samo už neobstálo. U dokumentu PDF předloženého
+  s externím podpisem, který nese i vlastní podpisy, nabídne karta Analýzy odkaz „Ověřit
+  podpisy dokumentu PDF s důkazem existence z externího podpisu“; razítko externího podpisu
+  se pak využije stejně. Podpis, jehož platnost
   by jinak zůstala neznámá — typicky proto, že mezitím vypršel certifikát podepisujícího nebo
   razítkovací autority —, se pak posoudí k tomuto dřívějšímu okamžiku; díky tomu může obstát
   i vlastní razítko podpisu. Využijí se jen razítka, která sama obstojí, včetně archivních

@@ -123,9 +123,16 @@ public class ContainerView {
      * {@link OpenInAnepHandler}. {@code null} tam, kde je okno nemá.
      */
     private final byte[] sourceBytes;
+    /**
+     * Jak se prohlížeč k obalu dostal, je-li vnořený v jiném obalu — viz
+     * {@link EnvelopeProof.Source#parent()}. {@code null} u obalu otevřeného přímo.
+     */
+    private EnvelopeProof.Source origin;
 
-    private ContainerView(Window owner, Result result, String sourceName, byte[] sourceBytes) {
+    private ContainerView(Window owner, Result result, String sourceName, byte[] sourceBytes,
+                          EnvelopeProof.Source origin) {
         this(owner, result, sourceName, null, null, sourceBytes);
+        this.origin = origin;
     }
 
     private ContainerView(Window owner, Result result, String sourceName,
@@ -243,9 +250,14 @@ public class ContainerView {
      *                anyway the moment they dismiss it.
      */
     public static boolean open(Window owner, byte[] bytes, String name, boolean explain) {
+        return open(owner, bytes, name, explain, null);
+    }
+
+    private static boolean open(Window owner, byte[] bytes, String name, boolean explain,
+                                EnvelopeProof.Source origin) {
         ContainerInspector.Kind kind = ContainerInspector.detectKind(bytes);
         if (!ContainerInspector.isContainerKind(kind)) return false;
-        return show(owner, ContainerInspector.inspect(bytes, name), name, explain, bytes);
+        return show(owner, ContainerInspector.inspect(bytes, name), name, explain, bytes, origin);
     }
 
     /**
@@ -263,16 +275,22 @@ public class ContainerView {
     }
 
     public static boolean openPdfAttachments(Window owner, byte[] bytes, String name, char[] password) {
-        return show(owner, PdfAttachmentInspector.inspect(bytes, name, password), name, true, bytes);
+        return openPdfAttachments(owner, bytes, name, password, null);
+    }
+
+    private static boolean openPdfAttachments(Window owner, byte[] bytes, String name,
+                                              char[] password, EnvelopeProof.Source origin) {
+        return show(owner, PdfAttachmentInspector.inspect(bytes, name, password), name, true,
+                bytes, origin);
     }
 
     private static boolean show(Window owner, Result result, String name, boolean explain,
-                                byte[] bytes) {
+                                byte[] bytes, EnvelopeProof.Source origin) {
         if (result.error() != null && !result.isBrowsable()) {
             if (explain) error("Obsah souboru " + name + " se nepodařilo přečíst:\n" + result.error());
             return false;
         }
-        Stage stage = new ContainerView(owner, result, name, bytes).stage;
+        Stage stage = new ContainerView(owner, result, name, bytes, origin).stage;
         OPEN_WINDOWS.add(stage);
         stage.setOnHidden(e -> OPEN_WINDOWS.remove(stage));
         stage.show();
@@ -1392,12 +1410,22 @@ public class ContainerView {
         byte[] data = node.getData();
         if (ContainerInspector.detectKind(data) == ContainerInspector.Kind.PDF) {
             return PdfAttachmentInspector.hasAttachments(data)
-                    && openPdfAttachments(stage, data, node.getName(), null);
+                    && openPdfAttachments(stage, data, node.getName(), null, nestedOrigin(node));
         }
         if (ContainerInspector.detectKind(data) == ContainerInspector.Kind.CODE) {
             return openCode(stage, data, node.getName(), null);
         }
-        return open(stage, data, node.getName(), explain);
+        return open(stage, data, node.getName(), explain, nestedOrigin(node));
+    }
+
+    /**
+     * Zdroj, kterým vnořený prohlížeč pozná, v čem leží — aby důkaz existence z razítka tohoto
+     * obalu dostal i dokument otevřený o úroveň níž (1. 11. 2026).
+     */
+    private EnvelopeProof.Source nestedOrigin(Node node) {
+        return sourceBytes == null ? null
+                : new EnvelopeProof.Source(sourceBytes, sourceName, node.getPath(), node.getData(),
+                        false, origin);
     }
 
     /** True when {@link #openNested} would have something to show for this element. */
@@ -1411,7 +1439,8 @@ public class ContainerView {
     private void openInAnep(Node node) {
         if (node == null || node.getData() == null || openInAnepHandler == null) return;
         EnvelopeProof.Source envelope = sourceBytes == null ? null
-                : new EnvelopeProof.Source(sourceBytes, sourceName, node.getPath(), node.getData());
+                : new EnvelopeProof.Source(sourceBytes, sourceName, node.getPath(), node.getData(),
+                        false, origin);
         openInAnepHandler.open(node.getData(), ContainerInspector.safeFileName(node.getName()),
                 envelope);
     }

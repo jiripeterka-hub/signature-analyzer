@@ -598,6 +598,7 @@ public class MainView {
 
         advisorView.setLenientVerifyCallback(this::performLenientVerify);
         advisorView.setLandRegistryVerifyCallback(this::performLandRegistryVerify);
+        advisorView.setDetachedProofVerifyCallback(this::verifyContentWithDetachedProof);
         // Doporučení v Analýze na Nastavení jen neodkazují slovy, ale otevřou ho — a rovnou tu
         // stránku, o které mluví.
         advisorView.setSettingsOpener(advanced -> {
@@ -916,6 +917,11 @@ public class MainView {
      * ověření takovou dvojici ohlásí jako nesprávnou (důvod 8).
      */
     private void acceptSigFile(File f) {
+        // Důkaz z obalu patří jen k souboru, který ho dostal od prohlížeče obalu nebo z odkazu
+        // u externího podpisu; nový výběr ho ruší. Volající, kteří ho předávají, ho nastaví až
+        // po tomhle volání.
+        extractedEnvelope = null;
+        extractedFile = null;
         if (verificationRan) {
             clearOrigFile();
             lastOrigFile = null;
@@ -943,6 +949,40 @@ public class MainView {
     private volatile cz.digitalnikontinuita.anep.core.EnvelopeProof.Source extractedEnvelope;
     private volatile File extractedFile;
 
+    /**
+     * Externí podpis a dokument z posledního ověření dvojice — pro odkaz „Ověřit dokument
+     * s důkazem existence z externího podpisu" ({@link #verifyContentWithDetachedProof}).
+     * {@code null}, když se naposledy neověřovala dvojice s externím podpisem.
+     */
+    private volatile File[] lastDetachedPair;
+
+    /**
+     * Ověří samotný dokument, který se právě ověřoval s externím podpisem, a jako důkaz existence
+     * mu předá razítko toho externího podpisu (1. 11. 2026). Dokument PDF, který nese vlastní
+     * podpisy, je v režimu externího podpisu jen podepsaným obsahem a jeho podpisy se neověřují;
+     * samostatně se ověřit dají, jenže bez tohohle odkazu by razítko externího podpisu, které je
+     * kryje, zůstalo nevyužité.
+     */
+    private void verifyContentWithDetachedProof() {
+        File[] pair = lastDetachedPair;
+        if (pair == null) return;
+        try {
+            byte[] signature = Files.readAllBytes(pair[0].toPath());
+            byte[] content = Files.readAllBytes(pair[1].toPath());
+            acceptSigFile(pair[1]);
+            extractedFile = pair[1];
+            extractedEnvelope = new cz.digitalnikontinuita.anep.core.EnvelopeProof.Source(
+                    signature, pair[0].getName(), pair[1].getName(), content, true, null);
+            analyzeIfReady();
+        } catch (Exception e) {
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                    javafx.scene.control.Alert.AlertType.ERROR,
+                    "Dokument se nepodařilo předat k ověření:\n" + e.getMessage());
+            alert.setHeaderText(null);
+            alert.showAndWait();
+        }
+    }
+
     private void verifyExtracted(byte[] data, String name,
                                  cz.digitalnikontinuita.anep.core.EnvelopeProof.Source envelope) {
         try {
@@ -951,9 +991,9 @@ public class MainView {
             Path tmp = dir.resolve(name.isBlank() ? "prvek" : name);
             Files.write(tmp, data);
             tmp.toFile().deleteOnExit();
+            acceptSigFile(tmp.toFile());
             extractedFile = tmp.toFile();
             extractedEnvelope = envelope;
-            acceptSigFile(tmp.toFile());
             if (sigZone.getScene() != null && sigZone.getScene().getWindow() instanceof Stage s) {
                 s.toFront();
             }
@@ -1707,6 +1747,7 @@ public class MainView {
                 // Unchanged: `of` is the detached signature, `sf` the content it signs.
                 sigDoc = second;
                 detachedContent = first;
+                lastDetachedPair = new File[] {of, sf};
                 // The trim can only have happened to the content: a detached signature is
                 // not a PDF, so it never enters the branch that cuts anything.
                 strayPrefixBytes = loadedFirst.strayPrefixBytes();

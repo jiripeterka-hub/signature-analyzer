@@ -43,17 +43,69 @@ import java.util.List;
  * @param token        krycí razítko v diagnostických datech obalu — pro přepočet
  * @param envelope     celé protokoly ověření obalu — razítka, certifikáty a revokační údaje,
  *                     které platnost krycího razítka nesou
+ * @param via          vnitřní obal, z něhož byl dokument předán, leží-li ten sám v obalu, jehož
+ *                     razítko důkaz nese (ZFO → ASiC → PDF); jinak {@code null}
+ * @param detached     „obalem" je externí (odloučený) podpis dokumentu, ne soubor, v němž dokument
+ *                     leží — věta pro čtenáře se pak skládá jinak
+ * @param support      důkaz z obalu o úroveň výš, bez kterého by krycí razítko samo už neobstálo
+ *                     (razítko kontejneru, jemuž vypršel certifikát TSA, podržené razítkem datové
+ *                     zprávy, v níž kontejner leží); {@code null}, když razítko obstálo samo.
+ *                     Při přepočtu se připisuje spolu s ním.
  */
 public record EnvelopeProof(Instant when, String envelopeName, String elementPath, String how,
                             TimestampEntry timestamp, TimestampEntry newest, XmlTimestamp token,
-                            Reports envelope) {
+                            Reports envelope, String via, boolean detached, EnvelopeProof support) {
+
+    public EnvelopeProof(Instant when, String envelopeName, String elementPath, String how,
+                         TimestampEntry timestamp, TimestampEntry newest, XmlTimestamp token,
+                         Reports envelope, String via, boolean detached) {
+        this(when, envelopeName, elementPath, how, timestamp, newest, token, envelope, via,
+                detached, null);
+    }
+
+    /** Týž důkaz, nesený obalem, v němž leží obal {@code inner} s dokumentem (vnoření). */
+    EnvelopeProof through(String inner) {
+        String newVia = via == null ? inner : via + " → " + inner;
+        String newHow;
+        if (via == null) {
+            String innerHow = how.startsWith("dokument ")
+                    ? "ten " + how.substring("dokument ".length()) : how;
+            newHow = "kryje obal " + inner + ", v němž dokument leží (" + innerHow + ")";
+        } else {
+            newHow = how.replaceFirst("^kryje obal " + java.util.regex.Pattern.quote(via),
+                    java.util.regex.Matcher.quoteReplacement("kryje obal " + newVia));
+        }
+        return new EnvelopeProof(when, envelopeName, elementPath, newHow, timestamp, newest, token,
+                envelope, newVia, detached, support);
+    }
+
+    /**
+     * Týž důkaz, jehož razítko obstálo jen díky důkazu {@code outer} z obalu o úroveň výš.
+     * Horizont ověřitelnosti se pak ptá na razítka vnějšího obalu, která celý řetěz drží.
+     */
+    EnvelopeProof supportedBy(EnvelopeProof outer) {
+        return new EnvelopeProof(when, envelopeName, elementPath, how, timestamp,
+                outer.newest() != null ? outer.newest() : newest, token, envelope, via, detached,
+                outer);
+    }
 
     /**
      * Co prohlížeč obalu předává spolu s prvkem. Bajty prvku jsou ty, které prohlížeč z obalu
      * vyjmul — vazbu na bajty tak není třeba dokazovat znovu, stačí ji najít v obalu.
+     *
+     * @param detached obalem je externí podpis dokumentu (dokument je jeho odloučeným obsahem);
+     *                 obal se pak ověřuje spolu s dokumentem
+     * @param parent   jak se prohlížeč dostal k tomuto obalu, je-li sám vnořený v jiném: zdroj,
+     *                 v němž je {@code envelopeBytes} prvkem. Razítko vnějšího obalu kryje i vše,
+     *                 co leží ve vnitřním (1. 11. 2026). {@code null} u obalu otevřeného přímo.
      */
     public record Source(byte[] envelopeBytes, String envelopeName, String elementPath,
-                         byte[] elementBytes) { }
+                         byte[] elementBytes, boolean detached, Source parent) {
+        public Source(byte[] envelopeBytes, String envelopeName, String elementPath,
+                      byte[] elementBytes) {
+            this(envelopeBytes, envelopeName, elementPath, elementBytes, false, null);
+        }
+    }
 
     /**
      * Nejstarší razítko obalu s indikací PASSED, které prvek kryje; {@code null}, když žádné.
@@ -85,7 +137,7 @@ public record EnvelopeProof(Instant when, String envelopeName, String elementPat
         ContainerInspector.Kind kind = source.envelopeBytes() == null ? null
                 : ContainerInspector.detectKind(source.envelopeBytes());
         if (kind == null) return null;
-        Coverage coverage = switch (kind) {
+        Coverage coverage = source.detached() ? detachedCoverage(data) : switch (kind) {
             case ZIP -> asicCoverage(data);
             case CMS, ZFO, XML, JSON -> envelopingCoverage(source, data);
             case PDF -> pdfCoverage(source.envelopeBytes(), data);
@@ -121,7 +173,7 @@ public record EnvelopeProof(Instant when, String envelopeName, String elementPat
         if (token == null) return null;
         return new EnvelopeProof(best.getProductionTime().toInstant(), source.envelopeName(),
                 source.elementPath(), bestHow, ReportMapper.timestampEntry(best, sr),
-                ReportMapper.timestampEntry(newest, sr), token, envelope);
+                ReportMapper.timestampEntry(newest, sr), token, envelope, null, source.detached());
     }
 
     /**
@@ -185,7 +237,7 @@ public record EnvelopeProof(Instant when, String envelopeName, String elementPat
                 return new EnvelopeProof(ts.getProductionTime().toInstant(), source.envelopeName(),
                         source.elementPath(),
                         "dokument je písemností zprávy, jejíž otisk kryje razítko podání (dmQTimestamp)",
-                        entry, entry, t, stamp);
+                        entry, entry, t, stamp, null, false);
             }
         }
         return null;
@@ -205,6 +257,23 @@ public record EnvelopeProof(Instant when, String envelopeName, String elementPat
     @FunctionalInterface
     private interface Coverage {
         String how(TimestampWrapper ts);
+    }
+
+    /**
+     * Externí podpis: otisk dokumentu mezi otisky podpisu, který razítko kryje (CAdES
+     * message-digest, reference XAdES bez transformací, sigD u JAdES). Podpis musí být neporušený
+     * — obal se kvůli tomu ověřuje spolu s dokumentem.
+     */
+    private static Coverage detachedCoverage(byte[] data) {
+        return ts -> {
+            for (SignatureWrapper s : ts.getTimestampedSignatures()) {
+                if (!intact(s)) continue;
+                for (XmlDigestMatcher m : s.getDigestMatchers()) {
+                    if (matches(m, data)) return "otisk dokumentu je v tomto podpisu";
+                }
+            }
+            return null;
+        };
     }
 
     private static Coverage asicCoverage(byte[] data) {
