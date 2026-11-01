@@ -234,6 +234,11 @@ public final class ContinuityHorizon {
         Instant base;
         Limit limit;
         TimestampEntry poe = newestProof(sig, TimestampEntry::passed);
+        // Prvek, jehož platnost stojí na důkazu z obalu (situace 57, 1. 11. 2026): i jeho vlastní
+        // razítko obstálo jen díky razítkům obalu, takže uznatelnost důkazu určuje nejnovější
+        // z nich, ne razítko prvku. Na měřeném kontejneru by razítko prvku z 2015 dalo mez
+        // dávno uplynulou, ačkoli archivní razítko obalu z 2024 drží celý řetěz.
+        if (sig.getEnvelopeProofTimestamp() != null) poe = sig.getEnvelopeProofTimestamp();
         // Prvek bez vlastního razítka, jehož existenci dokládá prvek, který ho kryje (situace 54).
         // Otázka zní „jak dlouho bude uznatelný důkaz existence" — a tím důkazem je právě to cizí
         // razítko, takže se počítá z něj. Bez toho spadl výpočet do větve „žádné razítko", vzal za

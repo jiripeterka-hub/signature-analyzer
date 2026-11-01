@@ -1038,6 +1038,27 @@ public class SignatureSummary {
     public TrustListRef getTrustList()                   { return trustList; }
     public void setTrustList(TrustListRef v)             { this.trustList = v; }
 
+    /**
+     * Situace 57 — věta o důkazu existence z obalu, z něhož byl prvek předán k ověření: z jakého
+     * obalu, které razítko a k jakému okamžiku. {@code null}, když situace 57 nenastala.
+     * Doplňuje ho mapper po sestavení prvku (1. 11. 2026), ze stejného důvodu jako
+     * {@link #newestTimestampKey}: konstruktor má přes osmdesát parametrů.
+     */
+    private String envelopeProofDetail;
+    /**
+     * Situace 57 — nejnovější platné razítko obalu, na kterém důkaz nakonec stojí (krycí
+     * razítko drží v platnosti archivní). Slouží horizontu ověřitelnosti stejně jako
+     * {@link #coveringProofTimestamp}; mezi {@link #allTimestamps} nepatří ze stejného důvodu.
+     */
+    private TimestampEntry envelopeProofTimestamp;
+
+    public String getEnvelopeProofDetail()               { return envelopeProofDetail; }
+    public TimestampEntry getEnvelopeProofTimestamp()    { return envelopeProofTimestamp; }
+    public void setEnvelopeProof(String detail, TimestampEntry timestamp) {
+        this.envelopeProofDetail = detail;
+        this.envelopeProofTimestamp = timestamp;
+    }
+
     /** True when at least one evidence record actually proves this signature's earlier existence. */
     public boolean hasProvingEvidenceRecord() {
         return evidenceRecords.stream().anyMatch(EvidenceRecordEntry::providesProof);

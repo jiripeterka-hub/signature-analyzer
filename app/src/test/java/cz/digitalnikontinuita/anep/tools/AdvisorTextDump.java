@@ -35,6 +35,10 @@ import java.util.List;
  * Proklik „Vlastní důvěryhodné certifikáty“ v radě se ve výpisu stiskne a ohlásí řádkem
  * „(proklik: …)“ — okno se přitom neotevírá.
  *
+ * <p>{@code -envelope kontejner prvek} (1. 11. 2026) vyjme prvek z kontejneru a ověří ho tak,
+ * jako by byl předán tlačítkem „Ověřit v AnEP" z prohlížeče obalu — tedy s důkazem existence
+ * z obalu ({@code ValidatorFactory.withEnvelopeProof}).
+ *
  * <pre>
  *   java -Dstdout.encoding=UTF-8 -cp "app/target/test-classes;app/target/classes;$(cat cp.txt)" \
  *        --module-path "%JAVAFX%" --add-modules javafx.controls,javafx.graphics,javafx.base \
@@ -56,11 +60,29 @@ public final class AdvisorTextDump extends Application {
         }, "advisor-dump").start();
     }
 
+    private final java.util.Map<File, cz.digitalnikontinuita.anep.core.EnvelopeProof.Source>
+            envelopes = new java.util.HashMap<>();
+
     private void run(List<String> args) throws Exception {
         List<File> files = new ArrayList<>();
         File trust = null;
         for (int i = 0; i < args.size(); i++) {
             if ("-trust".equals(args.get(i))) trust = new File(args.get(++i));
+            else if ("-envelope".equals(args.get(i))) {
+                File container = new File(args.get(++i));
+                String entry = args.get(++i);
+                byte[] envelopeBytes = java.nio.file.Files.readAllBytes(container.toPath());
+                byte[] element;
+                try (java.util.zip.ZipFile z = new java.util.zip.ZipFile(container)) {
+                    element = z.getInputStream(z.getEntry(entry)).readAllBytes();
+                }
+                File tmp = java.nio.file.Files.createTempDirectory("anep-prvek-")
+                        .resolve(new File(entry).getName()).toFile();
+                java.nio.file.Files.write(tmp.toPath(), element);
+                envelopes.put(tmp, new cz.digitalnikontinuita.anep.core.EnvelopeProof.Source(
+                        envelopeBytes, container.getName(), entry, element));
+                files.add(tmp);
+            }
             else files.add(new File(args.get(i)));
         }
         AppSettings settings = AppSettings.load();
@@ -83,8 +105,13 @@ public final class AdvisorTextDump extends Application {
             throws Exception {
         DSSDocument doc = new DocumentLoader().load(file);
         var pdfSource = cz.digitalnikontinuita.anep.core.PdfSource.of(file);
+        ValidatorFactory factory = new ValidatorFactory(settings);
+        var outcome = factory.validate(doc, null, verifier, null);
+        if (envelopes.containsKey(file)) {
+            outcome = factory.withEnvelopeProof(outcome, envelopes.get(file), verifier);
+        }
         ValidationResult result = new ReportMapper().map(file.getName(), null,
-                new ValidatorFactory(settings).validate(doc, null, verifier, null), settings,
+                outcome, settings,
                 cz.digitalnikontinuita.anep.core.PdfSignatureAppearanceExtractor
                         .extract(pdfSource, null));
         for (var sig : result.getSignatures()) {

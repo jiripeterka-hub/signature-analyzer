@@ -99,13 +99,21 @@ public class ValidatorFactory {
      * @param poeSupplied hodiny se neposouvaly: {@code controlTime} je okamžik prvního průchodu
      *                    a důkaz existence dostalo DSS jako razítko prvku — viz
      *                    {@code recomputeWithCoveringTimestamp()}.
+     * @param envelope    důkaz nepochází z krycího prvku téhož souboru, nýbrž z <b>obalu</b>, z něhož
+     *                    byl prvek předán k ověření — viz {@link #withEnvelopeProof}; jinak {@code null}
      */
     public record DerivedTimeResult(java.util.Date when, java.util.Date controlTime,
                                     String indication, String subIndication, Reports reports,
-                                    boolean poeSupplied) {
+                                    boolean poeSupplied, EnvelopeProof envelope) {
         public DerivedTimeResult(java.util.Date when, java.util.Date controlTime,
                                  String indication, String subIndication, Reports reports) {
-            this(when, controlTime, indication, subIndication, reports, false);
+            this(when, controlTime, indication, subIndication, reports, false, null);
+        }
+
+        public DerivedTimeResult(java.util.Date when, java.util.Date controlTime,
+                                 String indication, String subIndication, Reports reports,
+                                 boolean poeSupplied) {
+            this(when, controlTime, indication, subIndication, reports, poeSupplied, null);
         }
     }
 
@@ -777,6 +785,195 @@ public class ValidatorFactory {
         } finally {
             covered.getFoundTimestamps().remove(found);
             ts.getTimestampedObjects().remove(object);
+        }
+    }
+
+    /** Vypínač pro měření: {@code -Danep.noenvelopepoe} vrátí chování před 1. 11. 2026. */
+    private static final boolean ENVELOPE_POE_OFF = Boolean.getBoolean("anep.noenvelopepoe");
+
+    /**
+     * Doplní k výsledku závěr s <b>důkazem existence z obalu</b>, z něhož byl prvek předán
+     * k ověření ({@link EnvelopeProof}).
+     *
+     * <p>Obal se ověří týmiž zdroji a politikou jako prvek, najde se jeho nejstarší platné razítko
+     * nad bajty prvku, a to se připíše do diagnostických dat prvku stejně jako krycí razítko
+     * v {@link #recomputeWithCoveringTimestamp}: hodiny se neposouvají, best-signature-time sníží
+     * DSS samo. Spolu s ním se připíšou i ostatní razítka obalu (archivní drží v platnosti to
+     * krycí) a certifikáty a revokační údaje, které jejich platnost nesou. Změřeno sondou
+     * {@code EnvelopePoeScan} 1. 11. 2026: připsání dalo tentýž závěr jako posun hodin k času
+     * razítka obalu, bez jeho vedlejších účinků.
+     *
+     * <p>Jen u podpisů, které vyšly INDETERMINATE a nepomohl jim ani odvozený čas z krycího
+     * prvku: důkaz existence neplatný podpis nespraví a platnému nemá co přidat. Výsledek se
+     * předává jako {@link DerivedTimeResult}, takže {@link ReportMapper} posoudí rozhodný okamžik
+     * i situaci 20 vůči okamžiku, který důkaz doložil — sonda {@code RevokedBeforeProofScan}
+     * ukázala, že jen tak se nezamlčí odvolání před tím okamžikem, které dokládá údaj, jejž
+     * přísná politika DSS nepřijme.
+     *
+     * <p>Obaly: kontejner ASiC, obalující podpis (CMS, XAdES, JAdES), datová zpráva a PDF
+     * s přílohami — jak se v nich krytí pozná, popisuje {@link EnvelopeProof#find}. U datové
+     * zprávy se bere i razítko podání ({@code dmQTimestamp}), které je starší než razítko
+     * pečeti — viz {@link EnvelopeProof#submission}.
+     */
+    public ValidationOutcome withEnvelopeProof(ValidationOutcome outcome, EnvelopeProof.Source source,
+                                               CertificateVerifier certificateVerifier) {
+        if (ENVELOPE_POE_OFF || outcome == null || source == null || outcome.reports() == null) {
+            return outcome;
+        }
+        Reports reports = outcome.reports();
+        SimpleReport now = reports.getSimpleReport();
+        List<String> wanted = new ArrayList<>();
+        for (String id : now.getSignatureIdList()) {
+            if (now.getIndication(id) != Indication.INDETERMINATE) continue;
+            DerivedTimeResult derived = outcome.derivedTimeResults().get(id);
+            if (derived != null && Indication.TOTAL_PASSED.name().equals(derived.indication())) continue;
+            wanted.add(id);
+        }
+        if (wanted.isEmpty()) return outcome;
+        if (source.envelopeBytes() == null) return outcome;
+        switch (ContainerInspector.detectKind(source.envelopeBytes())) {
+            case ZIP, CMS, ZFO, XML, JSON, PDF -> { }
+            default -> { return outcome; }
+        }
+
+        Reports envelope;
+        try {
+            envelope = validate(new eu.europa.esig.dss.model.InMemoryDocument(
+                    source.envelopeBytes(), source.envelopeName()), null, certificateVerifier, null)
+                    .reports();
+        } catch (Exception e) {
+            // Obal, který DSS neověří (prostý ZIP), důkaz nedá. Ověření prvku samo už proběhlo.
+            return outcome;
+        }
+        List<EnvelopeProof> candidates = new ArrayList<>();
+        EnvelopeProof sealed = EnvelopeProof.find(source, envelope);
+        if (sealed != null) candidates.add(sealed);
+        // Datová zpráva: razítko podání je starší než razítko pečeti (to přidává ISDS až při
+        // stažení), a kryje-li otisk zprávy i tuto písemnost, je to lepší důkaz. Ověří se samo
+        // jako odloučené razítko nad otiskem, který kryje — že otisk na obálku zprávy sedí,
+        // zjistil už IsdsMessageInspector.
+        EnvelopeProof.Submission submission = EnvelopeProof.submission(source);
+        if (submission != null) {
+            try {
+                Reports stamp = validate(new eu.europa.esig.dss.model.InMemoryDocument(
+                                submission.token(), "dmQTimestamp.tst"),
+                        new eu.europa.esig.dss.model.DigestDocument(submission.algorithm(),
+                                java.util.Base64.getEncoder().encodeToString(submission.imprint())),
+                        certificateVerifier, null).reports();
+                EnvelopeProof submitted = EnvelopeProof.fromSubmission(source, stamp);
+                if (submitted != null) candidates.add(submitted);
+            } catch (Exception e) {
+                // Razítko podání, které DSS neověří, důkaz nedá; zůstává razítko pečeti.
+            }
+        }
+        if (candidates.isEmpty()) return outcome;
+        // Od nejstaršího. Starší důkaz je lepší, ale ne vždy použitelný: v jeho okamžiku třeba
+        // ještě nebyl na světě revokační údaj, o který se závěr opírá (týž jev jako u krycího
+        // prvku, viz chooseControlTime). Kde nevyjde, zkusí se pozdější.
+        candidates.sort(java.util.Comparator.comparing(EnvelopeProof::when));
+
+        ValidationPolicy built = ValidationPolicyFactory.build(settings);
+        ValidationPolicy effective = built != null ? built : defaultPolicy();
+        if (effective == null) return outcome;
+
+        Map<String, DerivedTimeResult> out = new java.util.HashMap<>(outcome.derivedTimeResults());
+        List<String> open = new ArrayList<>(wanted);
+        for (EnvelopeProof proof : candidates) {
+            if (open.isEmpty()) break;
+            Reports supplied = recomputeWithEnvelopeTimestamp(reports, effective, proof);
+            SimpleReport then = supplied != null ? supplied.getSimpleReport() : null;
+            if (then == null) continue;
+            for (java.util.Iterator<String> it = open.iterator(); it.hasNext(); ) {
+                String id = it.next();
+                if (then.getIndication(id) != Indication.TOTAL_PASSED) continue;
+                // Rozhodný okamžik je nejstarší platný důkaz. Často to není razítko obalu, nýbrž
+                // vlastní razítko prvku, které teprve díky němu obstálo (měřený kontejner: razítko
+                // obalu z 2019 drželo podpisové razítko z 2014) — a to DSS ve svém
+                // best-signature-time má.
+                java.util.Date bst = then.getBestSignatureTime(id);
+                java.util.Date when = bst != null && bst.toInstant().isBefore(proof.when())
+                        ? bst : java.util.Date.from(proof.when());
+                out.put(id, new DerivedTimeResult(when, reports.getDiagnosticData().getValidationDate(),
+                        Indication.TOTAL_PASSED.name(), null, supplied, true, proof));
+                it.remove();
+            }
+        }
+        if (out.size() == outcome.derivedTimeResults().size()) return outcome;
+        return new ValidationOutcome(reports, outcome.skippedRevocations(), Map.copyOf(out),
+                outcome.unreadableSigningTimes());
+    }
+
+    /**
+     * Přepočet s krycím razítkem obalu připsaným do diagnostických dat prvku — viz
+     * {@link #withEnvelopeProof}. Připsané objekty se po přepočtu odeberou, stejně jako
+     * v {@link #recomputeWithCoveringTimestamp}: razítko obalu prvku nepatří, jen ho kryje.
+     */
+    private static Reports recomputeWithEnvelopeTimestamp(Reports reports, ValidationPolicy policy,
+                                                          EnvelopeProof proof) {
+        var dd = reports.getDiagnosticDataJaxb();
+        var edd = proof.envelope().getDiagnosticDataJaxb();
+        var cover = proof.token();
+        java.util.Set<String> tsIds = new java.util.HashSet<>();
+        dd.getUsedTimestamps().forEach(t -> tsIds.add(t.getId()));
+        if (tsIds.contains(cover.getId())) return null;
+        java.util.Set<String> certIds = new java.util.HashSet<>();
+        dd.getUsedCertificates().forEach(c -> certIds.add(c.getId()));
+        java.util.Set<String> revIds = new java.util.HashSet<>();
+        dd.getUsedRevocations().forEach(r -> revIds.add(r.getId()));
+
+        List<eu.europa.esig.dss.diagnostic.jaxb.XmlCertificate> addedCerts = new ArrayList<>();
+        List<eu.europa.esig.dss.diagnostic.jaxb.XmlRevocation> addedRevs = new ArrayList<>();
+        List<eu.europa.esig.dss.diagnostic.jaxb.XmlTimestamp> addedTs = new ArrayList<>();
+        List<eu.europa.esig.dss.diagnostic.jaxb.XmlTimestampedObject> addedObjects = new ArrayList<>();
+        Map<eu.europa.esig.dss.diagnostic.jaxb.XmlSignature,
+                eu.europa.esig.dss.diagnostic.jaxb.XmlFoundTimestamp> addedFound =
+                new java.util.LinkedHashMap<>();
+        List<eu.europa.esig.dss.diagnostic.jaxb.XmlTimestamp> ownTimestamps =
+                new ArrayList<>(dd.getUsedTimestamps());
+        // Druh razítka se po dobu přepočtu vede jako podpisové. Razítko podání datové zprávy
+        // ověřené samostatně DSS označí jako CONTENT_TIMESTAMP — a obsahové razítko dokládá
+        // jen to, že podpis vznikl až po něm, takže best-signature-time nesnižuje. Změřeno
+        // 1. 11. 2026 na příloze datové zprávy: razítko podání obstálo, a přepočet přesto
+        // skončil k dnešku. Vůči prvku je to přitom razítko nad bajty, mezi nimiž leží jeho
+        // podpisová hodnota, tedy přesně to, co podpisové razítko dokládá.
+        eu.europa.esig.dss.enumerations.TimestampType originalType = cover.getType();
+        try {
+            cover.setType(eu.europa.esig.dss.enumerations.TimestampType.SIGNATURE_TIMESTAMP);
+            for (var c : edd.getUsedCertificates()) if (certIds.add(c.getId())) addedCerts.add(c);
+            for (var r : edd.getUsedRevocations()) if (revIds.add(r.getId())) addedRevs.add(r);
+            for (var t : edd.getUsedTimestamps()) if (tsIds.add(t.getId())) addedTs.add(t);
+            dd.getUsedCertificates().addAll(addedCerts);
+            dd.getUsedRevocations().addAll(addedRevs);
+            dd.getUsedTimestamps().addAll(addedTs);
+            for (var s : dd.getSignatures()) {
+                var found = new eu.europa.esig.dss.diagnostic.jaxb.XmlFoundTimestamp();
+                found.setTimestamp(cover);
+                s.getFoundTimestamps().add(found);
+                addedFound.put(s, found);
+                var object = new eu.europa.esig.dss.diagnostic.jaxb.XmlTimestampedObject();
+                object.setCategory(eu.europa.esig.dss.enumerations.TimestampedObjectType.SIGNATURE);
+                object.setToken(s);
+                addedObjects.add(object);
+            }
+            // Bajty prvku kryjí i jeho vlastní razítka: razítko obalu je důkazem existence
+            // i pro ně, a to je cesta, kterou se na měřeném kontejneru dostal podpis z 2014
+            // k platnosti — razítko obalu z 2019 dosvědčilo vnitřní razítko v době, kdy
+            // certifikát jeho TSA ještě platil.
+            for (var t : ownTimestamps) {
+                var object = new eu.europa.esig.dss.diagnostic.jaxb.XmlTimestampedObject();
+                object.setCategory(eu.europa.esig.dss.enumerations.TimestampedObjectType.TIMESTAMP);
+                object.setToken(t);
+                addedObjects.add(object);
+            }
+            cover.getTimestampedObjects().addAll(addedObjects);
+            return recompute(reports, policy, dd.getValidationDate());
+        } finally {
+            cover.setType(originalType);
+            cover.getTimestampedObjects().removeAll(addedObjects);
+            addedFound.forEach((s, found) -> s.getFoundTimestamps().remove(found));
+            dd.getUsedTimestamps().removeAll(addedTs);
+            dd.getUsedRevocations().removeAll(addedRevs);
+            dd.getUsedCertificates().removeAll(addedCerts);
         }
     }
 

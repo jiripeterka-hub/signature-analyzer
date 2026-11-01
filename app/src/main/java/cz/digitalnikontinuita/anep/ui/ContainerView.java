@@ -1,6 +1,7 @@
 package cz.digitalnikontinuita.anep.ui;
 
 import cz.digitalnikontinuita.anep.core.ContainerInspector;
+import cz.digitalnikontinuita.anep.core.EnvelopeProof;
 import cz.digitalnikontinuita.anep.core.ContainerInspector.Node;
 import cz.digitalnikontinuita.anep.core.ContainerInspector.Result;
 import cz.digitalnikontinuita.anep.core.PdfAttachmentInspector;
@@ -92,9 +93,20 @@ public class ContainerView {
      * verified in its own right. An attachment is very often a signed document itself, and
      * getting to it should not mean saving it to disk and dropping it back in by hand.
      */
-    private static java.util.function.BiConsumer<byte[], String> openInAnepHandler;
+    private static OpenInAnepHandler openInAnepHandler;
 
-    public static void setOpenInAnepHandler(java.util.function.BiConsumer<byte[], String> handler) {
+    /**
+     * Prvek k ověření i s tím, z čeho pochází. Obal se předává kvůli důkazu existence: nese-li
+     * platné razítko nad bajty prvku, je to doklad, že prvek existoval nejpozději v jeho čase
+     * ({@link EnvelopeProof}, 1. 11. 2026). {@code envelope} je {@code null}, když prohlížeč
+     * bajty obalu nemá.
+     */
+    @FunctionalInterface
+    public interface OpenInAnepHandler {
+        void open(byte[] data, String name, EnvelopeProof.Source envelope);
+    }
+
+    public static void setOpenInAnepHandler(OpenInAnepHandler handler) {
         openInAnepHandler = handler;
     }
 
@@ -106,16 +118,23 @@ public class ContainerView {
     /** Akce tlačítka „Forenzní balíček…“, nebo {@code null}, když se tlačítko nenabízí. */
     private final Runnable forensicPackageAction;
 
-    private ContainerView(Window owner, Result result, String sourceName) {
-        this(owner, result, sourceName, null, null);
+    /**
+     * Bajty obalu, jak je prohlížeč dostal — pro důkaz existence z obalu, viz
+     * {@link OpenInAnepHandler}. {@code null} tam, kde je okno nemá.
+     */
+    private final byte[] sourceBytes;
+
+    private ContainerView(Window owner, Result result, String sourceName, byte[] sourceBytes) {
+        this(owner, result, sourceName, null, null, sourceBytes);
     }
 
     private ContainerView(Window owner, Result result, String sourceName,
-                          String notice, Runnable forensicPackageAction) {
+                          String notice, Runnable forensicPackageAction, byte[] sourceBytes) {
         this.result = result;
         this.sourceName = sourceName;
         this.notice = notice;
         this.forensicPackageAction = forensicPackageAction;
+        this.sourceBytes = sourceBytes;
         buildUi(owner);
     }
 
@@ -149,7 +168,7 @@ public class ContainerView {
                 + " jako celek ověřit nelze. Podepsané mohou být soubory v něm: vyberte prvek"
                 + " a tlačítkem „Ověřit v AnEP“ jej předejte k ověření. Archiv jako celek můžete"
                 + " zajistit časovým razítkem tlačítkem „Forenzní balíček…“.";
-        Stage stage = new ContainerView(owner, result, file.getName(), notice, forensicPackage).stage;
+        Stage stage = new ContainerView(owner, result, file.getName(), notice, forensicPackage, null).stage;
         OPEN_WINDOWS.add(stage);
         stage.setOnHidden(e -> OPEN_WINDOWS.remove(stage));
         stage.show();
@@ -189,7 +208,7 @@ public class ContainerView {
                   + " dokumentu podle eIDAS; dokládá, kdo program vydal a že se od té doby nezměnil."
                 : "Soubor je program bez podpisu kódu (Authenticode) — není co ověřovat ani"
                   + " rozebírat.";
-        Stage stage = new ContainerView(owner, result, name, notice, forensicPackage).stage;
+        Stage stage = new ContainerView(owner, result, name, notice, forensicPackage, null).stage;
         OPEN_WINDOWS.add(stage);
         stage.setOnHidden(e -> OPEN_WINDOWS.remove(stage));
         stage.show();
@@ -226,7 +245,7 @@ public class ContainerView {
     public static boolean open(Window owner, byte[] bytes, String name, boolean explain) {
         ContainerInspector.Kind kind = ContainerInspector.detectKind(bytes);
         if (!ContainerInspector.isContainerKind(kind)) return false;
-        return show(owner, ContainerInspector.inspect(bytes, name), name, explain);
+        return show(owner, ContainerInspector.inspect(bytes, name), name, explain, bytes);
     }
 
     /**
@@ -244,19 +263,16 @@ public class ContainerView {
     }
 
     public static boolean openPdfAttachments(Window owner, byte[] bytes, String name, char[] password) {
-        return show(owner, PdfAttachmentInspector.inspect(bytes, name, password), name);
+        return show(owner, PdfAttachmentInspector.inspect(bytes, name, password), name, true, bytes);
     }
 
-    private static boolean show(Window owner, Result result, String name) {
-        return show(owner, result, name, true);
-    }
-
-    private static boolean show(Window owner, Result result, String name, boolean explain) {
+    private static boolean show(Window owner, Result result, String name, boolean explain,
+                                byte[] bytes) {
         if (result.error() != null && !result.isBrowsable()) {
             if (explain) error("Obsah souboru " + name + " se nepodařilo přečíst:\n" + result.error());
             return false;
         }
-        Stage stage = new ContainerView(owner, result, name).stage;
+        Stage stage = new ContainerView(owner, result, name, bytes).stage;
         OPEN_WINDOWS.add(stage);
         stage.setOnHidden(e -> OPEN_WINDOWS.remove(stage));
         stage.show();
@@ -1394,7 +1410,10 @@ public class ContainerView {
 
     private void openInAnep(Node node) {
         if (node == null || node.getData() == null || openInAnepHandler == null) return;
-        openInAnepHandler.accept(node.getData(), ContainerInspector.safeFileName(node.getName()));
+        EnvelopeProof.Source envelope = sourceBytes == null ? null
+                : new EnvelopeProof.Source(sourceBytes, sourceName, node.getPath(), node.getData());
+        openInAnepHandler.open(node.getData(), ContainerInspector.safeFileName(node.getName()),
+                envelope);
     }
 
     private void copyHash() {

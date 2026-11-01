@@ -2483,6 +2483,19 @@ public class AdvisorView {
             HBox.setHgrow(note, Priority.ALWAYS);
             body.getChildren().add(row);
         }
+        // Situace 57: totéž, jen důkaz přišel z obalu, z něhož byl dokument předán k ověření
+        // (1. 11. 2026). Bez barvy ze stejného důvodu jako 54 — je to vysvětlení kladného
+        // závěru, ne výhrada.
+        if (sig.getDetectedSituations().contains(57) && sig.getEnvelopeProofDetail() != null) {
+            Label note = new Label(sig.getEnvelopeProofDetail());
+            note.setStyle("-fx-text-fill: #555555; -fx-font-size: 12px;");
+            note.setWrapText(true);
+            HBox row = new HBox(8, ResultView.makeInfoButton(ResultView.SITUATION_LABELS.get(57)),
+                    note);
+            row.setAlignment(Pos.CENTER_LEFT);
+            HBox.setHgrow(note, Priority.ALWAYS);
+            body.getChildren().add(row);
+        }
 
         addSigningTimeRow(body, sig);
         addIgnoredTimestampRow(body, sig);
@@ -4269,6 +4282,11 @@ public class AdvisorView {
             // „Nedokládá nic" se smí říct jen tam, kde opravdu nic není. Nález uživatele
             // z 12. 9. 2026: u prvku se situací 54 tu stálo „že existoval dříve, nedokládá nic",
             // ačkoli závěr o platnosti právě na tom důkazu stál.
+            if (sig.getDetectedSituations().contains(57) && sig.getEnvelopeProofDetail() != null) {
+                return sb.append(". Dřívější existenci dokládá časové razítko obalu, z něhož byl"
+                        + " dokument předán k ověření, a právě k okamžiku, který tím doložil,"
+                        + " se platnost posuzovala — viz poznámku k výsledku.").toString();
+            }
             if (sig.getDetectedSituations().contains(54) && sig.getCoveringProofDetail() != null) {
                 // Bez druhého „ale": předchozí věta ho má taky a dvě za sebou se nečtou.
                 return sb.append(". Dřívější existenci dokládá jiný prvek téhož dokumentu, a právě"

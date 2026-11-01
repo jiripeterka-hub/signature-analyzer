@@ -588,6 +588,13 @@ final class ContinuityElementBlocks {
                     // Prvek, jehož důkaz existence nese jiný prvek (situace 54): „prokazuje časové
                     // razítko" by u podpisu bez razítka znělo, jako by ho měl. Mez je přitom táž —
                     // uznatelnost toho cizího razítka.
+                    // Důkaz z obalu (situace 57): razítko nese obal, ne dokument, a dokument
+                    // vyjmutý z obalu ho ztrácí — proto i výzva uchovávat celý obal.
+                    : sig.getEnvelopeProofTimestamp() != null
+                      ? " Dřívější existenci " + gen + " prokazují časová razítka obalu, z něhož"
+                        + " byl dokument předán k ověření, takže je rozhodující, jak dlouho bude"
+                        + " uznatelné nejnovější z nich. Uchovávat je proto třeba celý obal,"
+                        + " ne jen dokument z něj vyjmutý."
                     : sig.getCoveringProofTimestamp() != null
                       ? " Dřívější existenci " + gen + " prokazuje časové razítko jiného prvku"
                         + " téhož dokumentu, takže je rozhodující, jak dlouho bude uznatelné ono."
@@ -1374,6 +1381,14 @@ final class ContinuityElementBlocks {
             // Datum se tu přesto nedopočítává. Jestli si cizí nástroj tu úvahu udělá, aplikace
             // nemá odkud vědět; ví jen o jednom případu, kdy se tak stalo, a to je pozorování,
             // ne pravidlo.
+            // Důkaz z obalu: cizí nástroj dostane typicky jen dokument sám, a o obalu pak neví.
+            if (sig.getEnvelopeProofTimestamp() != null) {
+                return AdvisorView.capitalize(AdvisorView.elementCert(sig, AdvisorView.Case.NOMINATIV))
+                        + " už expiroval a důkaz existence " + gen + " v dřívější době nese"
+                        + " obal, z něhož byl dokument předán k ověření, ne dokument sám."
+                        + " Nástroj, kterému se předá jen dokument, o něm nemusí vědět;"
+                        + " jak naloží s celým obalem, se předem říct nedá.";
+            }
             if (sig.getCoveringProofTimestamp() != null) {
                 return AdvisorView.capitalize(AdvisorView.elementCert(sig, AdvisorView.Case.NOMINATIV))
                         + " už expiroval a tento " + AdvisorView.gendered(sig,

@@ -934,13 +934,25 @@ public class MainView {
      * Attachments are very often signed documents themselves, and the alternative — save to disk,
      * find the file, drag it back in — is a detour with no purpose.
      */
-    private void verifyExtracted(byte[] data, String name) {
+    /**
+     * Obal, z něhož byl prvek předán tlačítkem „Ověřit v AnEP", a dočasný soubor, pod kterým se
+     * prvek ověřuje — viz {@link ValidatorFactory#withEnvelopeProof}. Platí, dokud se ověřuje
+     * tentýž soubor (i opakovaně, s ústupky); jiný soubor ho mine, protože se neshodne cesta.
+     * Čte se na vlákně ověřování, proto {@code volatile}.
+     */
+    private volatile cz.digitalnikontinuita.anep.core.EnvelopeProof.Source extractedEnvelope;
+    private volatile File extractedFile;
+
+    private void verifyExtracted(byte[] data, String name,
+                                 cz.digitalnikontinuita.anep.core.EnvelopeProof.Source envelope) {
         try {
             Path dir = Files.createTempDirectory("anep-prvek-");
             dir.toFile().deleteOnExit();
             Path tmp = dir.resolve(name.isBlank() ? "prvek" : name);
             Files.write(tmp, data);
             tmp.toFile().deleteOnExit();
+            extractedFile = tmp.toFile();
+            extractedEnvelope = envelope;
             acceptSigFile(tmp.toFile());
             if (sigZone.getScene() != null && sigZone.getScene().getWindow() instanceof Stage s) {
                 s.toFront();
@@ -1715,6 +1727,14 @@ public class MainView {
         StartupTrace.mark("document loaded");
         ValidationOutcome outcome = validatorFactory.validate(
                 sigDoc, detachedContent, verifier, pdfPassword, evidenceRecords);
+        // Prvek předaný z prohlížeče obalu: nese-li obal platné razítko nad jeho bajty, je to
+        // důkaz existence prvku (1. 11. 2026). Jen pro samotný prvek, ne pro dvojici s externím
+        // podpisem — tam by se důkaz týkal jiného souboru, než který se ověřuje.
+        var envelope = extractedEnvelope;
+        if (envelope != null && of == null && sf.equals(extractedFile)) {
+            outcome = validatorFactory.withEnvelopeProof(outcome, envelope, verifier);
+            StartupTrace.mark("envelope proof done");
+        }
         StartupTrace.mark("DSS validateDocument done");
         // The PDF passes below read the same document DSS just parsed. Reuse the bytes
         // already in memory (see PdfSource) instead of opening the file three more times.

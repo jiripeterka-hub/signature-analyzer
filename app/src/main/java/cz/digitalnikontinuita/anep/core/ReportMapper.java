@@ -327,7 +327,17 @@ public class ReportMapper {
             List<Integer> situations = detectFailureSituations(id, dd, simpleReport,
                     reports.getDetailedReport(), settings, bestSigTime, hasExternalSig,
                     s33.detected(), s33.tolerantlyComplete(), s34.detected(),
-                    outcome.skippedRevocations(), derivedPasses);
+                    outcome.skippedRevocations(), derivedPasses && derived.envelope() == null);
+            // Situace 57: týž druh kladného závěru jako 54, jen důkaz nepřišel z krycího prvku
+            // téhož souboru, nýbrž z obalu, z něhož byl prvek předán k ověření (1. 11. 2026).
+            // Vlastní číslo proto, že všechny věty u situace 54 mluví o „jiném prvku téhož
+            // dokumentu" — a ten tu není.
+            EnvelopeProof envelopeProof = derivedPasses ? derived.envelope() : null;
+            if (envelopeProof != null) {
+                List<Integer> withEnvelope = new ArrayList<>(situations);
+                withEnvelope.add(57);
+                situations = List.copyOf(withEnvelope);
+            }
             // Porušená integrita druh podpisu nemaže — viz brokenIntegrityLegalType().
             if (!sysZnacka && situations.contains(1)) {
                 String broken = brokenIntegrityLegalType(q, reports.getDetailedReport(), id);
@@ -547,6 +557,10 @@ public class ReportMapper {
                     sw == null || !reasons.contains(6) ? null : expiredResponderNotAfter(sw),
                     situations.contains(22) && outcome.unreadableSigningTimes().contains(id)
             ));
+            if (envelopeProof != null) {
+                summaries.get(summaries.size() - 1).setEnvelopeProof(
+                        envelopeProofDetail(envelopeProof, bestSigTime), envelopeProof.newest());
+            }
         }
 
         // A file whose only authentication elements are time-stamps has no signature to hang
@@ -5194,41 +5208,53 @@ public class ReportMapper {
                 .filter(ts -> ts.getProductionTime() != null)
                 .sorted(Comparator.comparing(ts -> ts.getProductionTime()))
                 .map(ts -> {
-                    CertificateWrapper tsaCert = ts.getSigningCertificate();
-                    String issuer = null;
-                    Instant notAfter = null;
-                    if (tsaCert != null) {
-                        issuer = tsaCert.getCommonName() != null && !tsaCert.getCommonName().isBlank()
-                                ? tsaCert.getCommonName() : tsaCert.getReadableCertificateName();
-                        notAfter = tsaCert.getNotAfter() != null
-                                ? tsaCert.getNotAfter().toInstant() : null;
-                    }
-                    String tsKind = resolveTsKind(ts);
+                    TimestampEntry entry = timestampEntry(ts, simpleReport);
                     // A VRI token only counts towards BST when an archival time-stamp covers it,
                     // so the two cases need different labels — see canEstablishBestSignatureTime.
-                    if ("vri".equals(tsKind) && !isCoveredByArchivalTimestamp(ts, sw, simpleReport)) {
-                        tsKind = "vri_bare";
+                    if ("vri".equals(entry.tsKind()) && !isCoveredByArchivalTimestamp(ts, sw, simpleReport)) {
+                        entry = new TimestampEntry(entry.time(), entry.passed(), entry.issuer(),
+                                entry.notAfter(), "vri_bare", entry.qualified(), entry.intact(),
+                                entry.failureCause(), entry.weakDigest(), entry.statusWithdrawn(),
+                                entry.qualifiedFrom(), entry.anchorCert());
                     }
-                    return new TimestampEntry(
-                            ts.getProductionTime().toInstant(),
-                            simpleReport.getIndication(ts.getId()) == Indication.PASSED,
-                            issuer,
-                            notAfter,
-                            tsKind,
-                            simpleReport.getTimestampQualification(ts.getId())
-                                    == TimestampQualification.QTSA,
-                            // Neporušenost bez důvěry: podpis tokenu sedí a otisk, který kryje,
-                            // souhlasí. Táž trojice dotazů, jakou klade DetailedReportView; co
-                            // nepřidává, je isTrustedChain(), a právě to je ten rozdíl.
-                            ts.isSignatureIntact() && ts.isSignatureValid()
-                                    && ts.isMessageImprintDataIntact(),
-                            timestampFailure(ts, simpleReport),
-                            timestampWeakDigest(ts),
-                            timestampStatusWithdrawn(ts),
-                            qualifiedOnlyFrom(ts, simpleReport),
-                            tsaCert != null && tsaCert.isTrusted());
+                    return entry;
                 })
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * Jedno razítko jako položka souhrnu. Vytknuto z {@link #allTimestamps} 1. 11. 2026, aby
+     * stejně vznikla i položka pro krycí razítko obalu ({@link EnvelopeProof}), které leží
+     * v protokolech jiného ověření než prvek sám.
+     */
+    static TimestampEntry timestampEntry(TimestampWrapper ts, SimpleReport simpleReport) {
+        CertificateWrapper tsaCert = ts.getSigningCertificate();
+        String issuer = null;
+        Instant notAfter = null;
+        if (tsaCert != null) {
+            issuer = tsaCert.getCommonName() != null && !tsaCert.getCommonName().isBlank()
+                    ? tsaCert.getCommonName() : tsaCert.getReadableCertificateName();
+            notAfter = tsaCert.getNotAfter() != null
+                    ? tsaCert.getNotAfter().toInstant() : null;
+        }
+        return new TimestampEntry(
+                ts.getProductionTime().toInstant(),
+                simpleReport.getIndication(ts.getId()) == Indication.PASSED,
+                issuer,
+                notAfter,
+                resolveTsKind(ts),
+                simpleReport.getTimestampQualification(ts.getId())
+                        == TimestampQualification.QTSA,
+                // Neporušenost bez důvěry: podpis tokenu sedí a otisk, který kryje,
+                // souhlasí. Táž trojice dotazů, jakou klade DetailedReportView; co
+                // nepřidává, je isTrustedChain(), a právě to je ten rozdíl.
+                ts.isSignatureIntact() && ts.isSignatureValid()
+                        && ts.isMessageImprintDataIntact(),
+                timestampFailure(ts, simpleReport),
+                timestampWeakDigest(ts),
+                timestampStatusWithdrawn(ts),
+                qualifiedOnlyFrom(ts, simpleReport),
+                tsaCert != null && tsaCert.isTrusted());
     }
 
     /**
@@ -5748,6 +5774,31 @@ public class ReportMapper {
             out.put(e.getKey(), before + 1);
         }
         return out;
+    }
+
+    /**
+     * Věta situace 57 — z jakého obalu důkaz pochází, které razítko ho nese a k jakému okamžiku
+     * se nakonec posuzovalo.
+     *
+     * <p>Rozhodný okamžik nemusí být čas razítka obalu: razítko obalu často teprve podrží vlastní
+     * razítko prvku, které je starší, a rozhodným okamžikem se pak stane to. Na měřeném
+     * kontejneru z archivační služby (1. 11. 2026) dosvědčilo razítko obalu z roku 2019 podpisové
+     * razítko z roku 2014 — věta „a právě k němu se posuzovala" by o roce 2019 lhala.
+     */
+    static String envelopeProofDetail(EnvelopeProof proof, Instant decisive) {
+        String head = "Dokument byl k ověření předán z obalu " + proof.envelopeName()
+                + ", který nese platné časové razítko z "
+                + formatRevDate(java.util.Date.from(proof.when()))
+                + ", a to razítko dokument kryje: " + proof.how()
+                + ". Z toho plyne, že dokument i s tímto podpisem existoval nejpozději v ten okamžik";
+        if (decisive != null && decisive.isBefore(proof.when())) {
+            return head + ". Díky tomu obstálo i vlastní časové razítko podpisu z "
+                    + formatRevDate(java.util.Date.from(decisive))
+                    + ", a rozhodným okamžikem se proto stal tento dřívější čas. Vyjmutý z obalu"
+                    + " tento důkaz dokument ztrácí.";
+        }
+        return head + ", a právě k němu se jeho platnost posuzovala. Vyjmutý z obalu tento důkaz"
+                + " dokument ztrácí.";
     }
 
     /** Věta situace 54 — který prvek ten důkaz nese a k jakému okamžiku. */

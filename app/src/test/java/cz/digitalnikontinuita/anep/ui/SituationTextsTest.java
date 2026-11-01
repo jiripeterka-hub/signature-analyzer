@@ -49,7 +49,7 @@ class SituationTextsTest {
             if (SituationTexts.get(section, "text") == null) empty.add(section);
         }
         assertEquals(List.of(), empty, "oddíl bez textu v texty/situace.txt");
-        assertEquals(54, ResultView.SITUATION_LABELS.size());
+        assertEquals(55, ResultView.SITUATION_LABELS.size());
     }
 
     @Test
@@ -57,7 +57,7 @@ class SituationTextsTest {
     void situationsTheCodeNamesExist() {
         // Tahle čísla se v kódu píšou natvrdo — tlačítka ⓘ a ⚠ v přehledech a poznámky
         // na kartě. Kdyby jejich oddíl z souboru zmizel, zůstalo by u nich prázdno.
-        for (int situation : new int[]{20, 21, 49, 50, 51, 54, 1, 53}) {
+        for (int situation : new int[]{20, 21, 49, 50, 51, 54, 57, 1, 53}) {
             assertNotNull(ResultView.SITUATION_LABELS.get(situation), "situace " + situation);
         }
     }

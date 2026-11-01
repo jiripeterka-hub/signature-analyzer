@@ -7,6 +7,19 @@ pro soupis změn ke každé nové vydané verzi.
 
 ### Ověřování
 
+- **Důkaz existence z obalu.** Dokument předaný k ověření tlačítkem „Ověřit v AnEP“
+  z prohlížeče obsahu — z kontejneru ASiC, z datové zprávy, z obalujícího podpisu nebo jako
+  příloha PDF — nově využije časové razítko obalu, které jeho obsah kryje, jako důkaz, že
+  dokument existoval nejpozději v čase onoho razítka. U datové zprávy je to kvalifikované
+  časové razítko podání, případně razítko připojené při stažení; u přílohy PDF razítko té
+  verze dokumentu, která přílohu už obsahovala. Podpis, jehož platnost
+  by jinak zůstala neznámá — typicky proto, že mezitím vypršel certifikát podepisujícího nebo
+  razítkovací autority —, se pak posoudí k tomuto dřívějšímu okamžiku; díky tomu může obstát
+  i vlastní razítko podpisu. Využijí se jen razítka, která sama obstojí, včetně archivních
+  razítek obalu. Karta Analýzy to výslovně uvede a záložka Digitální kontinuita
+  upozorní, že uchovávat je třeba celý obal: vyjmutý dokument tento důkaz nemá. Dokládá-li
+  revokační informace, že certifikát byl odvolán ještě před tímto okamžikem, karta na to
+  upozorní stejně jako u vlastního razítka.
 - **Knihovna DSS 6.5.1.** Ověřovacím jádrem je nově opravné vydání DSS 6.5.1. Samotné
   ověřování podpisů a výchozí politika se proti verzi 6.5 nemění; novější jsou knihovny, na
   kterých stojí (mimo jiné Bouncy Castle 1.86 a veraPDF 1.30.3).
