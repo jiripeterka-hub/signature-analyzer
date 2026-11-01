@@ -1510,6 +1510,11 @@ public class MainView {
             resultView.show(result);
             extendedView.show(result);
             advisorView.setSourceFile(sf, of, pdfPassword);
+            // Obal jde do forenzního balíčku s dokumentem — viz AdvisorView.setSourceEnvelope.
+            var sourceEnvelope = extractedEnvelope;
+            if (sourceEnvelope != null && of == null && sf.equals(extractedFile)) {
+                advisorView.setSourceEnvelope(sourceEnvelope);
+            }
             advisorView.show(result);
             // Building the detailed card tree and rendering the DSS protocols is real work —
             // certificate paths, revocation records and evidence records for every signature.
@@ -1684,6 +1689,10 @@ public class MainView {
             hidden.setCustomValidationTime(
                     appSettings.isUseCustomValidationTime() ? appSettings.getCustomValidationTime() : null);
             hidden.setSourceFile(sf, of, pdfPassword);
+            var hiddenEnvelope = extractedEnvelope;
+            if (hiddenEnvelope != null && of == null && sf.equals(extractedFile)) {
+                hidden.setSourceEnvelope(hiddenEnvelope);
+            }
             hidden.show(task.getValue());
             appSettings.resetValidationPolicy();
             onChecked.accept(hidden);

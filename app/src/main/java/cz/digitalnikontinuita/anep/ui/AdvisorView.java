@@ -429,7 +429,20 @@ public class AdvisorView {
         this.sourceFile = file;
         this.secondaryFile = secondary;
         this.pdfPassword = password;
+        this.sourceEnvelope = null;
     }
+
+    /**
+     * Obal, z něhož byl ověřovaný soubor předán tlačítkem „Ověřit v AnEP" (i s obaly nad ním),
+     * nebo {@code null}. Volá se po {@link #setSourceFile}, který ho maže. Slouží forenznímu
+     * balíčku, který obal přibalí — viz {@link FixationService#fix(File, File, ValidationResult,
+     * TsaProfile, DigestAlgorithm, cz.digitalnikontinuita.anep.core.EnvelopeProof.Source)}.
+     */
+    public void setSourceEnvelope(cz.digitalnikontinuita.anep.core.EnvelopeProof.Source envelope) {
+        this.sourceEnvelope = envelope;
+    }
+
+    private cz.digitalnikontinuita.anep.core.EnvelopeProof.Source sourceEnvelope;
 
     /**
      * The file that carries the signature. The same as the submitted file, except when a detached
@@ -10019,6 +10032,7 @@ public class AdvisorView {
 
         File inputFile = sourceFile;
         File secondary = secondaryFile;
+        var envelope = sourceEnvelope;
         FixationService svc = fixationService;
         ValidationResult result = lastValidationResult;
         DigestAlgorithm alg = TimestampingService.resolveAlgorithm(profile.getHashAlgorithm());
@@ -10026,7 +10040,7 @@ public class AdvisorView {
         Task<FixationService.FixationResult> task = new Task<>() {
             @Override
             protected FixationService.FixationResult call() {
-                return svc.fix(inputFile, secondary, result, profile, alg);
+                return svc.fix(inputFile, secondary, result, profile, alg, envelope);
             }
         };
 
@@ -10077,6 +10091,11 @@ public class AdvisorView {
             done.setTitle("Forenzní balíček");
             done.setHeaderText("Forenzní balíček byl vytvořen a opatřen časovým razítkem");
             done.setContentText("Obsahuje dokument beze změny, "
+                    + (res.envelopes() == 0 ? ""
+                       : envelope != null && envelope.detached()
+                         ? "externí podpis, k němuž byl předložen, "
+                         : res.envelopes() == 1 ? "obal, z něhož byl předán k ověření, "
+                         : "obaly, z nichž byl předán k ověření (" + res.envelopes() + "), ")
                     + res.revocations() + "x revokační informace a "
                     + res.certificates() + "x certifikát, protokoly ověření, popis a soupis"
                     + " s uvedením původu.\n\n"

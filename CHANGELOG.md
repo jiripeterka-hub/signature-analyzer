@@ -25,6 +25,9 @@ pro soupis změn ke každé nové vydané verzi.
   upozorní, že uchovávat je třeba celý obal: vyjmutý dokument tento důkaz nemá. Dokládá-li
   revokační informace, že certifikát byl odvolán ještě před tímto okamžikem, karta na to
   upozorní stejně jako u vlastního razítka.
+  Forenzní balíček vytvořený z takového dokumentu nově obsahuje i obal, z něhož byl dokument
+  předán (u vnořených obalů všechny, u externího podpisu ten podpis), beze změny a se zmínkou
+  v popisu balíčku.
 - **Knihovna DSS 6.5.1.** Ověřovacím jádrem je nově opravné vydání DSS 6.5.1. Samotné
   ověřování podpisů a výchozí politika se proti verzi 6.5 nemění; novější jsou knihovny, na
   kterých stojí (mimo jiné Bouncy Castle 1.86 a veraPDF 1.30.3).

@@ -204,7 +204,7 @@ Pro toho, kdo časová razítka posuzuje podle platnosti jejich certifikátů, v
 
 ### 6.6 Forenzní balíček
 
-Forenzní balíček zabalí nedotčený originál do kontejneru ASiC-E spolu se vším ověřovacím materiálem, který se podařilo sehnat, se soupisem toho, odkud co pochází (`soupis.xml`), a případně s dalšími soubory, aby bylo doloženo, že k sobě patří. Kontejner opatří časovým razítkem. V pojmech TS 119 512 je to kontejner objektů uchování se soupisem a cílem uchování obecných dat (PGD).
+Forenzní balíček zabalí nedotčený originál do kontejneru ASiC-E spolu se vším ověřovacím materiálem, který se podařilo sehnat, se soupisem toho, odkud co pochází (`soupis.xml`), a případně s dalšími soubory, aby bylo doloženo, že k sobě patří. ==Byl-li dokument předán k ověření z obalu (kontejneru ASiC, datové zprávy, obalujícího podpisu či dokumentu PDF s přílohami), přibalí se beze změny i tento obal, u vnořených obalů všechny a u externího podpisu ten podpis: důkaz existence dokumentu může stát na časovém razítku obalu a dokument z obalu vyjmutý o něj přichází.== Kontejner opatří časovým razítkem. V pojmech TS 119 512 je to kontejner objektů uchování se soupisem a cílem uchování obecných dat (PGD).
 
 Balíček **ověřitelnost dokumentu neprodlouží**: dokládá jen, že tento materiál v této podobě existoval v daném okamžiku, a podpisu nedodá důkaz existence, který neměl. Čte ho odborník, ne validátor. Nabízí se tam, kde zachovat ověřitelnost všech prvků nejde; v expertním módu i vedle uchování. Balíček lze obnovit novým razítkem nad kontejnerem; jeho lhůtou je konec platnosti certifikátu posledního razítka.
 
@@ -328,4 +328,4 @@ Z TS 119 512 AnEP odpovídá schématu F.4 se dvěma odchylkami uvedenými v 3.2
 | ==1.10== | ==30. 10. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.10 politiky ověřování, která doplňuje ověřování podpisu kódu u programů== |
 | ==1.11== | ==31. 10. 2026== | ==oddíl 8.1: podpis CB-AdES aplikace ověří, ale neuchovává; číslo verze sjednocené s verzí 1.11 politiky ověřování, která doplňuje ověřování CB-AdES a přechod na knihovnu DSS 6.5.1== |
 | ==1.12== | ==31. 10. 2026== | ==oddíly 2 a 8.1: podpisy CB-AdES (COSE) se uchovávají jako ostatní formáty AdES — knihovna DSS je rozšíří na úroveň B-LTA; odloučený podpis jen spolu s podepsaným dokumentem; výsledek ověří validátory podle standardů, které formát CB-AdES podporují, nikoli CzechPOINT ani podatelny== |
-| ==1.13== | ==1. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.13 politiky ověřování, která přidává důkaz existence z obalu, z něhož byl dokument předán k ověření== |
+| ==1.13== | ==1. 11. 2026== | ==číslo verze sjednocené s verzí 1.13 politiky ověřování, která přidává důkaz existence z obalu, z něhož byl dokument předán k ověření; forenzní balíček z takového dokumentu nese i obal== |

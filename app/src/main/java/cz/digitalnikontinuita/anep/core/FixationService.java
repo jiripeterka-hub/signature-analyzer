@@ -75,7 +75,12 @@ public class FixationService {
      *        cannot be read, and then the name simply omits it rather than stating a guess.
      */
     public record FixationResult(DSSDocument container, int documents, int revocations,
-                                 int certificates, Date tsaCertNotAfter) {}
+                                 int certificates, Date tsaCertNotAfter, int envelopes) {
+        public FixationResult(DSSDocument container, int documents, int revocations,
+                              int certificates, Date tsaCertNotAfter) {
+            this(container, documents, revocations, certificates, tsaCertNotAfter, 0);
+        }
+    }
 
     /**
      * The expiry of the time-stamping certificate in a freshly built container.
@@ -125,6 +130,20 @@ public class FixationService {
      */
     public FixationResult fix(File source, File secondary, ValidationResult result,
                               TsaProfile profile, DigestAlgorithm algorithm) {
+        return fix(source, secondary, result, profile, algorithm, null);
+    }
+
+    /**
+     * @param envelope obal, z něhož byl dokument předán k ověření tlačítkem „Ověřit v AnEP",
+     *                 i s obaly nad ním ({@link EnvelopeProof.Source#parent()}); {@code null},
+     *                 když byl dokument předložen sám. Obal jde do balíčku beze změny
+     *                 (1. 11. 2026, na pokyn uživatele): důkaz existence dokumentu může stát
+     *                 na jeho razítku, vyjmutý dokument ho ztrácí, a balíček bez obalu by
+     *                 zmrazil právě to, co k posouzení nestačí.
+     */
+    public FixationResult fix(File source, File secondary, ValidationResult result,
+                              TsaProfile profile, DigestAlgorithm algorithm,
+                              EnvelopeProof.Source envelope) {
         CommonCertificateVerifier verifier = verifierRef.get();
         if (verifier == null) {
             throw new FixationException("Ověřovatel certifikátů není dosud inicializován");
@@ -163,6 +182,28 @@ public class FixationService {
                 inventory.add(new Item(secondaryName,
                         isSignature ? "oddělený podpis" : "evidenční záznam",
                         sha256(secondaryBytes), "předložený soubor, beze změny", null, null));
+            }
+
+            // 1c. Obal, z něhož byl dokument předán, a obaly nad ním — od nejbližšího. Každý
+            //     beze změny a s cestou, pod kterou v něm leží to, co je o úroveň níž; vnější
+            //     obal sice vnitřní obsahuje, ale znalec by ho z něj musel teprve vybalovat
+            //     a nevěděl by, který prvek se ověřoval.
+            List<String> envelopeNames = new ArrayList<>();
+            int level = 0;
+            for (EnvelopeProof.Source s = envelope; s != null; s = s.parent()) {
+                if (s.envelopeBytes() == null || s.envelopeName() == null) continue;
+                String name = String.format("obal/%02d-%s", ++level, safeFileName(s.envelopeName()));
+                contents.add(new InMemoryDocument(s.envelopeBytes(), name,
+                        eu.europa.esig.dss.enumerations.MimeType.fromFileName(s.envelopeName())));
+                String provenance = s.detached()
+                        ? "externí podpis, k němuž byl dokument předložen a jehož otisk ho kryje,"
+                          + " beze změny"
+                        : (level == 1 ? "obal, z něhož byl dokument předán k ověření"
+                                      : "vnější obal, v němž leží obal o úroveň níž")
+                          + " (v něm pod cestou „" + s.elementPath() + "“), beze změny";
+                inventory.add(new Item(name, s.detached() ? "externí podpis" : "obal",
+                        sha256(s.envelopeBytes()), provenance, null, null));
+                envelopeNames.add(s.envelopeName());
             }
 
             // 2. Revocation material, one file each, named by what it covers.
@@ -210,7 +251,8 @@ public class FixationService {
 
             // 5. The inventory and the description, added last so they can list everything above.
             String popis = buildDescription(source.getName(), secondaryName == null ? null
-                    : secondary.getName(), result.isExternalSignature(), now, revCount, certCount);
+                    : secondary.getName(), result.isExternalSignature(), now, revCount, certCount,
+                    envelopeNames, envelope != null && envelope.detached());
             contents.add(new InMemoryDocument(popis.getBytes(StandardCharsets.UTF_8),
                     "POPIS.txt", eu.europa.esig.dss.enumerations.MimeTypeEnum.TEXT));
             String soupis = buildInventory(source.getName(), now, inventory);
@@ -226,7 +268,7 @@ public class FixationService {
             DSSDocument container = service.timestamp(contents, params);
 
             return new FixationResult(container, contents.size(), revCount, certCount,
-                    timestampCertExpiry(container));
+                    timestampCertExpiry(container), envelopeNames.size());
 
         } catch (Exception e) {
             throw new FixationException("Zafixování selhalo: " + e.getMessage(), e);
@@ -490,7 +532,8 @@ public class FixationService {
      */
     private static String buildDescription(String fileName, String secondaryFileName,
                                            boolean secondaryIsSignature, Date now,
-                                           int revCount, int certCount) {
+                                           int revCount, int certCount,
+                                           List<String> envelopeNames, boolean detached) {
         // Assembled without the text block's indentation: the block strips it from its own lines
         // only, so anything substituted in keeps whatever spaces it carries.
         String druhy = secondaryFileName == null ? ""
@@ -498,6 +541,26 @@ public class FixationService {
                   + (secondaryIsSignature
                         ? "oddělený podpis\nk tomuto dokumentu, předložený spolu s ním."
                         : "evidenční záznam\npředložený spolu s dokumentem.");
+        if (!envelopeNames.isEmpty()) {
+            StringBuilder obal = new StringBuilder("\n\n");
+            if (detached) {
+                obal.append("Dokument byl k ověření předložen spolu s externím podpisem \"")
+                    .append(envelopeNames.get(0)).append("\",\njehož otisk ho kryje.");
+            } else {
+                obal.append("Dokument byl k ověření předán z obalu \"")
+                    .append(envelopeNames.get(0)).append("\"");
+                for (int i = 1; i < envelopeNames.size(); i++) {
+                    obal.append(",\nkterý sám leží v obalu \"").append(envelopeNames.get(i))
+                        .append("\"");
+                }
+                obal.append(".");
+            }
+            obal.append(" ").append(envelopeNames.size() == 1 ? "Je" : "Jsou")
+                .append(" v balíčku ve složce obal/, beze změny:\ndůkaz existence dokumentu")
+                .append(" může stát na časovém razítku obalu, a dokument\nz obalu vyjmutý")
+                .append(" o něj přichází.");
+            druhy = druhy + obal;
+        }
         return """
                 FORENZNÍ BALÍČEK
                 ================

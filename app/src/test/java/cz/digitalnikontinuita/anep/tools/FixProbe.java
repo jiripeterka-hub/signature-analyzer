@@ -25,7 +25,12 @@ import java.util.zip.ZipInputStream;
  *
  * <pre>
  *   java -cp ... cz.digitalnikontinuita.anep.tools.FixProbe &lt;file&gt;
+ *   java -cp ... cz.digitalnikontinuita.anep.tools.FixProbe -envelope &lt;obal&gt; &lt;prvek&gt;
  * </pre>
+ *
+ * <p>{@code -envelope} (1. 11. 2026) vyjme prvek z obalu jako tlačítko „Ověřit v AnEP",
+ * ověří ho s důkazem z obalu a obal předá balíčku. Pozor: razítko se bere od zdroje vybraného
+ * v nastavení, tedy skutečně.
  */
 public final class FixProbe {
 
@@ -49,6 +54,19 @@ public final class FixProbe {
             verifier = trustConfig.buildOfflineCertificateVerifier();
         }
 
+        cz.digitalnikontinuita.anep.core.EnvelopeProof.Source envelope = null;
+        if ("-envelope".equals(args[0])) {
+            Path container = Path.of(args[1]);
+            byte[] envelopeBytes = Files.readAllBytes(container);
+            byte[] element = EnvelopeProofSmoke.extract(envelopeBytes,
+                    container.getFileName().toString(), args[2]);
+            Path tmp = Files.createTempDirectory("anep-prvek-")
+                    .resolve(Path.of(args[2]).getFileName().toString());
+            Files.write(tmp, element);
+            envelope = new cz.digitalnikontinuita.anep.core.EnvelopeProof.Source(envelopeBytes,
+                    container.getFileName().toString(), args[2], element);
+            args = new String[] { tmp.toString() };
+        }
         Path src = Path.of(args[0]);
         Path secondary = args.length > 1 ? Path.of(args[1]) : null;
         DocumentLoader loader = new DocumentLoader();
@@ -59,13 +77,16 @@ public final class FixProbe {
         DSSDocument content = secondary == null ? null : loader.load(src.toFile());
         ValidationOutcome outcome =
                 new ValidatorFactory(settings).validate(sigDoc, content, verifier, null);
+        if (envelope != null) {
+            outcome = new ValidatorFactory(settings).withEnvelopeProof(outcome, envelope, verifier);
+        }
 
         ValidationResult result = new ReportMapper().map(src.getFileName().toString(), null,
                 outcome, settings, java.util.Map.of(), java.util.List.of(), secondary != null);
         FixationService svc = new FixationService(new AtomicReference<>(verifier));
         FixationService.FixationResult res = svc.fix(src.toFile(),
                 secondary == null ? null : secondary.toFile(), result, profile,
-                TimestampingService.resolveAlgorithm(profile.getHashAlgorithm()));
+                TimestampingService.resolveAlgorithm(profile.getHashAlgorithm()), envelope);
 
         byte[] bytes;
         try (InputStream is = res.container().openStream()) { bytes = is.readAllBytes(); }
@@ -78,12 +99,18 @@ public final class FixProbe {
         System.out.printf("kontejner %,12d B   %s%n", (long) bytes.length, out.getFileName());
         System.out.printf("  položek %d, revokací %d, certifikátů %d%n",
                 res.documents(), res.revocations(), res.certificates());
+        System.out.println("  obalů " + res.envelopes());
         System.out.println("  obsah:");
         try (ZipInputStream zis = new ZipInputStream(new java.io.ByteArrayInputStream(bytes))) {
             ZipEntry e;
+            String popis = null;
             while ((e = zis.getNextEntry()) != null) {
                 System.out.printf("      %-64s %,10d B%n", e.getName(), Math.max(e.getSize(), 0));
+                if ("POPIS.txt".equals(e.getName())) {
+                    popis = new String(zis.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                }
             }
+            if (envelope != null && popis != null) System.out.println(popis);
         }
     }
 }
