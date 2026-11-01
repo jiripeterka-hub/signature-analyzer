@@ -157,7 +157,7 @@ public class SettingsDialog {
         cbSha1.setSelected(settings.isIgnoreSha1Deprecated());
         HBox sha1Row = infoRow(cbSha1, makeInfoButton(stage,
                 "Ignorovat zastaralost algoritmu SHA1",
-                "SHA1 je od roku 2022 v DSS považován za zastaralý. Tato volba posune datum " +
+                "SHA1 je v DSS považován za zastaralý od 1. 8. 2012. Tato volba posune datum " +
                 "expirace na rok 2099 a potlačí tak chyby způsobené použitím SHA1 v podpisu " +
                 "nebo certifikátech."));
 

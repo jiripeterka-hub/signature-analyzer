@@ -79,8 +79,8 @@ Za ní následují jen ty odrážky, které pro **tento** prvek skutečně plat�
 
 **(c) SHA-1** *(SHA1)*
 
-> **Nebylo přihlédnuto k zastaralosti algoritmu SHA-1.** Knihovna DSS považuje SHA-1 od roku
-> 2022 za nedostatečný a podpisy či certifikáty, které jej používají, odmítá. Zde bylo od
+> **Nebylo přihlédnuto k zastaralosti algoritmu SHA-1.** Knihovna DSS považuje SHA-1 od
+> 1. 8. 2012 za nedostatečný a podpisy či certifikáty, které jej používají, odmítá. Zde bylo od
 > tohoto omezení odhlédnuto. Bez tohoto ústupku by výsledek nebyl kladný.
 
 **(d) PDF-NOT-ETSI** *(PDF_NOT_ETSI)*

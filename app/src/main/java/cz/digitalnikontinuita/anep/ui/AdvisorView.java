@@ -5964,7 +5964,7 @@ public class AdvisorView {
             if (relSha1) {
                 block.getChildren().add(boldBullet(
                         "**Nebylo přihlédnuto k zastaralosti algoritmu SHA-1.** Knihovna DSS"
-                        + " považuje SHA-1 od roku 2022 za nedostatečný a podpisy či certifikáty,"
+                        + " považuje SHA-1 od 1. 8. 2012 za nedostatečný a podpisy či certifikáty,"
                         + " které jej používají, odmítá. Zde bylo od tohoto omezení odhlédnuto."
                         + ((eitherWillDo || !measured) ? ""
                             : " Bez tohoto ústupku by výsledek nebyl kladný.")));

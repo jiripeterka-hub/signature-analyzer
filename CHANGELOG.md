@@ -91,6 +91,10 @@ pro soupis změn ke každé nové vydané verzi.
   rovnou jeho hodnotu z certifikátu, případně že chybí; u čísla autorizace upozorní na
   neobvyklý tvar (u ČKA mívá pět číslic, u ČKAIT sedm). IČO Komory vypíše zvlášť mezi dalšími
   údaji certifikátu.
+- **Opravené datum zastarání SHA-1.** Nápověda k volbě „Ignorovat zastaralost algoritmu
+  SHA1“ v Nastavení i poznámka o tomto ústupku na kartě Analýzy uváděly, že knihovna DSS
+  považuje SHA-1 za zastaralý od roku 2022. Ve skutečnosti je to od 1. 8. 2012 a k tomuto
+  datu se ověřování řídí i dosud; opraven byl jen text.
 
 ### Prohlížeč kontejnerů
 
