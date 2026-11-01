@@ -1,5 +1,6 @@
 package cz.digitalnikontinuita.anep.ui;
 
+import cz.digitalnikontinuita.anep.core.BankIdSign;
 import cz.digitalnikontinuita.anep.core.CustomTrustStore;
 import cz.digitalnikontinuita.anep.core.CzechCommercialCATrust;
 import cz.digitalnikontinuita.anep.core.PodepsatOnline;
@@ -139,20 +140,21 @@ public class TrustedCertificatesDialog {
         // identitu podepsaného neověřuje, a důvěřovat jí je rozhodnutí uživatele (31. 10. 2026).
         // Na rozdíl od komerčních autorit jde o kořen: vydávající autorita tu žádná mezi ním
         // a jednorázovým certifikátem není. Viz javadoc PodepsatOnline.
-        Button btnPodepsatOnline = new Button("Vložit kořenový certifikát služby Podepsat.online");
-        btnPodepsatOnline.setOnAction(e -> {
-            CertificateToken podepsatRoot = PodepsatOnline.loadRoot();
-            try {
-                if (podepsatRoot == null) throw new java.io.IOException("certifikát chybí v balíku aplikace");
-                CustomTrustStore.addCertificateBytes(podepsatRoot.getEncoded());
-            } catch (Exception ex) {
-                showError("Certifikát se nepodařilo vložit:\n" + ex.getMessage());
-            }
-            refreshList(list);
-        });
+        Button btnPodepsatOnline = rootButton("Vložit kořenový certifikát služby Podepsat.online",
+                PodepsatOnline::loadRoot, list);
         HBox podepsatOnlineRow = buttonWithExplanation(stage, btnPodepsatOnline,
                 "Vloží kořenový certifikát „SignMaster CA“ (Software602 a.s.), pod nímž služba " +
                 "Podepsat.online vydává jednorázové certifikáty pro zaručené elektronické podpisy. " +
+                "Vkládejte jej jen tehdy, pokud službě důvěřujete. Lze spustit opakovaně — " +
+                "již vložený certifikát se nezdvojí.");
+
+        // Totéž pro službu BankID Sign (1. 11. 2026). Kořen, ne vydávající autorita: tu služba
+        // může obměnit (současná platí do 2029), kdežto kořen kryje i její nástupkyni.
+        Button btnBankId = rootButton("Vložit kořenový certifikát služby BankID Sign",
+                BankIdSign::loadRoot, list);
+        HBox bankIdRow = buttonWithExplanation(stage, btnBankId,
+                "Vloží kořenový certifikát „BankID Document Root CA“ (Bankovní identita, a.s.), " +
+                "pod nímž služba BankID Sign vydává certifikáty pro zaručené elektronické podpisy. " +
                 "Vkládejte jej jen tehdy, pokud službě důvěřujete. Lze spustit opakovaně — " +
                 "již vložený certifikát se nezdvojí.");
 
@@ -164,10 +166,28 @@ public class TrustedCertificatesDialog {
 
         root.getChildren().addAll(hint, list, buttons,
                 new javafx.scene.control.Separator(), bulkImportRow,
-                new javafx.scene.control.Separator(), podepsatOnlineRow);
+                new javafx.scene.control.Separator(), podepsatOnlineRow, bankIdRow);
 
         stage.setScene(new Scene(root));
         stage.showAndWait();
+    }
+
+    /** Tlačítko, které do úložiště vloží přibalený kořen jedné služby. */
+    private static Button rootButton(String text,
+                                     java.util.function.Supplier<CertificateToken> loader,
+                                     ListView<CustomTrustStore.Entry> list) {
+        Button button = new Button(text);
+        button.setOnAction(e -> {
+            CertificateToken serviceRoot = loader.get();
+            try {
+                if (serviceRoot == null) throw new java.io.IOException("certifikát chybí v balíku aplikace");
+                CustomTrustStore.addCertificateBytes(serviceRoot.getEncoded());
+            } catch (Exception ex) {
+                showError("Certifikát se nepodařilo vložit:\n" + ex.getMessage());
+            }
+            refreshList(list);
+        });
+        return button;
     }
 
     /**

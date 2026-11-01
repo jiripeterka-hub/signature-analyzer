@@ -1,6 +1,7 @@
 package cz.digitalnikontinuita.anep.ui;
 
 import java.nio.charset.StandardCharsets;
+import cz.digitalnikontinuita.anep.core.BankIdSign;
 import cz.digitalnikontinuita.anep.core.IdentityDocument;
 
 import java.util.ArrayList;
@@ -181,6 +182,16 @@ class DnUtil {
                 || matches(key, "2.5.4.4", "SURNAME", "SN");
     }
 
+    /** ID osoby z certifikátů BankID Sign — viz {@link BankIdSign#PERSON_ID_OID}. */
+    static boolean isBankIdPersonId(String key) {
+        return matches(key, BankIdSign.PERSON_ID_OID, null, null);
+    }
+
+    /** Výklad k ID osoby, který ukazuje ikona ⓘ vedle hodnoty (znění uživatele 1. 11. 2026). */
+    static final String BANKID_PERSON_ID_NOTE =
+            "Jde o identifikátor osoby, která využila bankovní identitu konkrétní banky. Stejná"
+            + " osoba má pro různé banky různé hodnoty tohoto identifikátoru.";
+
     /** True for the subject serialNumber, which the signer block leaves out. */
     static boolean isSubjectSerialNumber(String key) {
         return matches(key, "2.5.4.5", "SERIALNUMBER", "serialNumber");
@@ -237,6 +248,8 @@ class DnUtil {
             case "1.3.6.1.4.1.311.60.2.1.1"           -> "Sídlo podle rejstříku — obec";
             case "1.3.6.1.4.1.311.60.2.1.2"           -> "Sídlo podle rejstříku — region";
             case "1.3.6.1.4.1.311.60.2.1.3"           -> "Sídlo podle rejstříku — stát";
+            // Identifikátor osoby u konkrétní banky v certifikátech BankID Sign (1. 11. 2026).
+            case BankIdSign.PERSON_ID_OID             -> "ID osoby";
             default -> k;
         };
     }
@@ -282,6 +295,7 @@ class DnUtil {
             case "2.5.4.13"                           -> 90;
             case "2.5.4.45"                           -> 91;
             case "2.5.4.46"                           -> 92;
+            case BankIdSign.PERSON_ID_OID             -> 93;
             default -> 500;
         };
     }

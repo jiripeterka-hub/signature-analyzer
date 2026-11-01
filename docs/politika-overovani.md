@@ -98,6 +98,8 @@ Certifikáty tuzemských komerčních autorit má AnEP přibalené jako **doplň
 
 Stejně je přibalený kořenový certifikát „SignMaster CA“ (Software602 a.s.), pod nímž služba Podepsat.online vydává jednorázové certifikáty pro zaručené elektronické podpisy. Ve výchozím stavu kotvou není; vkládá jej jen uživatel, a to tlačítkem v okně vlastních důvěryhodných certifikátů. Identitu podepisující osoby služba neověřuje (je pouze deklarovaná a ověřená zprávou na zadaný e-mail a kódem v SMS), takže důvěra v tuto autoritu je rozhodnutím ověřovatele.
 
+Stejně je přibalený kořenový certifikát „BankID Document Root CA“ (Bankovní identita, a.s.) služby BankID Sign, pod nímž vydávající autorita „BankID Document CA“ vydává certifikáty pro zaručené elektronické podpisy. Ani ten ve výchozím stavu kotvou není a vkládá jej jen uživatel. Identitu podepisující osoby služba ověřuje skrze její bankovní identitu u banky, kterou certifikát uvádí v položce O předmětu.
+
 ### 5.3 Zvláštní případy kotev
 
 - Je-li kotvou sám podpisový certifikát (seznam jej vede jako identitu služby), neposuzuje se jeho doba platnosti ani revokace; platí, dokud je služba v kladném stavu.

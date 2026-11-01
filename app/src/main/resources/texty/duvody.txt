@@ -655,6 +655,23 @@ zkusenejsi =
   ačkoli identitu podepisujících osob služba neověřuje: je pouze deklarovaná a ověřená jen
   zprávou na zadaný e-mail a kódem v SMS zaslaným na zadané telefonní číslo.
 
+# Zaručený podpis od služby BankID Sign — certifikát vydala autorita BankID Document CA
+# společnosti Bankovní identita. Kořen té autority aplikace nese, ale mezi důvěryhodné ho vkládá
+# jen uživatel. Proklik a odkazy na certifikát jako u Podepsat.online výše.
+[3/bankid-sign]
+problem =
+  Jde o zaručený elektronický podpis od služby BankID Sign, založený na certifikátu, který
+  nevydala kvalifikovaná certifikační autorita, ale vlastní autorita provozovatele služby
+  „{vydavatel}“ (Bankovní identita, a.s.), jež není součástí důvěryhodných seznamů EU. Aplikace
+  proto tuto autoritu ve výchozím nastavení nemá mezi důvěryhodnými a neví, zda může obsahu
+  certifikátu důvěřovat a pracovat s ním.
+# pomoc =   (rada stojí mezi radami pro zkušenější uživatele, jako u Podepsat.online)
+zkusenejsi =
+  Pokud službě BankID Sign důvěřujete, vložte její kořenový certifikát mezi důvěryhodné: v okně
+  Vlastní důvěryhodné certifikáty stiskněte tlačítko „Vložit kořenový certifikát služby BankID
+  Sign“ a ověření opakujte. Důvěra se tím vztáhne na všechny podpisy od této služby; identitu
+  podepisujících osob služba ověřuje skrze jejich bankovní identitu.
+
 # Důvod 9 mluví o čase razítka. Není-li žádný důkaz existence a rozhodným okamžikem
 # zůstává čas ověření, platí místo něj tohle.
 # zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)

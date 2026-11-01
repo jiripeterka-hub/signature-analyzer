@@ -3656,9 +3656,10 @@ public class AdvisorView {
         // U služby Podepsat.online se ví, čí kořen vložit, a rada vede k tlačítku, které ho
         // vloží. Patří mezi rady pro zkušenější, ne do „Co může pomoci“: důvěřovat službě, která
         // identitu neověřuje, je rozhodnutí, které má čtenář udělat vědomě (pokyn uživatele
-        // 31. 10. 2026). Nahrazuje obecné „vyjádřit důvěru příslušnému certifikátu“.
-        if (rn == 3 && isPodepsatOnline(sig)) {
-            String service = ReasonTexts.get("3/podepsat-online", "zkusenejsi");
+        // 31. 10. 2026). Nahrazuje obecné „vyjádřit důvěru příslušnému certifikátu“. Totéž
+        // u služby BankID Sign (1. 11. 2026).
+        if (rn == 3 && serviceSection(sig) != null) {
+            String service = ReasonTexts.get(serviceSection(sig), "zkusenejsi");
             if (service != null) return service;
         }
         if (rn == 21) {
@@ -6990,6 +6991,13 @@ public class AdvisorView {
                         podepsatOnlineNote(sig.getPdfReason())));
                 return block;
             }
+            // U BankID Sign naopak: identitu ověřila banka, a obecná věta „identitu zaručovat
+            // nemusí“ by čtenáře mátla (pokyn uživatele 1. 11. 2026).
+            if (valid && isBankIdSign(sig)) {
+                block.getChildren().add(labelledRichParagraphs("Upozornění:",
+                        bankIdSignNote(DnUtil.dnField(sig.getSignerCertDN(), "2.5.4.10", "O"))));
+                return block;
+            }
             String caveat = ADES_IDENTITY_NOTE + " "
                     + (sig.isCertSelfSigned() ? SELF_SIGNED_NOTE : CA_POLICY_NOTE);
             block.getChildren().add(labelledRow("Upozornění:", caveat, false));
@@ -8037,6 +8045,21 @@ public class AdvisorView {
                 + " a anonymní SIM karta.";
     }
 
+    /**
+     * Upozornění u platného podpisu od služby BankID Sign, místo {@link #ADES_IDENTITY_NOTE}.
+     * Znění dodal uživatel 1. 11. 2026. Banka je položka O předmětu podpisového certifikátu —
+     * tam ji služba zapisuje; chybí-li, věta o konkrétní bance odpadne.
+     */
+    static String bankIdSignNote(String bank) {
+        return "Tento zaručený elektronický podpis pochází od služby BankID Sign. Identita"
+                + " podepsané osoby je zde ověřována skrze její bankovní identitu, a lze ji"
+                + " považovat za spolehlivě ověřenou."
+                + (bank != null && !bank.isBlank()
+                        // V uvozovkách: název banky se tu nesklonňuje („u Česká spořitelna“).
+                        ? " Zde konkrétně bylo ověření provedeno skrze bankovní identitu u „"
+                                + bank + "“." : "");
+    }
+
     /** Continuation of {@link #ADES_IDENTITY_NOTE} for a self-signed certificate. */
     private static final String SELF_SIGNED_NOTE =
             "Tento konkrétní podpis je založen na certifikátu s vlastním podpisem. Tedy takovém,"
@@ -8261,15 +8284,13 @@ public class AdvisorView {
      * nezná a může ji poznat.
      */
     private static String unknownCertProblem(SignatureSummary sig, ResultView.ReasonEntry re) {
-        // Podpis od služby Podepsat.online: vydavatele známe jménem i tím, komu patří, a čtenáři
-        // je víc platné vědět, že jde o vlastní autoritu té služby, než jen její CN.
-        if (isPodepsatOnline(sig)) {
-            String service = ReasonTexts.get("3/podepsat-online", "problem");
-            if (service != null) {
-                String issuer = certIssuerName(sig);
-                return ReasonTexts.fill(service, "{vydavatel}",
-                        issuer != null ? issuer : "SignMaster CA");
-            }
+        // Podpis od služby Podepsat.online či BankID Sign: vydavatele známe jménem i tím, komu
+        // patří, a čtenáři je víc platné vědět, že jde o vlastní autoritu té služby, než jen CN.
+        String section = serviceSection(sig);
+        String issuerName = certIssuerName(sig);
+        if (section != null && issuerName != null) {
+            String service = ReasonTexts.get(section, "problem");
+            if (service != null) return ReasonTexts.fill(service, "{vydavatel}", issuerName);
         }
         // Certifikát s vlastním podpisem vydavatele nemá: v DN stojí podepsaný sám, takže věta
         // „vydala jej autorita …" by jmenovala jeho a zněla by jako doporučení od sebe samého.
@@ -8354,6 +8375,25 @@ public class AdvisorView {
     static boolean isPodepsatOnline(SignatureSummary sig) {
         return !sig.isSeal() && cz.digitalnikontinuita.anep.core.PodepsatOnline
                 .isServiceSignature(sig.getCertIssuerDN(), sig.getPdfReason());
+    }
+
+    /**
+     * Pochází prvek od služby BankID Sign? Viz {@link
+     * cz.digitalnikontinuita.anep.core.BankIdSign#isServiceSignature}.
+     */
+    static boolean isBankIdSign(SignatureSummary sig) {
+        return !sig.isSeal() && cz.digitalnikontinuita.anep.core.BankIdSign
+                .isServiceSignature(sig.getCertIssuerDN());
+    }
+
+    /**
+     * Oddíl náhradního znění důvodu 3 pro podpis od podepisovací služby s vlastní autoritou,
+     * nebo {@code null}, nejde-li o žádnou ze služeb, jejichž kořen aplikace nese.
+     */
+    static String serviceSection(SignatureSummary sig) {
+        if (isPodepsatOnline(sig)) return "3/podepsat-online";
+        if (isBankIdSign(sig)) return "3/bankid-sign";
+        return null;
     }
 
     static String certIssuerName(SignatureSummary sig) {

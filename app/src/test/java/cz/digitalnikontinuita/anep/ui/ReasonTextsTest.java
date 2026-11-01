@@ -141,6 +141,7 @@ class ReasonTextsTest {
         require(missing, "25/bez-certifikatu", "problem");
         require(missing, "3/bez-vydavatele", "problem");
         require(missing, "3/podepsat-online", "problem", "zkusenejsi");
+        require(missing, "3/bankid-sign", "problem", "zkusenejsi");
         require(missing, "9/bez-dukazu", "problem");
         require(missing, "15/vyrazena-sluzba", "dodatek-s-duvodem-21", "dodatek-bez-duvodu-21");
         require(missing, "21/ramec", "problem-uvod", "problem-zaver");
@@ -177,6 +178,7 @@ class ReasonTextsTest {
         expected.add("25/bez-certifikatu");
         expected.add("3/bez-vydavatele");
         expected.add("3/podepsat-online");
+        expected.add("3/bankid-sign");
         expected.add("9/bez-dukazu");
         expected.add("15/vyrazena-sluzba");
         expected.add("21/ramec");

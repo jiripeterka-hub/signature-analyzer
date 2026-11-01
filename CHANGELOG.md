@@ -68,6 +68,15 @@ pro soupis změn ke každé nové vydané verzi.
   služby vydával za někoho jiného. Vysvětlení k oběma tlačítkům pro vložení certifikátů
   (komerčních autorit i služby Podepsat.online) už nestojí pod nimi, ale otevírá se ve vlastním
   okně odkazem „Co se stane?“ vpravo od tlačítka.
+- **Podpisy od služby BankID Sign.** Obdobně AnEP pozná zaručený elektronický podpis od služby
+  BankID Sign, jejíž autorita („BankID Document CA“, Bankovní identita, a.s.) také není
+  v důvěryhodných seznamech EU. Karta Analýzy u neznámé platnosti vysvětlí, o co jde, a v radě
+  pro zkušenější uživatele nabídne vložení kořenového certifikátu služby mezi důvěryhodné;
+  v okně Vlastní důvěryhodné certifikáty k tomu přibylo tlačítko „Vložit kořenový certifikát
+  služby BankID Sign“ (ve výchozím stavu certifikát mezi důvěryhodnými není). U platného
+  podpisu řádek „Upozornění“ uvádí, že identita podepsané osoby byla ověřena skrze její
+  bankovní identitu, a jmenuje banku z certifikátu. Rozšířený přehled vypisuje v bloku
+  Podepsaná osoba identifikátor osoby u dané banky jako „ID osoby“, s vysvětlením pod ikonou ⓘ.
 - **Elektronické autorizační razítko.** U podpisu, jehož certifikát má v organizační jednotce
   (OU) „Elektronické autorizační razítko“ (vydávají je ČKA a ČKAIT), karta Analýzy nově
   obsahuje rozbalovací blok „Elektronické autorizační razítko“; u platného podpisu stojí před

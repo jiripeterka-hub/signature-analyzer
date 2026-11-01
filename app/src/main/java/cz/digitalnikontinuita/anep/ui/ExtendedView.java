@@ -1088,7 +1088,9 @@ public class ExtendedView {
         String cnLabel = signerTitle(sig, isTs) + ":";
         // Řádky se sbírají s pořadovým číslem a řadí až nakonec, aby se mezi položky DN dal
         // vložit i údaj, který v DN není — e-mail z rozšíření — a přistál tam, kam patří.
-        record Item(int rank, String label, String value) { }
+        record Item(int rank, String label, String value, String note) {
+            Item(int rank, String label, String value) { this(rank, label, value, null); }
+        }
         List<Item> items = new java.util.ArrayList<>();
         boolean cnShown = false;
         boolean emailShown = false;
@@ -1103,6 +1105,11 @@ public class ExtendedView {
             } else if (DnUtil.isOrganizationIdentifier(a.key())) {
                 String[] org = DnUtil.organizationIdentifierEntry(a.value());
                 if (org != null) items.add(new Item(rank, org[0] + ":", org[1]));
+            } else if (DnUtil.isBankIdPersonId(a.key())) {
+                // Holé OID by čtenáři neřeklo nic; ikona ⓘ vysvětlí, proč má táž osoba
+                // u jiné banky jiné ID (pokyn uživatele 1. 11. 2026).
+                items.add(new Item(rank, DnUtil.label(a.key()) + ":", a.value(),
+                        DnUtil.BANKID_PERSON_ID_NOTE));
             } else {
                 items.add(new Item(rank, DnUtil.label(a.key()) + ":", a.value()));
                 if (DnUtil.isEmail(a.key())) emailShown = true;
@@ -1129,7 +1136,9 @@ public class ExtendedView {
         // Stabilní řazení: položky téhož druhu — typicky několik OU — si mezi sebou pořadí
         // z certifikátu podrží, protože v něm nesou strukturu, kterou nemá co přerovnávat.
         items.sort(java.util.Comparator.comparingInt(Item::rank));
-        for (Item item : items) body.getChildren().add(row(item.label(), item.value()));
+        for (Item item : items) {
+            body.getChildren().add(rowWithTooltip(item.label(), item.value(), item.note()));
+        }
         return body;
     }
 

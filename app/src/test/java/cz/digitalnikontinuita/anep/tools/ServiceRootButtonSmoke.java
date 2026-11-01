@@ -1,5 +1,6 @@
 package cz.digitalnikontinuita.anep.tools;
 
+import cz.digitalnikontinuita.anep.core.BankIdSign;
 import cz.digitalnikontinuita.anep.core.CustomTrustStore;
 import cz.digitalnikontinuita.anep.core.PodepsatOnline;
 import cz.digitalnikontinuita.anep.ui.TrustedCertificatesDialog;
@@ -15,27 +16,35 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Stiskne v okně Vlastní důvěryhodné certifikáty tlačítko „Vložit kořenový certifikát služby
- * Podepsat.online“ a vypíše, zda je kořen potom v úložišti — dvakrát, aby bylo vidět, že se
- * nezdvojí.
+ * Stiskne v okně Vlastní důvěryhodné certifikáty tlačítka, která vkládají kořen podepisovací
+ * služby (Podepsat.online, BankID Sign), a vypíše, zda je kořen potom v úložišti — každé
+ * dvakrát, aby bylo vidět, že se nezdvojí. Pak otevře a zavře všechna okna „Co se stane?“.
  *
  * <p><b>Zapisuje do vlastního úložiště</b> ({@code %APPDATA%\SignatureAnalyzer\trusted-certs}).
  * Pouštět s {@code APPDATA} přesměrovaným na kopii, ne nad skutečnými daty uživatele.
  */
-public final class PodepsatOnlineButtonSmoke extends Application {
+public final class ServiceRootButtonSmoke extends Application {
+
+    private record Service(String buttonText, String rootSha256) { }
+
+    private static final List<Service> SERVICES = List.of(
+            new Service("Podepsat.online", PodepsatOnline.ROOT_SHA256),
+            new Service("BankID Sign", BankIdSign.ROOT_SHA256));
 
     @Override
     public void start(Stage stage) {
-        System.out.println("před stiskem: " + count());
         Platform.runLater(() -> {
             try {
-                Button b = find();
-                System.out.println("tlačítko: " + (b != null ? b.getText() : "NENALEZENO"));
-                if (b != null) {
+                for (Service service : SERVICES) {
+                    System.out.println(service.buttonText() + " — před stiskem: "
+                            + count(service.rootSha256()));
+                    Button b = find(service.buttonText());
+                    System.out.println("  tlačítko: " + (b != null ? b.getText() : "NENALEZENO"));
+                    if (b == null) continue;
                     b.fire();
-                    System.out.println("po 1. stisku: " + count());
+                    System.out.println("  po 1. stisku: " + count(service.rootSha256()));
                     b.fire();
-                    System.out.println("po 2. stisku: " + count());
+                    System.out.println("  po 2. stisku: " + count(service.rootSha256()));
                 }
                 // Odkazy „Co se stane?“: každý otevře vlastní okno s vysvětlením. Zavře se
                 // dalším runLater, který poběží uvnitř vnořené smyčky showAndWait.
@@ -63,19 +72,30 @@ public final class PodepsatOnlineButtonSmoke extends Application {
         Platform.exit();
     }
 
-    private static long count() {
+    private static long count(String sha256) {
         return CustomTrustStore.listCertificates().stream()
-                .filter(e -> PodepsatOnline.ROOT_SHA256.equals(java.util.HexFormat.of().formatHex(
+                .filter(e -> sha256.equals(java.util.HexFormat.of().formatHex(
                         e.certificate().getDigest(
                                 eu.europa.esig.dss.enumerations.DigestAlgorithm.SHA256))))
                 .count();
     }
 
-    private static Button find() {
+    private static Button find(String textFragment) {
         for (Window w : Window.getWindows()) {
             if (w.getScene() == null) continue;
-            Button b = find(w.getScene().getRoot());
+            Button b = find(w.getScene().getRoot(), textFragment);
             if (b != null) return b;
+        }
+        return null;
+    }
+
+    private static Button find(Node n, String textFragment) {
+        if (n instanceof Button b && b.getText().contains(textFragment)) return b;
+        if (n instanceof Parent p) {
+            for (Node c : p.getChildrenUnmodifiable()) {
+                Button b = find(c, textFragment);
+                if (b != null) return b;
+            }
         }
         return null;
     }
@@ -93,17 +113,6 @@ public final class PodepsatOnlineButtonSmoke extends Application {
         if (n instanceof Parent p) {
             for (Node c : p.getChildrenUnmodifiable()) links(c, out);
         }
-    }
-
-    private static Button find(Node n) {
-        if (n instanceof Button b && b.getText().contains("Podepsat.online")) return b;
-        if (n instanceof Parent p) {
-            for (Node c : p.getChildrenUnmodifiable()) {
-                Button b = find(c);
-                if (b != null) return b;
-            }
-        }
-        return null;
     }
 
     public static void main(String[] args) {
