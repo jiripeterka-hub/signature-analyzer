@@ -280,7 +280,8 @@ def kapitola_4(doc):
     nadpis2(doc, '4.2', 'Rozšířený přehled')
     odstavec(doc, 'Totéž v devíti pojmenovaných rozbalovacích blocích:')
     odrazky(doc, [
-        'podepsaná osoba (u pečeti pečetící osoba, u razítka vydavatel razítka),',
+        'podepsaná osoba (u pečeti pečetící osoba, u razítka vydavatel razítka)'
+        '==; u podpisu od služby BankID Sign uvádí blok podepsané osoby i ID osoby — identifikátor osoby u konkrétní banky, s výkladem pod ikonou ⓘ==,',
         'vizualizace podpisu,',
         'důvody podpisu — tedy to, co podepsaná osoba uvedla jako důvod, místo a kontakt,',
         'certifikát,',
@@ -313,7 +314,9 @@ def kapitola_4(doc):
                   'tyto bloky:')
     tabulka(doc,
             ['Blok', 'Co v něm stojí'],
-            [['Formát podpisu',
+            [['==Jde o==',
+              '==Druh prvku a jeho výklad; jde-li o platný kvalifikovaný či uznávaný podpis (pečeť), i to, že postačuje pro podání vůči OVM podle § 6 (u pečeti § 9) zákona č. 297/2016 Sb.; nejde-li o dokument ve formátu PDF, i upozornění, že většina OVM přijímá podepsaná podání jen v PDF.=='],
+             ['Formát podpisu',
               'Druh formátu, zapouzdření, úroveň a odpověď na otázku, jestli jde o referenční '
               'formát podle prováděcího nařízení Komise (EU) 2026/248.'],
              ['Zjištěné důvody a doporučení',
@@ -338,7 +341,9 @@ def kapitola_4(doc):
               'U podpisu, který podepisuje jiný podpis, se řekne čí a co z toho plyne.'],
              ['Kde je šance na úspěšné ověření',
               'Kterým dalším nástrojům se dokument ověřit podaří a kterým ne — v možnosti, '
-              'ne v jistotě.']],
+              'ne v jistotě.'],
+             ['==Podpisy od podepisovacích služeb==',
+              '==U zaručeného podpisu od služby Podepsat.online nebo BankID Sign karta pozná, odkud pochází. Při neznámé platnosti vysvětlí, že autorita služby není v evropských seznamech, a mezi radami pro zkušenější nabídne vložení jejího kořenového certifikátu s proklikem do okna vlastních důvěryhodných certifikátů. U platného podpisu řádek Upozornění řekne, jak služba ověřila identitu podepsané osoby: u Podepsat.online jen zprávou na e-mail a SMS (s adresou a číslem z důvodu podpisu), u BankID Sign bankovní identitou konkrétní banky.==']],
             [5.0, 11.6])
     odstavec(doc, 'V expertním módu stojí nad kartami ještě bloky o dokumentu jako celku: '
                   '**Shoda s normou PDF/A**, **Co v souboru přibylo po podpisu** (přibyla-li '
@@ -633,7 +638,7 @@ def kapitola_7(doc):
         '**Vlastní kotvy důvěry** — certifikáty, které evropské seznamy neuvádějí, například '
         'interní firemní autorita. Jedním tlačítkem se vloží vydávající autority tuzemských '
         'komerčních linek (I.CA, PostSignum, eIdentity, NCA, KB); doplnit se dá libovolná '
-        'další. Aplikace vždy přizná, že závěr stojí na kotvě, kterou jiný nástroj nemá odkud '
+        'další. ==Dalšími tlačítky se na žádost vloží kořenové certifikáty podepisovacích služeb Podepsat.online a BankID Sign; ve výchozím stavu mezi důvěryhodnými nejsou.== Aplikace vždy přizná, že závěr stojí na kotvě, kterou jiný nástroj nemá odkud '
         'vzít.',
     ])
     odstavec(doc, 'Co ověření z vlastních zásob opravdu použilo, se při zachování ověřitelnosti '
