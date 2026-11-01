@@ -12,6 +12,7 @@
 
 .PARAMETER AppVersion  Ciselna verze do app-image a instalatoru. Windows Installer
                        prijima jen major.minor.build, takze tudy nesmi projit slovo.
+                       Nevyplnena = <version> z app\pom.xml.
 .PARAMETER Release     Jmeno vydani do NAZVU balicku ("1.0"). Nevyplnene znamena
                        totez co AppVersion, tedy chovani pred 22. 9. 2026. Co vidi
                        uzivatel v okne "O aplikaci", rika <anep.release> v POMu.
@@ -31,7 +32,7 @@
   co uz je hotove a overene.
 #>
 param(
-    [string]$AppVersion = "1.0.0",
+    [string]$AppVersion = "",
     [string]$Release = "",
     [switch]$Console,
     [switch]$Installer
@@ -45,6 +46,16 @@ $AppJar    = "signature-analyzer.jar"   # thin jar: only app classes
 # Resolve absolute paths so Maven -DoutputDirectory doesn't resolve relative
 # to the module basedir (app/) instead of the repo root.
 $Root      = (Get-Location).Path
+# Nevyplnena -AppVersion se bere z <version> v app\pom.xml, ne z pevne hodnoty ve skriptu
+# (do 1. 11. 2026 tu stalo "1.0.0"). Na cisle zavisi, zda instalator nahradi starsi verzi:
+# Windows Installer odstrani predchozi instalaci jen tehdy, je-li nova verze vyssi. Skript
+# spusteny rucne se starym cislem by vyrobil instalator, ktery verzi 1.0.0 nenahradi.
+# Overeno 1. 11. 2026 na AnEP-1.0.msi: tabulka Upgrade odstranuje verze pod vlastnim
+# cislem (s pevnym --win-upgrade-uuid nize), RemoveExistingProducts bezi pred instalaci.
+if ([string]::IsNullOrWhiteSpace($AppVersion)) {
+    $AppVersion = ([xml](Get-Content (Join-Path $Root "app\pom.xml") -Encoding UTF8)).project.version
+    if (-not $AppVersion) { Write-Error "Nelze precist version z app\pom.xml"; exit 1 }
+}
 $BuildDir  = Join-Path $Root "app\target"
 $ClassDir  = Join-Path $BuildDir "classes"
 $InputDir  = Join-Path $BuildDir "dist-input"

@@ -114,6 +114,7 @@ final class AboutDialog {
         content.setMaxWidth(WIDTH);
 
         content.getChildren().add(header());
+        content.getChildren().add(newVersionBlock());
 
         // Účel a záruka stojí spolu v jednom zvýrazněném bloku hned pod hlavičkou. Patří
         // k sobě — obojí říká, co od aplikace čekat — a jako jeden blok se čtou najednou
@@ -173,6 +174,77 @@ final class AboutDialog {
         HBox.setHgrow(text, Priority.ALWAYS);
         box.getChildren().add(text);
         return box;
+    }
+
+    /**
+     * Odkaz „Zkontrolovat novou verzi“ a pod ním výsledek kontroly.
+     *
+     * <p>Kontrola běží až na stisk a mimo vlákno JavaFX — stránka může odpovídat pomalu nebo
+     * vůbec a okno nesmí mezitím zamrznout. Při kladném výsledku se jen nabídne odkaz na stránku
+     * ke stažení; stažení a instalace jsou na uživateli (viz {@link NewVersionCheck}).
+     */
+    private static VBox newVersionBlock() {
+        VBox box = new VBox(4);
+        Hyperlink check = new Hyperlink("Zkontrolovat, zda je k dispozici nová verze");
+        check.setStyle("-fx-text-fill: #0a5ca8; -fx-padding: 0; -fx-border-width: 0;");
+        Tooltip.install(check, new Tooltip("Zjistí na stránce aplikace číslo poslední vydané"
+                + " verze. Nic se nestahuje ani neinstaluje."));
+        VBox result = new VBox(4);
+        box.getChildren().addAll(new HBox(check), result);
+
+        check.setOnAction(e -> {
+            check.setDisable(true);
+            result.getChildren().setAll(paragraph("Zjišťuji…"));
+            String current = version();
+            Thread worker = new Thread(() -> {
+                NewVersionCheck.Latest latest;
+                try {
+                    latest = NewVersionCheck.fetch(current);
+                } catch (Exception ex) {
+                    latest = null;
+                }
+                NewVersionCheck.Latest found = latest;
+                javafx.application.Platform.runLater(() -> {
+                    result.getChildren().setAll(newVersionResult(current, found));
+                    check.setDisable(false);
+                });
+            }, "anep-nova-verze");
+            worker.setDaemon(true);
+            worker.start();
+        });
+        return box;
+    }
+
+    /** Výsledek kontroly k vypsání; {@code latest} je {@code null}, když se zjistit nepodařil. */
+    static java.util.List<javafx.scene.Node> newVersionResult(String current,
+                                                             NewVersionCheck.Latest latest) {
+        java.util.List<javafx.scene.Node> out = new java.util.ArrayList<>();
+        Hyperlink download = link(NewVersionCheck.DOWNLOAD_URL, NewVersionCheck.DOWNLOAD_URL);
+        if (latest == null) {
+            out.add(paragraph("Zjistit to se nepodařilo: stránka aplikace neodpověděla nebo"
+                    + " údaj o verzi neobsahuje. Novou verzi lze vyhledat přímo na stránce"));
+            out.add(new HBox(download));
+            return out;
+        }
+        String when = latest.date() == null ? ""
+                : " z " + latest.date().format(
+                        java.time.format.DateTimeFormatter.ofPattern("d. M. yyyy"));
+        if (current == null) {
+            // Spuštěno z přeložených tříd: vlastní verzi neznáme, porovnat není s čím.
+            out.add(paragraph("Poslední vydaná verze je " + latest.version() + when + "."));
+            out.add(new HBox(download));
+        } else if (NewVersionCheck.compare(latest.version(), current) > 0) {
+            Label news = new Label("K dispozici je nová verze " + latest.version() + when + ".");
+            news.setStyle("-fx-text-fill: #111111; -fx-font-weight: bold;");
+            news.setWrapText(true);
+            out.add(news);
+            out.add(row("Ke stažení", download));
+            out.add(paragraph("Instalátor nové verze tu dosavadní sám odinstaluje;"
+                    + " nastavení zůstane zachováno."));
+        } else {
+            out.add(paragraph("Používáte nejnovější verzi."));
+        }
+        return out;
     }
 
     /**

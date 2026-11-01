@@ -164,6 +164,15 @@ pro soupis změn ke každé nové vydané verzi.
   a předala k ověření. Nově prohlížeč takovou položku nenačte vůbec, uvede její skutečnou
   velikost a upozorní, že ji je třeba rozbalit z archivu jiným programem.
 
+### O aplikaci
+
+- **Kontrola nové verze.** Okno „O aplikaci“ (v Nastavení) má nově odkaz „Zkontrolovat, zda je
+  k dispozici nová verze“. Teprve po jeho stisku se AnEP zeptá stránky aplikace na číslo
+  poslední vydané verze; sama od sebe se nikam neozývá, ani při spuštění. Je-li vydaná verze
+  novější, nabídne odkaz na stránku https://www.bajecnysvet.cz/anep/ziskat.php. Nic sama
+  nestahuje ani neinstaluje: stažení i instalace jsou na uživateli. Instalátor nové verze
+  tu dosavadní sám odinstaluje; nastavení zůstane zachováno.
+
 ### Instalační balíčky
 
 - **Linuxová verze: položka v nabídce aplikací.** Přenosný archiv pro Linux nově obsahuje
