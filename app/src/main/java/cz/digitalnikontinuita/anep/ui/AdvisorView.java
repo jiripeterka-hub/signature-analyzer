@@ -6983,24 +6983,26 @@ public class AdvisorView {
         // cases are deliberately excluded: there the identity is vouched for by a qualified
         // certificate, so the caveat below would be misleading.
         if ("zaručený elektronický podpis".equals(simplified)) {
-            // U platného podpisu od služby Podepsat.online se ví, jak identitu „ověřila“, a to
-            // čtenáři řekne víc než obecná věta o certifikační politice (pokyn uživatele
-            // 31. 10. 2026). Jen u platného: u neznámé platnosti o tom mluví důvod 3.
+            String caveat;
             if (valid && isPodepsatOnline(sig)) {
-                block.getChildren().add(labelledRichParagraphs("Upozornění:",
-                        podepsatOnlineNote(sig.getPdfReason())));
-                return block;
+                // U platného podpisu od služby Podepsat.online se ví, jak identitu „ověřila“, a to
+                // čtenáři řekne víc než obecná věta o certifikační politice (pokyn uživatele
+                // 31. 10. 2026). Jen u platného: u neznámé platnosti o tom mluví důvod 3.
+                caveat = podepsatOnlineNote(sig.getPdfReason());
+            } else if (valid && isBankIdSign(sig)) {
+                // U BankID Sign naopak: identitu ověřila banka, a obecná věta „identitu zaručovat
+                // nemusí“ by čtenáře mátla (pokyn uživatele 1. 11. 2026).
+                caveat = bankIdSignNote(DnUtil.dnField(sig.getSignerCertDN(), "2.5.4.10", "O"));
+            } else {
+                caveat = ADES_IDENTITY_NOTE + " "
+                        + (sig.isCertSelfSigned() ? SELF_SIGNED_NOTE : CA_POLICY_NOTE);
             }
-            // U BankID Sign naopak: identitu ověřila banka, a obecná věta „identitu zaručovat
-            // nemusí“ by čtenáře mátla (pokyn uživatele 1. 11. 2026).
-            if (valid && isBankIdSign(sig)) {
-                block.getChildren().add(labelledRichParagraphs("Upozornění:",
-                        bankIdSignNote(DnUtil.dnField(sig.getSignerCertDN(), "2.5.4.10", "O"))));
-                return block;
-            }
-            String caveat = ADES_IDENTITY_NOTE + " "
-                    + (sig.isCertSelfSigned() ? SELF_SIGNED_NOTE : CA_POLICY_NOTE);
-            block.getChildren().add(labelledRow("Upozornění:", caveat, false));
+            // Protějšek věty o podání u uznávaných a kvalifikovaných podpisů, s opačným
+            // významem (pokyn uživatele 1. 11. 2026): § 6 zákona č. 297/2016 Sb. žádá pro
+            // podání fyzické osoby uznávaný podpis, a zaručený jím není. Jen u platného — jako
+            // ona věta u uznávaných a kvalifikovaných.
+            if (valid) caveat += "\n\n" + noSubmissionNote();
+            block.getChildren().add(labelledRichParagraphs("Upozornění:", caveat));
         }
         return block;
     }
@@ -7903,11 +7905,22 @@ public class AdvisorView {
      */
     private static String submissionNote(String subject, String actor, int paragraph,
                                          boolean pdfDocument) {
-        return subject + " pro podání (" + actor + ") vůči OVM v elektronické podobě (dle ["
-                + "§ " + paragraph + " zákona č. 297/2016 Sb.](https://www.zakonyprolidi.cz/cs/2016-297#p"
-                + paragraph + "))."
+        return subject + " pro podání (" + actor + ") vůči OVM v elektronické podobě (dle "
+                + act297Link(paragraph) + ")."
                 + (pdfDocument ? "" : " Většina OVM ale přijímá elektronicky podepsaná podání jen"
                         + " v datovém formátu PDF.");
+    }
+
+    /** Odkaz „§ N zákona č. 297/2016 Sb.“ na znění zákona. */
+    private static String act297Link(int paragraph) {
+        return "[§ " + paragraph + " zákona č. 297/2016 Sb.](https://www.zakonyprolidi.cz/cs/2016-297#p"
+                + paragraph + ")";
+    }
+
+    /** Věta pod Upozorněním u platného zaručeného podpisu; viz {@link #typeBlock}. */
+    static String noSubmissionNote() {
+        return "Tento podpis **nepostačuje** pro podání (úkon fyzické osoby) vůči OVM"
+                + " v elektronické podobě (dle " + act297Link(6) + ").";
     }
 
     /**

@@ -54,6 +54,9 @@ pro soupis změn ke každé nové vydané verzi.
   přijímá elektronicky podepsaná podání jen ve formátu PDF. U platné
   kvalifikované či uznávané elektronické pečeti stejně, jen jde o úkon právnické osoby podle
   § 9 téhož zákona. Paragraf je odkazem na znění zákona.
+  U platného zaručeného elektronického podpisu naopak řádek „Upozornění“ nově končí větou,
+  že tento podpis pro podání (úkon fyzické osoby) vůči OVM podle § 6 téhož zákona
+  nepostačuje.
 - **Podpisy od služby Podepsat.online.** AnEP pozná zaručený elektronický podpis vytvořený
   službou Podepsat.online. Ta podepisuje certifikátem od vlastní, nekvalifikované autority
   provozovatele („SignMaster CA“, Software602 a.s.), která není v důvěryhodných seznamech EU,
