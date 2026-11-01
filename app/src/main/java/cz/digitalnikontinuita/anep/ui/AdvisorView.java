@@ -2361,6 +2361,7 @@ public class AdvisorView {
                 + gendered(sig, "podpis je platný", "pečeť je platná", "razítko je platné") + ".";
         card.getChildren().add(coloredHeader(headerMsg, "#1a7a1a", "#ffffff"));
         addCounterSignatureBlock(card, sig);
+        addAuthorizationStampBlock(card, sig);
         addLegalEffectsBlock(card, sig);
         addCertificationBlock(card, sig);
         addPdfLockBlock(card, sig);
@@ -2878,6 +2879,7 @@ public class AdvisorView {
         card.getChildren().add(typeBlock(sig, header, "#cc0000", false, false));
         card.getChildren().add(coloredHeader(headerMsg, "#cc0000", "#ffffff"));
         addCounterSignatureBlock(card, sig);
+        addAuthorizationStampBlock(card, sig);
         addCertificationBlock(card, sig);
         addPdfLockBlock(card, sig);
         addValidationCourseBlock(card, sig, "TOTAL_FAILED");
@@ -2955,6 +2957,7 @@ public class AdvisorView {
         card.getChildren().add(typeBlock(sig, header, "#9a6700", false, false));
         card.getChildren().add(coloredHeader(headerMsg, "#9a6700", "#ffffff"));
         addCounterSignatureBlock(card, sig);
+        addAuthorizationStampBlock(card, sig);
         addCertificationBlock(card, sig);
         addPdfLockBlock(card, sig);
 
@@ -7113,6 +7116,134 @@ public class AdvisorView {
                 + " o změnách, které v dokumentu přibyly po něm."));
         card.getChildren().add(collapsibleBlock("Protipodpis (kontrasignatura)", block, false));
         card.getChildren().add(blockSeparator());
+    }
+
+    // -------------------------------------------------------------------------
+    // „Elektronické autorizační razítko" — § 13 odst. 3 písm. b) zákona č. 360/1992 Sb.
+    // -------------------------------------------------------------------------
+
+    private static final String URL_ACT_360_1992_S13 =
+            "https://www.zakonyprolidi.cz/cs/1992-360#p13-3-b";
+
+    /**
+     * Blok o elektronickém autorizačním razítku autorizovaného architekta nebo inženýra.
+     *
+     * <p>Staví se u každého prvku, jehož podpisový certifikát nese OU „Elektronické autorizační
+     * razítko“, a na kartě se kterýmkoli verdiktem: zda podpis požadavky na razítko splňuje,
+     * je otázka i u neplatného podpisu — odpověď pak zní „nesplňuje“ a čtenář vidí proč.
+     * Na kartě platného podpisu stojí před blokem o účincích úředně ověřeného podpisu
+     * (zadání uživatele 1. 11. 2026).
+     *
+     * <p>Kvalifikované razítko se hledá mezi razítky, která podpis kryjí — razítkem podpisu,
+     * dokumentovým a archivním. Razítko obsahu ne: vzniká před podpisem a o podpisu nic
+     * nedokládá.
+     */
+    private static void addAuthorizationStampBlock(VBox card, SignatureSummary sig) {
+        if ("TimeStampToken".equals(sig.getFormat())) return;
+        AuthorizationStamp stamp = AuthorizationStamp.of(sig.getSignerCertDN());
+        if (stamp == null) return;
+        card.getChildren().add(collapsibleBlock("Elektronické autorizační razítko",
+                authorizationStampBlock(sig, stamp), false));
+        card.getChildren().add(blockSeparator());
+    }
+
+    private static VBox authorizationStampBlock(SignatureSummary sig, AuthorizationStamp stamp) {
+        VBox block = new VBox(8);
+        block.setPadding(new Insets(8, 12, 10, 12));
+
+        String indication = displayedIndication(sig);
+        boolean valid = "TOTAL_PASSED".equals(indication);
+        String simplified = sig.getLegalType() == null || sig.getLegalType().isBlank()
+                ? null : ExtendedView.simplifyLegalType(sig.getLegalType());
+        boolean qes = valid && "kvalifikovaný elektronický podpis".equals(simplified);
+
+        SignatureSummary.TimestampEntry qts = sig.getAllTimestamps().stream()
+                .filter(t -> !"content".equals(t.tsKind()))
+                .filter(t -> t.passed() && t.qualified())
+                .findFirst().orElse(null);
+        boolean anyCovering = sig.getAllTimestamps().stream()
+                .anyMatch(t -> !"content".equals(t.tsKind()));
+
+        boolean met = qes && qts != null && stamp.contentComplete();
+
+        block.getChildren().add(richParagraph(
+                "Certifikát, na kterém je podpis založen, je vydán pro elektronické autorizační"
+                + " razítko. Tím se podle [§ 13 odst. 3 písm. b)](" + URL_ACT_360_1992_S13
+                + ") zákona č. 360/1992 Sb. rozumí kvalifikovaný elektronický podpis autorizované"
+                + " osoby s kvalifikovaným elektronickým časovým razítkem, který obsahuje její"
+                + " jméno, číslo, pod nímž je zapsána v seznamu autorizovaných osob vedeném"
+                + " Komorou, obor, popřípadě specializaci autorizace, a označení Komory."));
+        block.getChildren().add(richParagraph(met
+                ? "Tento podpis požadavky na elektronické autorizační razítko **splňuje**:"
+                : "Tento podpis požadavky na elektronické autorizační razítko **nesplňuje**:"));
+
+        String sigReq;
+        if (qes) {
+            sigReq = "Kvalifikovaný elektronický podpis: **splněno** — jde o platný"
+                    + " kvalifikovaný elektronický podpis.";
+        } else if ("TOTAL_FAILED".equals(indication)) {
+            sigReq = "Kvalifikovaný elektronický podpis: **nesplněno** — podpis je neplatný.";
+        } else if (!valid) {
+            sigReq = "Kvalifikovaný elektronický podpis: **nesplněno** — platnost podpisu se"
+                    + " nepodařilo ověřit, zůstává neznámá.";
+        } else {
+            sigReq = "Kvalifikovaný elektronický podpis: **nesplněno** — nejde o kvalifikovaný"
+                    + " elektronický podpis" + (simplified != null ? ", nýbrž o " + simplified : "")
+                    + ".";
+        }
+        block.getChildren().add(bulletParagraph(sigReq));
+
+        String tsReq;
+        if (qts != null) {
+            tsReq = "Kvalifikované elektronické časové razítko: **splněno** — razítko z "
+                    + TimeUtil.format(qts.time())
+                    + (qts.issuer() != null && !qts.issuer().isBlank()
+                            ? ", vydala " + qts.issuer() : "")
+                    + ".";
+        } else if (anyCovering) {
+            tsReq = "Kvalifikované elektronické časové razítko: **nesplněno** — podpis časové"
+                    + " razítko nese, ale žádné z nich se nepodařilo ověřit jako platné"
+                    + " kvalifikované elektronické časové razítko.";
+        } else {
+            tsReq = "Kvalifikované elektronické časové razítko: **nesplněno** — podpis není"
+                    + " opatřen žádným časovým razítkem.";
+        }
+        block.getChildren().add(bulletParagraph(tsReq));
+
+        // Povinné údaje stojí rovnou s hodnotou; zvláštní výpis týchž údajů pod hodnocením by je
+        // jen opakoval (připomínka uživatele 1. 11. 2026).
+        block.getChildren().add(bulletParagraph(presence("Jméno autorizované osoby",
+                stamp.name(), "položka CN")));
+        String numberReq = presence("Číslo, pod nímž je osoba zapsána v seznamu autorizovaných"
+                + " osob", stamp.number(), "druhá položka OU");
+        // Tvar čísla se hlásí, ale požadavek nerozhoduje: zákon počet číslic nepředepisuje,
+        // jen se ve vzorcích ČKA a ČKAIT drží.
+        Boolean fits = stamp.numberFitsChamber();
+        if (Boolean.FALSE.equals(fits)) {
+            AuthorizationStamp.Chamber c = stamp.knownChamber();
+            numberReq += " Neobvyklý tvar: čísla autorizace " + c.abbreviation + " mívají "
+                    + c.numberDigits + " číslic.";
+        }
+        block.getChildren().add(bulletParagraph(numberReq));
+        block.getChildren().add(bulletParagraph(presence("Obor, popřípadě specializace",
+                stamp.fields(), "položka title")));
+        block.getChildren().add(bulletParagraph(presence("Označení Komory",
+                stamp.chamber(), "položka O")));
+
+        if (stamp.chamberId() != null) {
+            block.getChildren().add(richParagraph(
+                    "V certifikátu jsou dále uvedeny tyto údaje:"));
+            block.getChildren().add(bulletParagraph(
+                    "IČO Komory: **" + stamp.chamberId() + "** (položka organizationIdentifier)"));
+        }
+        return block;
+    }
+
+    /** Řádek požadavku na údaj v certifikátu: jeho hodnota, nebo že chybí, a kde se hledal. */
+    private static String presence(String what, String value, String where) {
+        return value != null
+                ? what + ": **splněno** — **" + value + "** (" + where + ")."
+                : what + ": **nesplněno** — v certifikátu chybí (" + where + ").";
     }
 
     private static void addLegalEffectsBlock(VBox card, SignatureSummary sig) {

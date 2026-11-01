@@ -68,6 +68,17 @@ pro soupis změn ke každé nové vydané verzi.
   služby vydával za někoho jiného. Vysvětlení k oběma tlačítkům pro vložení certifikátů
   (komerčních autorit i služby Podepsat.online) už nestojí pod nimi, ale otevírá se ve vlastním
   okně odkazem „Co se stane?“ vpravo od tlačítka.
+- **Elektronické autorizační razítko.** U podpisu, jehož certifikát má v organizační jednotce
+  (OU) „Elektronické autorizační razítko“ (vydávají je ČKA a ČKAIT), karta Analýzy nově
+  obsahuje rozbalovací blok „Elektronické autorizační razítko“; u platného podpisu stojí před
+  blokem o účincích úředně ověřeného podpisu. Blok posoudí, zda podpis splňuje požadavky
+  § 13 odst. 3 písm. b) zákona č. 360/1992 Sb.: platný kvalifikovaný elektronický podpis
+  s kvalifikovaným elektronickým časovým razítkem a v certifikátu jméno autorizované osoby,
+  číslo, pod nímž je zapsána v seznamu autorizovaných osob (druhá OU), obor, popřípadě
+  specializaci (položka title) a označení Komory (položka O). U každého z těchto údajů uvede
+  rovnou jeho hodnotu z certifikátu, případně že chybí; u čísla autorizace upozorní na
+  neobvyklý tvar (u ČKA mívá pět číslic, u ČKAIT sedm). IČO Komory vypíše zvlášť mezi dalšími
+  údaji certifikátu.
 
 ### Prohlížeč kontejnerů
 
