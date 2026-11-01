@@ -12,7 +12,7 @@
 
 .PARAMETER AppVersion  Ciselna verze do app-image a instalatoru. Windows Installer
                        prijima jen major.minor.build, takze tudy nesmi projit slovo.
-                       Nevyplnena = <version> z app\pom.xml.
+                       Nevyplnena = verze z app\pom.xml (zdedena z <parent>).
 .PARAMETER Release     Jmeno vydani do NAZVU balicku ("1.0"). Nevyplnene znamena
                        totez co AppVersion, tedy chovani pred 22. 9. 2026. Co vidi
                        uzivatel v okne "O aplikaci", rika <anep.release> v POMu.
@@ -53,7 +53,9 @@ $Root      = (Get-Location).Path
 # Overeno 1. 11. 2026 na AnEP-1.0.msi: tabulka Upgrade odstranuje verze pod vlastnim
 # cislem (s pevnym --win-upgrade-uuid nize), RemoveExistingProducts bezi pred instalaci.
 if ([string]::IsNullOrWhiteSpace($AppVersion)) {
-    $AppVersion = ([xml](Get-Content (Join-Path $Root "app\pom.xml") -Encoding UTF8)).project.version
+    # app\pom.xml vlastni <version> nema, dedi ji z <parent> - tak jako Maven.
+    $pom = ([xml](Get-Content (Join-Path $Root "app\pom.xml") -Encoding UTF8)).project
+    $AppVersion = if ($pom.version) { $pom.version } else { $pom.parent.version }
     if (-not $AppVersion) { Write-Error "Nelze precist version z app\pom.xml"; exit 1 }
 }
 $BuildDir  = Join-Path $Root "app\target"

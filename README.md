@@ -165,7 +165,7 @@ needs [WiX Toolset v3](https://github.com/wixtoolset/wix3/releases) on `PATH`.
 ### Linux (portable)
 
 ```bash
-bash packaging/linux/dist.sh 1.0.0 1.0      # app-image + AnEP-1.0-linux-<arch>-portable.tar.gz
+bash packaging/linux/dist.sh 1.1.0 1.1.0    # app-image + AnEP-1.1.0-linux-<arch>-portable.tar.gz
 ```
 
 The same steps as `dist.ps1` without the installer: one shaded JAR, JavaFX outside the
@@ -173,7 +173,7 @@ classpath in `lib/app/fx`, `licenses/` and `relink/`, plus `pridat-do-nabidky.sh
 a menu entry for the current user (no sudo, nothing deleted). jpackage only builds for the
 system and CPU it runs on, so the two Linux archives are built by GitHub Actions —
 workflow **Linux portable** (`.github/workflows/linux-portable.yml`), started by hand
-(`gh workflow run linux-portable.yml -f version=1.0.0 -f release=1.0`), one job on
+(`gh workflow run linux-portable.yml -f version=1.1.0 -f release=1.1.0`), one job on
 `ubuntu-22.04` (x64) and one on `ubuntu-22.04-arm` (aarch64). Each job also starts the
 packaged application under a virtual display and fails if it exits or logs an exception.
 
