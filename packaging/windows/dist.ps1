@@ -20,6 +20,9 @@
                        on launch - useful for debugging startup errors.
 .PARAMETER Installer   If set, builds an .msi installer as well. Vyzaduje WiX
                        Toolset v3 na PATH (jpackage jej pro --type msi potrebuje).
+.PARAMETER Sign        Podepise AnEP.exe (pred zabalenim do ZIP a MSI) a instalator
+                       certifikatem pro podpis kodu z uloziste CurrentUser\My,
+                       s casovym razitkem Certum. Vyzaduje signtool z Windows SDK.
 
   INSTALATOR SE STAVI Z HOTOVEHO APP-IMAGE, ne zvlast.
 
@@ -35,10 +38,45 @@ param(
     [string]$AppVersion = "",
     [string]$Release = "",
     [switch]$Console,
-    [switch]$Installer
+    [switch]$Installer,
+    [switch]$Sign
 )
 
 $ErrorActionPreference = "Stop"
+
+# Podpis kodu (Authenticode). Zaveden 1. 11. 2026 pro vydani 1.1.0 s certifikatem Certum
+# Code Signing 2021 CA. Certifikat se hleda podle jmena vydavatele a predmetu, ne podle
+# otisku: plati rok a obnoveny bude mit jiny otisk. Klic je v cloudu (SimplySign), takze
+# kazdy podpis muze chtit potvrzeni v aplikaci Certum.
+#
+# Podepisuje se se zamerem: AnEP.exe uvnitr app-image a az pak se z nej bali ZIP a MSI.
+# Podepsat jen hotovy .msi by nestacilo - nainstalovany AnEP.exe by zustal nepodepsany.
+function Invoke-CodeSign([string]$Path, [string]$Description) {
+    if (-not $script:SignTool) {
+        $script:SignTool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse `
+                -Filter signtool.exe -ErrorAction SilentlyContinue |
+            Where-Object { $_.DirectoryName -match '\\x64$' } |
+            Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
+        if (-not $script:SignTool) { Write-Error "Nenalezen signtool.exe (Windows SDK)."; exit 1 }
+        $now = Get-Date
+        $cert = Get-ChildItem Cert:\CurrentUser\My -CodeSigningCert |
+            Where-Object { $_.HasPrivateKey -and $_.NotBefore -le $now -and $_.NotAfter -gt $now -and
+                           $_.Issuer -match 'CN=Certum Code Signing' -and
+                           $_.Subject -match 'CN=Ji.. Peterka' } |
+            Sort-Object NotAfter -Descending | Select-Object -First 1
+        if (-not $cert) { Write-Error "V CurrentUser\My neni platny certifikat Certum pro podpis kodu se soukromym klicem."; exit 1 }
+        $script:SignThumb = $cert.Thumbprint
+        Write-Host "Podpisovy certifikat: $($cert.Thumbprint), plati do $($cert.NotAfter.ToString('d. M. yyyy'))" -ForegroundColor Cyan
+    }
+    # /tr + /td: casove razitko RFC 3161 - bez nej by podpis po expiraci certifikatu
+    # prestal platit. /d je text, ktery Windows ukaze v dialogu UAC u instalatoru.
+    & $script:SignTool sign /sha1 $script:SignThumb /fd sha256 `
+        /tr "http://time.certum.pl" /td sha256 /d $Description /du "https://bajecnysvet.cz/anep/" $Path
+    if ($LASTEXITCODE -ne 0) { Write-Error "Podpis $Path selhal."; exit 1 }
+    & $script:SignTool verify /pa /q $Path
+    if ($LASTEXITCODE -ne 0) { Write-Error "Podpis $Path se neoveril."; exit 1 }
+    Write-Host "Podepsano: $Path" -ForegroundColor Green
+}
 
 $AppName   = "AnEP"
 $MainClass = "cz.digitalnikontinuita.anep.Main"
@@ -244,6 +282,9 @@ for %%f in ("hs_err_pid*.log") do (
 echo Vystup zapsan do anep.log - poslete tento soubor.
 pause
 '@ | Out-File (Join-Path "$ImageDir\$AppName" "run-debug.bat") -Encoding ascii
+
+# 4d. Podpis spoustece - pred ZIP i pred MSI, ktere ho jen prebiraji.
+if ($Sign) { Invoke-CodeSign (Join-Path "$ImageDir\$AppName" "$AppName.exe") "AnEP" }
 
 # 5. Licence
 #
@@ -488,6 +529,7 @@ if ($Installer) {
             Rename-Item -Path $msi.FullName -NewName (Split-Path $target -Leaf)
             $msi = Get-Item $target
         }
+        if ($Sign) { Invoke-CodeSign $msi.FullName "AnEP – Analyzátor elektronických podpisů" }
         $msiMB = [math]::Round($msi.Length / 1MB, 1)
         Write-Host "Instalator: $($msi.FullName) ($msiMB MB)" -ForegroundColor Green
     }

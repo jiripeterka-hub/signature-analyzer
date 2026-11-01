@@ -75,14 +75,18 @@ public final class AuthenticodeCertificateCheck {
 
     /**
      * Řádky souhrnu, které ověření doplní nebo nahradí: certifikát podepisujícího, certifikát
-     * autority razítka a celkový verdikt. Nikdy nevyhazuje — co se nepodaří, je „?“.
+     * autority razítka, celkový verdikt a u programu, který se týká AnEP, zda jde o oficiální
+     * sestavení ({@link OfficialBuild}). Nikdy nevyhazuje — co se nepodaří, je „?“.
+     *
+     * @param fileName jméno souboru, jak ho prohlížeč ukazuje; smí být {@code null}
      */
-    public static Map<String, String> run(ContainerInspector.Result r) {
+    public static Map<String, String> run(ContainerInspector.Result r, String fileName) {
         Map<String, String> out = new LinkedHashMap<>();
+        X509CertificateHolder signer = null;
         try {
             CMSSignedData cms = new CMSSignedData(signature(r));
             SignerInformation si = cms.getSignerInfos().getSigners().iterator().next();
-            X509CertificateHolder signer = match(cms, si);
+            signer = match(cms, si);
 
             // Důkaz existence: čas platného razítka (RFC 3161 nebo protipodpis).
             Instant poe = null;
@@ -117,6 +121,7 @@ public final class AuthenticodeCertificateCheck {
                 out.put(KEY_SIGNER, why);
                 out.put(KEY_VERDICT, "? nerozhodnuto — certifikát podepisujícího nelze na tomto"
                         + " systému ověřit");
+                official(out, signer, fileName);
                 return out;
             }
             CertificateVerifier verifier = TrustConfig.buildAnchoredVerifier(roots, material);
@@ -136,7 +141,13 @@ public final class AuthenticodeCertificateCheck {
             out.put(KEY_SIGNER, "? nelze ověřit — " + ContainerInspector.describe(e));
             out.put(KEY_VERDICT, "? nerozhodnuto");
         }
+        official(out, signer, fileName);
         return out;
+    }
+
+    private static void official(Map<String, String> out, X509CertificateHolder signer, String fileName) {
+        String line = OfficialBuild.assess(signer, out.get(KEY_VERDICT), fileName);
+        if (line != null) out.put(OfficialBuild.KEY, line);
     }
 
     private static String verdict(Map<String, String> summary, AuthenticodeVerifier.Check signer,

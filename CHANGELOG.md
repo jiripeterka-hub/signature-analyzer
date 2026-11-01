@@ -3,6 +3,18 @@
 Změny ve verzích aplikace AnEP (Analyzátor elektronických podpisů). Slouží jako podklad
 pro soupis změn ke každé nové vydané verzi.
 
+## Připravovaná verze
+
+### Prohlížeč kontejnerů
+
+- **Rozpoznání oficiálního sestavení AnEP.** Souhrn podpisu kódu u programu (`.exe`, `.msi`),
+  který se týká AnEP, má nový řádek „Sestavení AnEP“. Podepsal-li program autor AnEP
+  certifikátem, který aplikace zná, a podpis je platný, jde o oficiální sestavení. Podepsal-li ho
+  certifikát se jménem autora, který aplikace nezná (třeba obnovený), uvede to jen jako náznak
+  a ukáže otisk certifikátu k porovnání se stránkou aplikace. Soubor, který se jménem vydává
+  za AnEP, ale je nepodepsaný nebo ho podepsal někdo jiný, označí jako neoficiální. U ostatních
+  programů se nic nemění.
+
 ## Verze 1.1.0 (změny oproti 1.0.0)
 
 ### Ověřování
@@ -178,6 +190,11 @@ pro soupis změn ke každé nové vydané verzi.
 
 ### Instalační balíčky
 
+- **Podepsaný instalátor a spouštěč.** Instalátor pro Windows (`.msi`) i spustitelný soubor
+  `AnEP.exe` v instalaci a v přenosném archivu nesou elektronický podpis kódu s časovým
+  razítkem. Vydavatelem je Jiří Peterka, certifikát vydala Certum Code Signing 2021 CA.
+  Windows proto při instalaci ukazuje ověřeného vydavatele místo „neznámého“ a podpis lze
+  ověřit ve vlastnostech souboru (karta Digitální podpisy) nebo v AnEP samotném.
 - **Linuxová verze: položka v nabídce aplikací.** Přenosný archiv pro Linux nově obsahuje
   skript `pridat-do-nabidky.sh`. Po rozbalení stačí spustit `./AnEP/pridat-do-nabidky.sh`
   a AnEP se objeví v nabídce aplikací přihlášeného uživatele. Skript nepotřebuje sudo, nic

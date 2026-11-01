@@ -356,6 +356,12 @@ public class ContainerView {
                     + "-fx-border-radius: 3; -fx-background-radius: 3; -fx-text-fill: #111111;");
             header.getChildren().add(info);
         }
+        // Nepodepsaný program se vydává za AnEP? Podepsaný posoudí až ověření certifikátu níže.
+        if (result.kind() == cz.digitalnikontinuita.anep.core.ContainerInspector.Kind.CODE
+                && !cz.digitalnikontinuita.anep.core.AuthenticodeCertificateCheck.applies(result)) {
+            String official = cz.digitalnikontinuita.anep.core.OfficialBuild.assessUnsigned(sourceName);
+            if (official != null) result.summary().put(cz.digitalnikontinuita.anep.core.OfficialBuild.KEY, official);
+        }
         GridPane summary = summaryGrid();
         header.getChildren().add(summary);
         if (cz.digitalnikontinuita.anep.core.AuthenticodeCertificateCheck.applies(result)) {
@@ -402,7 +408,7 @@ public class ContainerView {
      */
     private void checkCodeSigningCertificate(VBox header, GridPane shown) {
         Thread t = new Thread(() -> {
-            Map<String, String> lines = cz.digitalnikontinuita.anep.core.AuthenticodeCertificateCheck.run(result);
+            Map<String, String> lines = cz.digitalnikontinuita.anep.core.AuthenticodeCertificateCheck.run(result, sourceName);
             javafx.application.Platform.runLater(() -> {
                 result.summary().putAll(lines);
                 int at = header.getChildren().indexOf(shown);

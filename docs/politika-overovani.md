@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika ověřování podpisu**
 
-==Verze 1.13== · stav ke dni ==1. 11. 2026== · AnEP 1.0.0, knihovna DSS 6.5.1
+==Verze 1.14== · stav ke dni ==1. 11. 2026== · AnEP 1.0.0, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -28,7 +28,7 @@ Dokument je stavěný jako politika ověřování podpisu ve smyslu ETSI TS 119 
 | Položka | Hodnota |
 |---|---|
 | Název | Politika ověřování elektronických podpisů AnEP |
-| Verze | ==1.13== ze dne ==1. 11. 2026== |
+| Verze | ==1.14== ze dne ==1. 11. 2026== |
 | Platí pro | AnEP 1.0.0 (repozitář signature-analyzer, stav po commitu ==11f98cf==) |
 | Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.13== |
 | Ověřovací jádro | knihovna DSS (Digital Signature Service) 6.5.1 Evropské komise |
@@ -350,6 +350,8 @@ Program pro Windows (spustitelný soubor .exe či .dll a instalační balíček 
 
 Celkový verdikt je **platný**, obstojí-li integrita, matematika podpisu, certifikát podepisujícího a (je-li razítko) razítko i certifikát jeho autority; **neplatný**, neobstojí-li kterákoli z nich; jinak **nelze rozhodnout**. Bez razítka se certifikát posuzuje k okamžiku ověření.
 
+==**Oficiální sestavení AnEP.** Od verze 1.1.0 nese instalátor i spustitelný soubor AnEP podpis kódu autora aplikace. Je-li program podepsán certifikátem, který AnEP zná jako certifikát svého autora, a podpis je platný, AnEP uvede, že jde o oficiální sestavení. Rozhoduje otisk certifikátu, ne jméno v něm: předmět certifikátu pro podpis kódu nenese jedinečný identifikátor osoby. Je-li program platně podepsán certifikátem se jménem autora od téže certifikační autority, který AnEP nezná (například obnoveným certifikátem, který starší verze AnEP ještě nezná), uvede to jen jako náznak a zobrazí otisk certifikátu k porovnání se stránkou aplikace. Program, který se podle jména souboru vydává za AnEP, ale je nepodepsaný, podepsaný někým jiným nebo s neplatným podpisem, AnEP označí jako neoficiální. Na celkový verdikt podpisu kódu to nemá vliv.==
+
 ## 13 Omezení podle ETSI TS 119 172-1
 
 Tabulka uvádí, jak AnEP naplňuje omezení podle přílohy A.4.2.1 (tabulka A.2) a přílohy C normy ETSI TS 119 172-1.
@@ -406,3 +408,4 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 | ==1.11== | ==31. 10. 2026== | ==oddíl 4: nově se ověřují podpisy CB-AdES (COSE); ověřovacím jádrem je knihovna DSS 6.5.1 — jádro ověřování i výchozí politika se proti 6.5 nezměnily, novější jsou knihovny, na kterých stojí (mj. Bouncy Castle 1.86)== |
 | ==1.12== | ==31. 10. 2026== | ==oddíl 4: podpisy CB-AdES aplikace nově i uchovává; ověřování samo se nemění; číslo verze sjednocené s verzí 1.12 politiky uchovávání== |
 | ==1.13== | ==1. 11. 2026== | ==oddíl 8.4: nový zdroj důkazu existence — platné časové razítko obalu (kontejneru ASiC, obalujícího podpisu, datové zprávy, dokumentu PDF s přílohami), z něhož byl dokument předán k ověření tlačítkem „Ověřit v AnEP“, i vnějšího obalu, v němž obal leží; razítko externího podpisu pro vlastní podpisy dokumentu PDF== |
+| ==1.14== | ==1. 11. 2026== | ==oddíl 12.8: rozpoznání oficiálního sestavení AnEP podle otisku certifikátu autora; program, který se jménem vydává za AnEP a autor ho nepodepsal, se označí jako neoficiální; verdikt podpisu kódu se nemění== |
