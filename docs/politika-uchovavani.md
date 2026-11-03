@@ -107,7 +107,7 @@ O nabídce úkonu se rozhoduje z téhož ověření, které uživatel vidí na k
 
 ### 4.3 Síť a data
 
-Při úkonu se po síti stahují jen revokační údaje, chybějící certifikáty vydavatelů a časová razítka. Nedostupnost zdroje razítek se nezamění za odmítnutí. Obsah dokumentů aplikace neukládá (TS 119 511, OVR-9.1-01); uchovává jen údaje pro vlastní chod — nastavení, mezipaměť důvěryhodných seznamů, vlastní úložiště certifikátů a CRL a seznam naposledy otevřených souborů.
+Při úkonu se po síti stahují jen revokační údaje, chybějící certifikáty vydavatelů a časová razítka. ==Autoritě časových razítek se v žádosti posílá jen otisk razítkovaných dat, nikoli dokument; z otisku obsah dokumentu zjistit nelze.== Nedostupnost zdroje razítek se nezamění za odmítnutí. Obsah dokumentů aplikace neukládá (TS 119 511, OVR-9.1-01); uchovává jen údaje pro vlastní chod — nastavení, mezipaměť důvěryhodných seznamů, vlastní úložiště certifikátů a CRL a seznam naposledy otevřených souborů.
 
 ## 5 Dokdy je dokument ověřitelný
 
@@ -330,4 +330,4 @@ Z TS 119 512 AnEP odpovídá schématu F.4 se dvěma odchylkami uvedenými v 3.2
 | ==1.12== | ==31. 10. 2026== | ==oddíly 2 a 8.1: podpisy CB-AdES (COSE) se uchovávají jako ostatní formáty AdES — knihovna DSS je rozšíří na úroveň B-LTA; odloučený podpis jen spolu s podepsaným dokumentem; výsledek ověří validátory podle standardů, které formát CB-AdES podporují, nikoli CzechPOINT ani podatelny== |
 | ==1.13== | ==1. 11. 2026== | ==číslo verze sjednocené s verzí 1.13 politiky ověřování, která přidává důkaz existence z obalu, z něhož byl dokument předán k ověření; forenzní balíček z takového dokumentu nese i obal== |
 | ==1.15== | ==3. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.15 politiky ověřování; platí pro AnEP 1.1.1== |
-| ==1.16== | ==3. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.16 politiky ověřování; platí pro AnEP 1.2.0== |
+| ==1.16== | ==3. 11. 2026== | ==oddíl 4.3: upřesněno, že autoritě časových razítek se posílá jen otisk dat, nikoli dokument; číslo verze sjednocené s verzí 1.16 politiky ověřování; platí pro AnEP 1.2.0== |
