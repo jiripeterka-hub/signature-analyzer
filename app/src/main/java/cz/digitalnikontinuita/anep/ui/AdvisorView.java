@@ -2537,6 +2537,16 @@ public class AdvisorView {
             HBox.setHgrow(note, Priority.ALWAYS);
             body.getChildren().add(row);
         }
+        // Důkaz z obalu, který nepomohl (3. 11. 2026). Situaci nemá — závěr nese první průchod —,
+        // ale čtenář, který dokument předal z obalu, se musí dozvědět, že razítko obalu se
+        // započetlo a proč přesto výsledek nezměnilo. Bez téhle řádky karta o obalu mlčela.
+        if (sig.getUnhelpfulEnvelopeProofDetail() != null) {
+            Label note = new Label(sig.getUnhelpfulEnvelopeProofDetail());
+            note.setStyle("-fx-text-fill: #555555; -fx-font-size: 12px;");
+            note.setWrapText(true);
+            note.setMaxWidth(Double.MAX_VALUE);
+            body.getChildren().add(note);
+        }
 
         addSigningTimeRow(body, sig);
         addIgnoredTimestampRow(body, sig);
@@ -3760,7 +3770,10 @@ public class AdvisorView {
         // pozdější prvek s platným razítkem, ten důkaz je a ověření k němu už proběhlo — rada by
         // čtenáře posílala hledat, co už v dokumentu má (nález uživatele 2. 10. 2026). Tutéž
         // podmínku má znění [4/kryto], viz reasonProblem().
-        if (rn == 4 && sig.getCoveringProofDetail() != null) return null;
+        if (rn == 4 && (sig.getCoveringProofDetail() != null
+                || sig.getUnhelpfulEnvelopeProofDetail() != null)) {
+            return null;
+        }
         // U služby Podepsat.online se ví, čí kořen vložit, a rada vede k tlačítku, které ho
         // vloží. Patří mezi rady pro zkušenější, ne do „Co může pomoci“: důvěřovat službě, která
         // identitu neověřuje, je rozhodnutí, které má čtenář udělat vědomě (pokyn uživatele
@@ -4397,6 +4410,11 @@ public class AdvisorView {
                 return sb.toString().replace(" žádným časovým razítkem",
                                 " vlastním časovým razítkem")
                         + ". " + sig.getCoveringProofDetail();
+            }
+            // A týž doklad z obalu (3. 11. 2026). Razítko obalu není razítkem dokumentu, takže
+            // „žádným" platí, jen „nedokládá nic" ne.
+            if (sig.getUnhelpfulEnvelopeProofDetail() != null) {
+                return sb.append(". ").append(sig.getUnhelpfulEnvelopeProofDetail()).toString();
             }
             return sb.append(", takže není o co se opřít —")
                     .append(" že existoval dříve, nedokládá nic.").toString();
@@ -5273,8 +5291,14 @@ public class AdvisorView {
             // Krycí prvek důkaz dodal, jen nepomohl. Odstavec „Důkaz existence v čase" o něm
             // výš píše, takže „bez důkazu existence" a „vznik se prokázat nepodařilo" by mu
             // odporovaly (nález uživatele 2. 10. 2026 nad „ruzne vizualizace.pdf").
-            boolean coveredButFailed = sig.getCoveringProofDetail() != null && !found.contains(54);
-            if (coveredButFailed) {
+            boolean wrappedButFailed = sig.getUnhelpfulEnvelopeProofDetail() != null;
+            boolean coveredButFailed = wrappedButFailed
+                    || sig.getCoveringProofDetail() != null && !found.contains(54);
+            if (wrappedButFailed) {
+                sb.append("Dřívější existenci sice dokládá časové razítko obalu, z něhož byl"
+                        + " dokument předán k ověření, ověření k tomu okamžiku ale neuspělo ani"
+                        + " tak: překážkou není doba vzniku, nýbrž něco jiného.");
+            } else if (coveredButFailed) {
                 sb.append("Dřívější existenci sice dokládá jiný prvek téhož dokumentu, ověření"
                         + " k tomu okamžiku ale neuspělo ani tak: překážkou není doba vzniku,"
                         + " nýbrž něco jiného.");
@@ -8430,6 +8454,15 @@ public class AdvisorView {
             // 22. 9. 2026: dokument razítko nese, AnEP z něj důkaz
             // odvodil a ověření k němu zopakoval — jen to nestačilo. Situaci 54 se ptát nelze:
             // ta se hlásí jen tam, kde přepočet vyšel kladně, a tam žádné důvody nejsou.
+            // Totéž s důkazem z obalu, který nepomohl (3. 11. 2026) — jen ten prvek neleží
+            // v témže dokumentu, takže má vlastní znění.
+            if (sig.getUnhelpfulEnvelopeProofDetail() != null && sig.getCertNotAfter() != null) {
+                String wrapped = ReasonTexts.get("4/obal", "problem");
+                if (wrapped != null) {
+                    return ReasonTexts.fill(wrapped, "{konec}",
+                            TimeUtil.format(sig.getCertNotAfter()));
+                }
+            }
             if (sig.getCoveringProofDetail() != null && sig.getCertNotAfter() != null) {
                 String covered = ReasonTexts.get("4/kryto", "problem");
                 if (covered != null) {

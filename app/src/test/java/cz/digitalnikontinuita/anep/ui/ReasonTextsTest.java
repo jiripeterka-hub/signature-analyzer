@@ -135,6 +135,7 @@ class ReasonTextsTest {
         require(missing, "2/bez-data", "problem");
         require(missing, "4/bez-data", "problem");
         require(missing, "4/kryto", "problem");
+        require(missing, "4/obal", "problem");
         require(missing, "6/bez-data", "problem");
         require(missing, "3/vlastni-podpis", "problem");
         require(missing, "24/bez-certifikatu", "problem");
@@ -172,6 +173,7 @@ class ReasonTextsTest {
         expected.add("2/bez-data");
         expected.add("4/bez-data");
         expected.add("4/kryto");
+        expected.add("4/obal");
         expected.add("6/bez-data");
         expected.add("3/vlastni-podpis");
         expected.add("24/bez-certifikatu");

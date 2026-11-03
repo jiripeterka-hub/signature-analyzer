@@ -602,6 +602,17 @@ problem =
   platné časové razítko. Aplikace k tomu doloženému okamžiku ověření zopakovala a ani tak
   neuspělo — překážka tedy leží jinde než v době vzniku; popisuje ji blok „Průběh ověřování".
 
+# Prvek předaný k ověření z obalu (kontejner, zpráva, obalující podpis), jehož platné razítko
+# ho kryje — jen to nestačilo. Katalogové znění by tu tvrdilo, že dřívější existenci nedokládá
+# nic; razítko obalu ji dokládá. Co přesně a odkud, stojí v poznámce k výsledku.
+[4/obal]
+problem =
+  Podpis (či pečeť) nemá vlastní časové razítko a je založen na certifikátu, který již expiroval
+  (tj. již skončila řádná doba jeho platnosti). K tomu došlo {konec}. Dřívější existenci ale
+  dokládá platné časové razítko obalu, z něhož byl dokument předán k ověření. Aplikace
+  k tomu doloženému okamžiku ověření zopakovala a ani tak neuspělo — překážka tedy leží jinde
+  než v době vzniku; popisují ji další důvody a blok „Průběh ověřování".
+
 [6/bez-data]
 problem =
   Aplikace našla přímo v podpisu (či dokumentu) vložené revokační informace, prokazující stav

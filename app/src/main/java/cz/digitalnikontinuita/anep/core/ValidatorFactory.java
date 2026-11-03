@@ -100,7 +100,8 @@ public class ValidatorFactory {
      *                    a důkaz existence dostalo DSS jako razítko prvku — viz
      *                    {@code recomputeWithCoveringTimestamp()}.
      * @param envelope    důkaz nepochází z krycího prvku téhož souboru, nýbrž z <b>obalu</b>, z něhož
-     *                    byl prvek předán k ověření — viz {@link #withEnvelopeProof}; jinak {@code null}
+     *                    byl prvek předán k ověření — viz {@link #withEnvelopeProof}; jinak {@code null}.
+     *                    U záporného výsledku je to důkaz, který nepomohl
      */
     public record DerivedTimeResult(java.util.Date when, java.util.Date controlTime,
                                     String indication, String subIndication, Reports reports,
@@ -810,6 +811,10 @@ public class ValidatorFactory {
      * ukázala, že jen tak se nezamlčí odvolání před tím okamžikem, které dokládá údaj, jejž
      * přísná politika DSS nepřijme.
      *
+     * <p>Kde nepomohl žádný důkaz, předá se pokus s tím nejstarším jako záporný
+     * {@link DerivedTimeResult} (od 3. 11. 2026): závěr nemění, ale karta podle něj ví, že
+     * důkaz z obalu byl a překážka leží jinde než v době vzniku.
+     *
      * <p>Obaly: kontejner ASiC, obalující podpis (CMS, XAdES, JAdES), datová zpráva a PDF
      * s přílohami — jak se v nich krytí pozná, popisuje {@link EnvelopeProof#find}. U datové
      * zprávy se bere i razítko podání ({@code dmQTimestamp}), které je starší než razítko
@@ -845,6 +850,77 @@ public class ValidatorFactory {
 
         Map<String, DerivedTimeResult> out = new java.util.HashMap<>(outcome.derivedTimeResults());
         List<String> open = new ArrayList<>(wanted);
+        // Pokus s nejstarším důkazem u prvků, kterým nepomohl žádný. Zapisuje se taky: dokud se
+        // nesl jen kladný přepočet, karta o obalu mlčela a prvek vykládala, jako by žádný důkaz
+        // existence neměl (nález uživatele 3. 11. 2026 nad PDF z kontejneru ASiC-E: razítko
+        // obalu z doby platnosti certifikátu, ověření přesto skončilo na chybějících
+        // revokačních údajích — a karta hlásila jen „bez časového razítka").
+        Map<String, DerivedTimeResult> failed = new java.util.HashMap<>();
+        tryEnvelopeProofs(reports, effective, candidates, open, out, failed);
+
+        // Vlastní úložiště CRL se ptá k okamžiku, který zná před ověřením — u prvku bez razítka
+        // k dnešku (revocationReferenceTime), a seznam z doby platnosti certifikátu tak vyřadí.
+        // Razítko obalu se ale připisuje až do hotových diagnostických dat, kde se revokační
+        // údaje znovu nehledají: úložiště se k okamžiku z obalu nikdy nezeptalo. Kde žádný důkaz
+        // nepomohl a úložiště něco má, ověří se proto prvek znovu, s úložištěm dotázaným
+        // k nejstaršímu důkazu, a důkazy se zkusí nad tím. Nález uživatele 3. 11. 2026: PDF
+        // úrovně B z kontejneru ASiC-E, CRL vydaný za platnosti certifikátu vložený do úložiště
+        // podle rady u důvodu 12 — a výsledek se nepohnul.
+        if (!open.isEmpty() && source.elementBytes() != null
+                && !CustomCrlStore.listCrls().isEmpty()) {
+            Reports again = null;
+            Date previous = CRL_REFERENCE_TIME.get();
+            try {
+                CRL_REFERENCE_TIME.set(Date.from(candidates.get(0).when()));
+                again = validate(new eu.europa.esig.dss.model.InMemoryDocument(
+                                source.elementBytes(), source.elementPath()),
+                        (DSSDocument) null, certificateVerifier, null).reports();
+            } catch (Exception e) {
+                // Bez druhého ověření zůstává výsledek prvního.
+            } finally {
+                CRL_REFERENCE_TIME.set(previous);
+            }
+            if (again != null && again.getSimpleReport() != null) {
+                SimpleReport againReport = again.getSimpleReport();
+                List<String> stillOpen = new ArrayList<>();
+                for (String id : open) {
+                    if (againReport.getIndication(id) != null) stillOpen.add(id);
+                }
+                List<String> tried = List.copyOf(stillOpen);
+                Map<String, DerivedTimeResult> failedAgain = new java.util.HashMap<>();
+                tryEnvelopeProofs(again, effective, candidates, stillOpen, out, failedAgain);
+                // Kterým pomohl, ti jsou ze stillOpen venku. U ostatních vypovídá o překážce
+                // líp druhý pokus — ten už měl k dispozici i seznam z úložiště.
+                open.removeIf(id -> tried.contains(id) && !stillOpen.contains(id));
+                failed.putAll(failedAgain);
+            }
+        }
+        // Přepíše i záporný přepočet od krycího prvku: ten ReportMapper nečte (bere jen kladný)
+        // a větu o krycím prvku skládá z diagnostických dat sám.
+        for (String id : open) {
+            if (failed.containsKey(id)) out.put(id, failed.get(id));
+        }
+        if (out.equals(outcome.derivedTimeResults())) return outcome;
+        return new ValidationOutcome(reports, outcome.skippedRevocations(), Map.copyOf(out),
+                outcome.unreadableSigningTimes());
+    }
+
+    /**
+     * Okamžik, ke kterému se má vlastní úložiště CRL ptát místo {@link #revocationReferenceTime}
+     * — jen po dobu druhého ověření v {@link #withEnvelopeProof}. Vlákno, ne pole: továrnu sdílí
+     * celá aplikace a ověření běží na pozadí.
+     */
+    private static final ThreadLocal<Date> CRL_REFERENCE_TIME = new ThreadLocal<>();
+
+    /**
+     * Přepočty s důkazy z obalu, od nejstaršího, nad protokoly {@code reports}. Prvky, kterým
+     * některý pomohl, se z {@code open} odeberou a jejich výsledek jde do {@code out}; u ostatních
+     * se do {@code failed} zapíše pokus s nejstarším důkazem.
+     */
+    private static void tryEnvelopeProofs(Reports reports, ValidationPolicy effective,
+                                          List<EnvelopeProof> candidates, List<String> open,
+                                          Map<String, DerivedTimeResult> out,
+                                          Map<String, DerivedTimeResult> failed) {
         for (EnvelopeProof proof : candidates) {
             if (open.isEmpty()) break;
             Reports supplied = recomputeWithEnvelopeTimestamp(reports, effective, proof);
@@ -852,7 +928,17 @@ public class ValidatorFactory {
             if (then == null) continue;
             for (java.util.Iterator<String> it = open.iterator(); it.hasNext(); ) {
                 String id = it.next();
-                if (then.getIndication(id) != Indication.TOTAL_PASSED) continue;
+                if (then.getIndication(id) != Indication.TOTAL_PASSED) {
+                    if (then.getIndication(id) != null && !failed.containsKey(id)) {
+                        failed.put(id, new DerivedTimeResult(java.util.Date.from(proof.when()),
+                                reports.getDiagnosticData().getValidationDate(),
+                                then.getIndication(id).name(),
+                                then.getSubIndication(id) != null
+                                        ? then.getSubIndication(id).name() : null,
+                                supplied, true, proof));
+                    }
+                    continue;
+                }
                 // Rozhodný okamžik je nejstarší platný důkaz. Často to není razítko obalu, nýbrž
                 // vlastní razítko prvku, které teprve díky němu obstálo (měřený kontejner: razítko
                 // obalu z 2019 drželo podpisové razítko z 2014) — a to DSS ve svém
@@ -865,9 +951,6 @@ public class ValidatorFactory {
                 it.remove();
             }
         }
-        if (out.size() == outcome.derivedTimeResults().size()) return outcome;
-        return new ValidationOutcome(reports, outcome.skippedRevocations(), Map.copyOf(out),
-                outcome.unreadableSigningTimes());
     }
 
     /**
@@ -1115,6 +1198,10 @@ public class ValidatorFactory {
      */
     private Date revocationReferenceTime(DSSDocument signatureDoc,
                                          List<DSSDocument> detachedContents, char[] pdfPassword) {
+        // Druhé ověření s důkazem z obalu — viz withEnvelopeProof(). Má přednost i před
+        // vlastním razítkem prvku: to tu je jen tehdy, když samo neobstálo.
+        Date fromEnvelope = CRL_REFERENCE_TIME.get();
+        if (fromEnvelope != null) return fromEnvelope;
         Date earliest = earliestTimestampTime(signatureDoc, detachedContents, pdfPassword);
         if (earliest != null) return earliest;
         if (settings.isUseCustomValidationTime()) {

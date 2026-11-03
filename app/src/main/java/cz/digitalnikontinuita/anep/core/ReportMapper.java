@@ -188,7 +188,7 @@ public class ReportMapper {
                                  int strayPrefixBytes) {
         Reports baseReports = outcome.reports();
         SimpleReport baseReport = baseReports.getSimpleReport();
-        DiagnosticData dd = baseReports.getDiagnosticData();
+        DiagnosticData baseDd = baseReports.getDiagnosticData();
         List<SignatureSummary> summaries = new ArrayList<>();
         // Collect PDF field names that DSS has processed, so orphan detection can filter them out.
         java.util.Set<String> dssFieldNames = new java.util.HashSet<>();
@@ -200,7 +200,7 @@ public class ReportMapper {
         // předtím (identifikátory ze zjednodušeného protokolu, prvky z diagnostických dat),
         // takže se obsah obou množin nemění — jen vznikne o pár řádků výš.
         for (String id : baseReport.getSignatureIdList()) {
-            SignatureWrapper sw = dd.getSignatureById(id);
+            SignatureWrapper sw = baseDd.getSignatureById(id);
             if (sw == null) continue;
             if (sw.getPDFRevision() != null) {
                 String br = byteRangeKey(sw.getPDFRevision().getSignatureByteRange());
@@ -216,10 +216,24 @@ public class ReportMapper {
 
         // Pořadí prvků se počítá hned tady, ne až u řazení na konci: výklad situace 54 jmenuje
         // krycí prvek číslem, a to číslo musí být totéž, které čtenář uvidí v záhlaví karty.
-        java.util.Map<String, Integer> docPos = documentPositions(dd, baseReport, orphanCards);
+        java.util.Map<String, Integer> docPos = documentPositions(baseDd, baseReport, orphanCards);
         java.util.Map<String, Integer> displayPositions = displayPositions(docPos);
 
         for (String id : baseReport.getSignatureIdList()) {
+            // Závěr téhož ověření spočítaný k odvozenému okamžiku — viz
+            // ValidatorFactory.derivedTimeResults(). Bere se, jen když je kladný: k čemu se
+            // dobral záporný nebo neprůkazný druhý průchod, čtenáři neříká nic, co by nevěděl
+            // z prvního.
+            ValidatorFactory.DerivedTimeResult derived = outcome.derivedTimeResults().get(id);
+            boolean derivedPasses = derived != null && derived.reports() != null
+                    && Indication.TOTAL_PASSED.name().equals(derived.indication());
+            // I diagnostická data jsou pak jeho. Přepočty nad týmiž daty to nerozlišují, druhé
+            // ověření s důkazem z obalu ale nese revokační údaje, které první nemělo (seznam
+            // z vlastního úložiště, dotázaného k okamžiku razítka obalu). Nález uživatele
+            // 3. 11. 2026: karta s platným závěrem tvrdila, že se o stavu certifikátu nepodařilo
+            // zjistit nic, a seznam CRL vedla mezi chybějícími.
+            DiagnosticData dd = derivedPasses && derived.reports().getDiagnosticData() != null
+                    ? derived.reports().getDiagnosticData() : baseDd;
             Instant signingTime = baseReport.getSigningTime(id) != null
                     ? baseReport.getSigningTime(id).toInstant()
                     : null;
@@ -232,13 +246,6 @@ public class ReportMapper {
             // Důkaz existence odvozený z prvku, který tenhle kryje — viz coveringProof().
             // Sám o sobě rozhodný okamžik nepřepisuje; to dělá až kladný druhý průchod níž.
             CoveringProof covering = coveringProof(id, dd, baseReport);
-            // Závěr téhož ověření spočítaný k tomu odvozenému okamžiku — viz
-            // ValidatorFactory.derivedTimeResults(). Bere se, jen když je kladný: k čemu se
-            // dobral záporný nebo neprůkazný druhý průchod, čtenáři neříká nic, co by nevěděl
-            // z prvního.
-            ValidatorFactory.DerivedTimeResult derived = outcome.derivedTimeResults().get(id);
-            boolean derivedPasses = derived != null && derived.reports() != null
-                    && Indication.TOTAL_PASSED.name().equals(derived.indication());
             // Prvek, jehož závěr vydal druhý průchod, se z něj má i celý mapovat. Jinak by karta
             // hlásila „platný" a pod tím vyjmenovala důvody, ke kterým se dobral průchod první —
             // situace, důvody, rozhodný okamžik i průběh ověřování patří k závěru, který nese.
@@ -333,6 +340,10 @@ public class ReportMapper {
             // Vlastní číslo proto, že všechny věty u situace 54 mluví o „jiném prvku téhož
             // dokumentu" — a ten tu není.
             EnvelopeProof envelopeProof = derivedPasses ? derived.envelope() : null;
+            // Důkaz z obalu, který nepomohl (3. 11. 2026) — viz ValidatorFactory.withEnvelopeProof.
+            // Situaci 57 nedává, závěr nese první průchod; jen se o něm musí říct.
+            EnvelopeProof unhelpfulEnvelope = derived != null && !derivedPasses
+                    ? derived.envelope() : null;
             if (envelopeProof != null) {
                 List<Integer> withEnvelope = new ArrayList<>(situations);
                 withEnvelope.add(57);
@@ -350,10 +361,19 @@ public class ReportMapper {
                     ? revocationReasonsOnTimestampChains(sw, dd, simpleReport.getSubIndication(id),
                             settings, outcome.skippedRevocations())
                     : java.util.Set.copyOf(REVOCATION_ADVICE_REASONS);
+            // Důkaz z obalu, který nepomohl, je pro důvod 4 totéž co krycí prvek: rozhodný okamžik
+            // nestojí na přítomnosti, a překážku, kterou je pak často revokační údaj, důvod 4
+            // umlčet nesmí (nález uživatele 3. 11. 2026 — karta hlásila jen důvod 4, ověření
+            // s razítkem obalu skončilo na chybějících revokačních údajích).
+            Instant otherProof = covering != null ? covering.when() : null;
+            if (unhelpfulEnvelope != null
+                    && (otherProof == null || unhelpfulEnvelope.when().isBefore(otherProof))) {
+                otherProof = unhelpfulEnvelope.when();
+            }
             ReasonFacts reasonFacts = new ReasonFacts(revocOnTimestampChains,
                     sw != null && naTimestampsAllNoChain(sw, simpleReport),
-                    covering != null && sigCert != null && sigCert.getNotAfter() != null
-                            && covering.when().isBefore(sigCert.getNotAfter().toInstant()),
+                    otherProof != null && sigCert != null && sigCert.getNotAfter() != null
+                            && otherProof.isBefore(sigCert.getNotAfter().toInstant()),
                     sw != null && ownPoeWithinValidity(sw, simpleReport));
             List<Integer> reasons = detectReasons(situations, settings, reasonFacts);
             // Důvody 24 a 25 mluví „o certifikátu", a ten může být z řetězu podpisu i z řetězu
@@ -561,9 +581,14 @@ public class ReportMapper {
                 summaries.get(summaries.size() - 1).setEnvelopeProof(
                         envelopeProofDetail(envelopeProof, bestSigTime), envelopeProof.newest(),
                         envelopeProof.when());
+            } else if (unhelpfulEnvelope != null) {
+                summaries.get(summaries.size() - 1).setUnhelpfulEnvelopeProof(
+                        unhelpfulEnvelopeProofDetail(unhelpfulEnvelope),
+                        unhelpfulEnvelope.when());
             }
         }
 
+        DiagnosticData dd = baseDd;
         // A file whose only authentication elements are time-stamps has no signature to hang
         // situation 33 on, yet the question it answers is exactly the one preservation asks there:
         // renewing the chain means embedding revocation data for the time-stamps already inside,
@@ -5798,25 +5823,7 @@ public class ReportMapper {
      * razítko z roku 2014 — věta „a právě k němu se posuzovala" by o roce 2019 lhala.
      */
     static String envelopeProofDetail(EnvelopeProof proof, Instant decisive) {
-        String date = formatRevDate(java.util.Date.from(proof.when()));
-        String head;
-        if (proof.detached()) {
-            // Externí podpis: dokument v něm neleží, je jeho odloučeným obsahem.
-            head = "Dokument je podepsán i externím podpisem " + proof.envelopeName()
-                    + ", který nese platné časové razítko z " + date
-                    + ", a to razítko dokument kryje: " + proof.how()
-                    + ". Z toho plyne, že dokument i s tímto podpisem existoval nejpozději v ten okamžik";
-        } else if (proof.via() != null) {
-            head = "Dokument byl k ověření předán z obalu " + proof.via() + ", který sám leží"
-                    + " v obalu " + proof.envelopeName() + ". Ten nese platné časové razítko z "
-                    + date + ", a to razítko " + proof.how()
-                    + ". Z toho plyne, že dokument i s tímto podpisem existoval nejpozději v ten okamžik";
-        } else {
-            head = "Dokument byl k ověření předán z obalu " + proof.envelopeName()
-                    + ", který nese platné časové razítko z " + date
-                    + ", a to razítko dokument kryje: " + proof.how()
-                    + ". Z toho plyne, že dokument i s tímto podpisem existoval nejpozději v ten okamžik";
-        }
+        String head = envelopeProofHead(proof);
         String tail = proof.detached()
                 ? " Ověřený bez externího podpisu tento důkaz dokument nemá."
                 : " Vyjmutý z obalu tento důkaz dokument ztrácí.";
@@ -5836,6 +5843,39 @@ public class ReportMapper {
                     + ", a rozhodným okamžikem se proto stal tento dřívější čas." + tail;
         }
         return head + ", a právě k němu se jeho platnost posuzovala." + tail;
+    }
+
+    /**
+     * Věta o důkazu z obalu, který nepomohl (3. 11. 2026): ověření se s razítkem obalu
+     * zopakovalo a skončilo znovu bez kladného závěru. Obdoba záporné věty u krycího prvku
+     * ({@link #coveringProofDetail}) — bez ní karta o obalu mlčela a tvrdila, že dřívější
+     * existenci nedokládá nic.
+     */
+    static String unhelpfulEnvelopeProofDetail(EnvelopeProof proof) {
+        return envelopeProofHead(proof) + ". Ověření se k tomu okamžiku zopakovalo, platnost se"
+                + " ale prokázat nepodařilo ani tak: překážkou je něco jiného než doba vzniku.";
+    }
+
+    /** Úvod vět o důkazu z obalu: který obal, které razítko a co z něj plyne. */
+    private static String envelopeProofHead(EnvelopeProof proof) {
+        String date = formatRevDate(java.util.Date.from(proof.when()));
+        if (proof.detached()) {
+            // Externí podpis: dokument v něm neleží, je jeho odloučeným obsahem.
+            return "Dokument je podepsán i externím podpisem " + proof.envelopeName()
+                    + ", který nese platné časové razítko z " + date
+                    + ", a to razítko dokument kryje: " + proof.how()
+                    + ". Z toho plyne, že dokument i s tímto podpisem existoval nejpozději v ten okamžik";
+        }
+        if (proof.via() != null) {
+            return "Dokument byl k ověření předán z obalu " + proof.via() + ", který sám leží"
+                    + " v obalu " + proof.envelopeName() + ". Ten nese platné časové razítko z "
+                    + date + ", a to razítko " + proof.how()
+                    + ". Z toho plyne, že dokument i s tímto podpisem existoval nejpozději v ten okamžik";
+        }
+        return "Dokument byl k ověření předán z obalu " + proof.envelopeName()
+                + ", který nese platné časové razítko z " + date
+                + ", a to razítko dokument kryje: " + proof.how()
+                + ". Z toho plyne, že dokument i s tímto podpisem existoval nejpozději v ten okamžik";
     }
 
     /** Věta situace 54 — který prvek ten důkaz nese a k jakému okamžiku. */

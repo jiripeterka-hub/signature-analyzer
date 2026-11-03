@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika ověřování podpisu**
 
-==Verze 1.14== · stav ke dni ==1. 11. 2026== · AnEP 1.0.0, knihovna DSS 6.5.1
+==Verze 1.15== · stav ke dni ==3. 11. 2026== · AnEP 1.0.0, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -150,7 +150,7 @@ Vyprší-li nebo je-li zneplatněn certifikát autority až poté, co vydala pod
 
 1. Revokační údaje vložené v podpisu nebo v dokumentu (slovník DSS/VRI u PDF, atributy CAdES a XAdES).
 2. On-line: nejprve OCSP, potom CRL z distribučního bodu certifikátu.
-3. Vlastní úložiště CRL, je-li v něm nějaký seznam — jako poslední záchrana, když on-line zdroje k danému certifikátu nic použitelného nevrátí. Z uložených seznamů se vybere ten, který stav certifikátu v době jeho platnosti dokládá nejlépe.
+3. Vlastní úložiště CRL, je-li v něm nějaký seznam — jako poslední záchrana, když on-line zdroje k danému certifikátu nic použitelného nevrátí. Z uložených seznamů se vybere ten, který stav certifikátu v době jeho platnosti dokládá nejlépe. ==U dokumentu předaného k ověření z obalu (oddíl 8.4), kterému razítko obalu samo nestačilo, se ověření zopakuje a seznam z úložiště se vybírá k okamžiku razítka obalu; jinak by se u dokumentu bez vlastního razítka vybíral k času ověření a seznam z doby platnosti certifikátu by nemohl posloužit.==
 
 ### 7.2 Údaje vydané po expiraci certifikátu
 
@@ -409,3 +409,4 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 | ==1.12== | ==31. 10. 2026== | ==oddíl 4: podpisy CB-AdES aplikace nově i uchovává; ověřování samo se nemění; číslo verze sjednocené s verzí 1.12 politiky uchovávání== |
 | ==1.13== | ==1. 11. 2026== | ==oddíl 8.4: nový zdroj důkazu existence — platné časové razítko obalu (kontejneru ASiC, obalujícího podpisu, datové zprávy, dokumentu PDF s přílohami), z něhož byl dokument předán k ověření tlačítkem „Ověřit v AnEP“, i vnějšího obalu, v němž obal leží; razítko externího podpisu pro vlastní podpisy dokumentu PDF== |
 | ==1.14== | ==1. 11. 2026== | ==oddíl 12.8: rozpoznání oficiálního sestavení AnEP podle otisku certifikátu autora; program, který se jménem vydává za AnEP a autor ho nepodepsal, se označí jako neoficiální; verdikt podpisu kódu se nemění== |
+| ==1.15== | ==3. 11. 2026== | ==oddíl 7.1: u dokumentu předaného z obalu, kterému razítko obalu samo nestačilo, se seznam z vlastního úložiště CRL vybírá k okamžiku razítka obalu, ne k času ověření== |

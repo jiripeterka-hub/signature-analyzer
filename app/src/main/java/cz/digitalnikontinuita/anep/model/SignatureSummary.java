@@ -1070,6 +1070,22 @@ public class SignatureSummary {
         this.envelopeProofTime = when;
     }
 
+    /**
+     * Důkaz existence z obalu, který <b>nepomohl</b>: ověření se k okamžiku razítka obalu
+     * zopakovalo a ani tak neskončilo kladně (3. 11. 2026). Věta pro čtenáře a okamžik razítka;
+     * {@code null}, když takový důkaz není. Situaci 57 nedává a horizont ověřitelnosti se o něj
+     * neopírá — slouží jen tomu, aby karta neříkala, že dřívější existenci nedokládá nic.
+     */
+    private String unhelpfulEnvelopeProofDetail;
+    private java.time.Instant unhelpfulEnvelopeProofTime;
+
+    public String getUnhelpfulEnvelopeProofDetail()      { return unhelpfulEnvelopeProofDetail; }
+    public java.time.Instant getUnhelpfulEnvelopeProofTime() { return unhelpfulEnvelopeProofTime; }
+    public void setUnhelpfulEnvelopeProof(String detail, java.time.Instant when) {
+        this.unhelpfulEnvelopeProofDetail = detail;
+        this.unhelpfulEnvelopeProofTime = when;
+    }
+
     /** True when at least one evidence record actually proves this signature's earlier existence. */
     public boolean hasProvingEvidenceRecord() {
         return evidenceRecords.stream().anyMatch(EvidenceRecordEntry::providesProof);

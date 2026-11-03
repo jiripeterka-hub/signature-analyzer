@@ -5,6 +5,26 @@ pro soupis změn ke každé nové vydané verzi.
 
 ## Připravovaná verze
 
+### Ověřování
+
+- **Vlastní seznamy CRL i u důkazu z obalu.** Dokument předaný tlačítkem „Ověřit v AnEP“
+  bez vlastního časového razítka se dosud ptal úložiště vlastních seznamů CRL k dnešku,
+  a seznam z doby platnosti certifikátu proto nepoužil, ani když dřívější existenci
+  dokládalo razítko obalu. Nyní se, pokud razítko obalu samo nestačí, úložiště zeptá
+  k okamžiku tohoto razítka. Podpis, kterému chyběl jen revokační údaj z doby platnosti
+  certifikátu, tak může vyjít platný. Karta pak seznam z úložiště uvede jako zdroj
+  revokační informace a neoznačí ho za chybějící.
+
+### Výklad výsledků
+
+- **Důkaz z obalu, který nestačil.** Když dokument předaný tlačítkem „Ověřit v AnEP“
+  z kontejneru, datové zprávy či jiného obalu neobstál ani s časovým razítkem obalu, karta
+  Analýzy to nově řekne: v poznámce k výsledku, v bloku „Průběh ověřování“ i ve znění důvodu
+  „expirovaný podpisový certifikát, bez časového razítka“, které už netvrdí, že dřívější
+  existenci nedokládá nic. Dosud karta o obalu mlčela a ukázala jen tento důvod. Nově se
+  ukážou i důvody, které ověření s razítkem obalu skutečně zastavily — typicky chybějící
+  revokační informace k podpisovému certifikátu, včetně rady vložit seznam CRL z vhodné doby.
+
 ### Prohlížeč kontejnerů
 
 - **Rozpoznání oficiálního sestavení AnEP.** Souhrn podpisu kódu u programu (`.exe`, `.msi`),
