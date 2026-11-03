@@ -35,7 +35,7 @@ from docx_kit import (AKCENT, AKCENT_TMAVY, INKOUST, INKOUST_SVET, PISMO_LEHKE,
 ZDE = os.path.dirname(os.path.abspath(__file__))
 CIL = os.path.join(ZDE, 'AnEP-schopnosti-s-obrazky.docx')
 
-STAV_KE_DNI = '9. 10. 2026'
+STAV_KE_DNI = '3. 11. 2026'
 TITULEK = 'AnEP — přehled schopností'
 
 
@@ -112,7 +112,8 @@ OSNOVA = [
                                'Podpisy JAdES', 'Vizualizace a původ podpisu', 'Zámek dokumentu',
                                'Prázdná podpisová pole', 'Protipodpis', 'Podpisy v OOXML']),
     ('13', 'Nastavení a úložiště', ['Základní nastavení', 'Pokročilé nastavení',
-                                    'Zdroje časových razítek', 'Kde aplikace ukládá svá data']),
+                                    'Zdroje časových razítek', 'Kde aplikace ukládá svá data',
+                                    'Síť']),
     ('14', 'Provoz, měření a licence', ['Distribuce a start', 'Sondy a skeny', 'Licence']),
     ('15', 'Kde jsou hranice', []),
     ('A', 'Dodatek: přehled důvodů', []),
@@ -197,7 +198,9 @@ def kapitola_2(doc):
               'obyčejný archiv, který není kontejnerem ASiC, se otevře v prohlížeči obsahu; '
               'soubory v něm lze předat k ověření jednotlivě'],
              ['Odloučené a samostatné',
-              'CAdES (`.p7s`, `.p7m`, `.cms`), XAdES (`.xml`), JAdES (`.json`, `.jose`, `.jws`)'],
+              'CAdES (`.p7s`, `.p7m`, `.cms`), XAdES (`.xml`), JAdES (`.json`, `.jose`, `.jws`)'
+              '==, CB-AdES (`.cose`) — podpis COSE nad daty CBOR, odloučený i obalující; aplikace '
+              'u něj uvádí, že zatím nejde o referenční formát=='],
              ['Datové zprávy',
               '`.zfo` — zprávy ISDS i doručenky, ověřené přes kvalifikované časové razítko '
               'nad zprávou'],
@@ -208,6 +211,9 @@ def kapitola_2(doc):
               '(viz kapitola 12)'],
              ['Evidenční záznamy',
               'RFC 4998 (`.ers`, `.er`) a XMLERS, samostatné i vložené v dokumentu'],
+             ['==Programy Windows==',
+              '==`.exe`, `.dll`, `.msi` — otevřou se v prohlížeči kontejnerů, který ověří podpis '
+              'kódu Authenticode (kapitola 6.2); spustit se odtud nedají=='],
              ['Holý certifikát, CRL, OCSP',
               'nejsou to podepsané dokumenty, a tak se neověřují — otevřou se rovnou '
               've vlastním prohlížeči (kapitola 6)']],
@@ -225,6 +231,9 @@ def kapitola_2(doc):
         'se vypíše také, včetně toho, jestli by bylo vidět a co by po podpisu uzamklo.',
         '**Smetí před hlavičkou souboru** — bajty, které musely ustoupit, aby šel dokument '
         'vůbec přečíst, se spočítají a řeknou; nic je nepodepsalo.',
+        '==**Dokument předaný z obalu** — dokument poslaný k ověření tlačítkem „Ověřit v AnEP“ '
+        'z kontejneru ASiC, z datové zprávy, z obalujícího podpisu nebo jako příloha PDF si '
+        's sebou nese časové razítko obalu jako důkaz své dřívější existence (kapitola 4.3).==',
     ])
 
 
@@ -273,7 +282,11 @@ def kapitola_4(doc):
                   'tak, jak ji nese PDF. Kdo chce jen odpověď, dál už jít nemusí. '
                   'Změnil-li se po podpisu obsah dokumentu, upozorní na to hnědožlutým '
                   'řádkem s čísly dotčených stran a odkazem na Rozšířený přehled — jinak by '
-                  'zelené „platný“ svádělo k domněnce, že dokument je ten podepsaný.')
+                  'zelené „platný“ svádělo k domněnce, že dokument je ten podepsaný. '
+                  '==U podpisů a pečetí v kontejneru ASiC uvádí stejně jako Rozšířený přehled '
+                  'řádek „Podepsané soubory“ (u pečeti „Zapečetěné soubory“) se jmény dokumentů, '
+                  'které prvek podepisuje — ve sloučeném kontejneru je tak vidět, k čemu se který '
+                  'závěr vztahuje.==')
     obrazek(doc, 'Zjednodušený přehled — karta jednoho podpisu.',
             'obsah záložky Zjednodušený přehled', vyska=7.5)
 
@@ -315,10 +328,27 @@ def kapitola_4(doc):
     tabulka(doc,
             ['Blok', 'Co v něm stojí'],
             [['==Jde o==',
-              '==Druh prvku a jeho výklad; jde-li o platný kvalifikovaný či uznávaný podpis (pečeť), i to, že postačuje pro podání vůči OVM podle § 6 (u pečeti § 9) zákona č. 297/2016 Sb.; nejde-li o dokument ve formátu PDF, i upozornění, že většina OVM přijímá podepsaná podání jen v PDF.=='],
+              '==Druh prvku a jeho výklad; jde-li o platný kvalifikovaný či uznávaný podpis (pečeť), i to, že postačuje pro podání vůči OVM podle § 6 (u pečeti § 9) zákona č. 297/2016 Sb.; nejde-li o dokument ve formátu PDF, i upozornění, že většina OVM přijímá podepsaná podání jen v PDF.=='
+              '== U zaručeného podpisu naopak, že pro podání vůči OVM nepostačuje. Změnil-li se po '
+              'podpisu obsah, druh prvku se zachová s přívlastkem „neplatný“ (například „neplatný '
+              'kvalifikovaný elektronický podpis“) a výklad dodá, že se k dokumentu v dnešní podobě '
+              'účinky takového podpisu neváží.=='],
              ['Formát podpisu',
               'Druh formátu, zapouzdření, úroveň a odpověď na otázku, jestli jde o referenční '
               'formát podle prováděcího nařízení Komise (EU) 2026/248.'],
+             ['==Elektronické autorizační razítko==',
+              '==U podpisu s certifikátem autorizované osoby (ČKA, ČKAIT) posoudí požadavky '
+              '§ 13 odst. 3 písm. b) zákona č. 360/1992 Sb.: platný kvalifikovaný podpis '
+              's kvalifikovaným časovým razítkem a v certifikátu jméno, číslo autorizace, obor '
+              'a označení Komory. U každého údaje uvede hodnotu z certifikátu nebo že chybí '
+              'a u čísla autorizace upozorní na neobvyklý tvar.=='],
+             ['==Důkaz existence z obalu==',
+              '==U dokumentu předaného z obalu využije časové razítko obalu (i obalu vnějšího) jako '
+              'důkaz, že dokument existoval nejpozději v jeho čase. Podpis, který by jinak skončil '
+              'neznámou platností — typicky po vypršení certifikátu podepisujícího nebo autority '
+              'razítka —, se pak posoudí k tomuto okamžiku. Karta to uvede i se jménem obalu, '
+              'a když razítko obalu nestačilo, řekne proč. U PDF s externím podpisem nabídne odkaz '
+              '„Ověřit podpisy dokumentu PDF s důkazem existence z externího podpisu“.=='],
              ['Zjištěné důvody a doporučení',
               'Očíslované důvody — co se stalo a co s tím. Celá kapitola 5.'],
              ['Průběh ověřování',
@@ -359,11 +389,15 @@ def kapitola_4(doc):
                   'přijímání chystá omezit.')
     obrazek(doc, 'Analýza — blok Zjištěné důvody a doporučení.',
             'karta podpisu s rozbaleným blokem důvodů', vyska=8.0)
+    obrazek(doc, '==Analýza — dokument předaný z obalu a důkaz existence z razítka obalu.==',
+            'karta podpisu dokumentu otevřeného tlačítkem Ověřit v AnEP z kontejneru nebo datové '
+            'zprávy, s poznámkou o razítku obalu', vyska=7.0)
 
     nadpis2(doc, '4.4', 'Digitální kontinuita')
     odstavec(doc, 'Jak dlouho dokument zůstane ověřitelný, kdo ho ještě ověří, a co a do kdy '
                   'je proto potřeba udělat. Tady také stojí tlačítka úkonů. Podrobně '
-                  'v kapitolách 9 a 10.')
+                  'v kapitolách 9 a 10. ==Stojí-li závěr na důkazu existence z obalu, záložka '
+                  'upozorní, že uchovávat je třeba celý obal: vyjmutý dokument tento důkaz nemá.==')
     obrazek(doc, 'Digitální kontinuita — lhůty a úkon, který je posune.',
             'obsah záložky Digitální kontinuita', vyska=8.0)
 
@@ -511,14 +545,33 @@ def kapitola_6(doc):
         '**Ověřit v AnEP** — poslat prvek zpět k plnému ověření, jako by jej uživatel vložil sám;',
         '**Kopírovat SHA-256** — otisk prvku do schránky.',
     ])
-    odstavec(doc, 'Nad stromem je **filtr podle názvu**; s napsaným hledáním se rozbalí i to, '
+    odstavec(doc, '==Pole nad stromem **hledá** v názvech, rolích i ve všech údajích na kartě '
+                  'prvku (předmět a vydavatel certifikátu, sériové číslo, čas razítka…) a v otiscích '
+                  'SHA-256 a SHA-1, bez ohledu na velikost písmen a diakritiku; otisk či sériové číslo '
+                  'lze vložit i s mezerami nebo dvojtečkami.== S napsaným hledáním se rozbalí i to, '
                   'co je jinak složené. Validační data uložená jako samostatné položky mívají '
                   'strojová jména, ze kterých čtenář nepozná odpověď OCSP od certifikátu — '
                   'takovým se ve stromu dá čitelné jméno (`odpoved-ocsp-1.ors`), kdežto '
                   'skutečné jméno položky zůstává na kartě pod „Název v kontejneru“ a hledá se '
                   'v obou.')
+    odstavec(doc, '==Dokument v obálce `.p7m` nese původní jméno, pokud ho obálka uvádí '
+                  '(atribut content-hints); jinak se jméno odvodí z obálky a karta to řekne. '
+                  'Odpovědi OCSP se čtou v obou podobách, v nichž je CMS ukládá, i z atributů '
+                  'certificate-values a revocation-values. Položku archivu ZIP větší než 128 MB '
+                  'prohlížeč nenačte a řekne to, místo aby ji usekl.==')
     obrazek(doc, 'Prohlížeč kontejnerů — strom položek, karta prvku a náhled.',
             'okno prohlížeče kontejnerů nad kontejnerem ASiC-E', vyska=8.5)
+    odstavec(doc, '==**Podpis kódu u programů** (`.exe`, `.dll`, `.msi`). Prohlížeč ukáže, kdo '
+                  'program podepsal, jaký otisk podpis kryje, název programu a odkaz uvedené '
+                  'podepisujícím, časová razítka, vložené certifikáty a vnořené podpisy. Ověří, zda '
+                  'se soubor od podpisu nezměnil, zda podpis sedí ke klíči certifikátu a zda razítko '
+                  'kryje podpis; na Windows i řetěz ke kořeni, kterému počítač důvěřuje, účel '
+                  'a zneplatnění certifikátu. Výsledkem je „platný podpis kódu“, „neplatný“ nebo '
+                  '„nerozhodnuto“ s důvodem. U programu, který se týká AnEP, řekne řádek „Sestavení '
+                  'AnEP“, zda jde o oficiální sestavení podepsané autorem. Tlačítko „Otevřít '
+                  'v aplikaci“ je u programu nedostupné, aby se cizí kód omylem nespustil.==')
+    obrazek(doc, '==Prohlížeč kontejnerů — podpis kódu u programu.==',
+            'okno prohlížeče nad instalátorem AnEP-1.2.0.msi se souhrnem podpisu kódu', vyska=7.5)
 
     nadpis2(doc, '6.3', 'Prohlížeč certifikátů')
     odstavec(doc, 'Certifikát vypsaný ve slovech, ne v šestnáctkové soustavě. Kromě subjektu, '
@@ -746,7 +799,8 @@ def kapitola_9(doc):
                   'že v okamžiku zafixování všechny podklady existovaly.')
     odstavec(doc, 'Do balíčku se dá přidat i další soubor: smlouva se svými přílohami, zpráva '
                   's tím, co k ní bylo připojeno. Zarazítkovat je zvlášť by každý zafixovalo '
-                  'v jiném okamžiku a neřeklo by to nic o tom, že patří k sobě.')
+                  'v jiném okamžiku a neřeklo by to nic o tom, že patří k sobě. ==Byl-li dokument '
+                  'předán z obalu, balíček nese beze změny i ten obal (u vnořených obalů všechny).==')
     obrazek(doc, 'Okno forenzního balíčku se seznamem souborů, které do něj půjdou.',
             'dialog Forenzní balíček', vyska=7.5)
 
@@ -945,15 +999,21 @@ def kapitola_13(doc):
         '**Expertní mód** — zpřístupní Detailní rozbor a Protokoly DSS a bloky '
         'o dokumentu v Analýze.',
         '**O aplikaci** — k čemu aplikace slouží, že její výstupy jsou bez záruky, dále verze, '
-        'autor, licence a složka s licencemi použitých knihoven.',
+        'autor, licence a složka s licencemi použitých knihoven==, a odkaz, kterým se na '
+        'požádání zjistí, zda vyšla nová verze; sama od sebe se aplikace nikam neozývá a nic '
+        'nestahuje ani neinstaluje==.',
     ])
     odstavec(doc, 'Změny se projeví ihned, bez restartu.')
     obrazek(doc, 'Základní nastavení.', 'okno Nastavení, základní podoba', vyska=7.0)
 
     nadpis2(doc, '13.2', 'Pokročilé nastavení')
-    odstavec(doc, 'Jednotlivé ústupky, ověření k zadanému datu a času, správa vlastních '
-                  'důvěryhodných certifikátů a vlastních CRL seznamů, zdroje časových razítek '
-                  'a ruční obnova důvěryhodných seznamů EU.')
+    odstavec(doc, 'Jednotlivé ústupky, správa vlastních důvěryhodných certifikátů a vlastních '
+                  'CRL seznamů, zdroje časových razítek, ruční obnova důvěryhodných seznamů EU, '
+                  'ověření k zadanému datu a času ==a připojení k internetu (proxy): podle nastavení '
+                  'systému, zadaná adresa a port s výjimkami, nebo žádná. Okno jde zmenšit na výšku, '
+                  'obsah se posouvá a tlačítka Uložit a Zrušit zůstávají v pruhu dole.==')
+    obrazek(doc, '==Pokročilé nastavení — připojení k internetu (proxy).==',
+            'spodní část pokročilého nastavení s oddílem proxy a pruhem tlačítek', vyska=7.0)
 
     nadpis2(doc, '13.3', 'Zdroje časových razítek')
     odstavec(doc, 'Zdroje se spravují jako pojmenované profily s adresou, přihlášením '
@@ -975,6 +1035,12 @@ def kapitola_13(doc):
                   'zdrojů razítek, vlastní úložiště CRL, vlastní důvěryhodné certifikáty '
                   'a mezipaměť důvěryhodných seznamů. Do systému aplikace jinak nezasahuje.')
 
+    nadpis2(doc, '13.5', '==Síť==')
+    odstavec(doc, '==Ověřovaný dokument se nikam neodesílá. Po síti jdou jen důvěryhodné seznamy, '
+                  'revokační informace, chybějící certifikáty vydavatelů, žádosti o časové razítko '
+                  '(nesou jen otisk dat) a kontrola nové verze na požádání; protokoly DSS se zobrazí '
+                  'i bez připojení. Podrobně to popisuje Přehled online komunikace AnEP.==')
+
 
 def kapitola_14(doc):
     nadpis1(doc, '14', 'Provoz, měření a licence')
@@ -982,7 +1048,10 @@ def kapitola_14(doc):
     nadpis2(doc, '14.1', 'Distribuce a start')
     odstavec(doc, 'Aplikace se dodává jako instalátor `.msi` i jako přenosná verze, obojí '
                   's vlastním běhovým prostředím — uživatel nemusí nic doinstalovávat. Start je '
-                  'zrychlený předehřátím ověřovací cesty a mezipamětí důvěryhodných seznamů.')
+                  'zrychlený předehřátím ověřovací cesty a mezipamětí důvěryhodných seznamů. '
+                  '==Instalátor i spouštěč `AnEP.exe` nesou podpis kódu autora s časovým razítkem. '
+                  'Pro Linux (x64 i ARM64) se vydává přenosný archiv se skriptem, který aplikaci '
+                  'přidá do nabídky. Ověřovacím jádrem je knihovna DSS 6.5.1.==')
 
     nadpis2(doc, '14.2', 'Sondy a skeny')
     odstavec(doc, 'Vedle běžných jednotkových testů má projekt desítky **sond a skenů**, '
@@ -997,7 +1066,9 @@ def kapitola_14(doc):
     odstavec(doc, 'AnEP se šíří pod **Evropskou unijní veřejnou licencí (EUPL) verze 1.2**, '
                   'která má závazné české znění. Licence použitých knihoven a oznámení jejich '
                   'autorů se dodávají s každou distribucí; seznam se generuje z těch souborů, '
-                  'které se opravdu balí, takže se od skutečnosti nemůže odchýlit.')
+                  'které se opravdu balí, takže se od skutečnosti nemůže odchýlit. ==Zdrojový kód je '
+                  'veřejně na GitHubu (`https://github.com/jiripeterka-hub/signature-analyzer`), '
+                  'takže si aplikaci může sestavit kdokoli sám.==')
 
 
 def kapitola_15(doc):
