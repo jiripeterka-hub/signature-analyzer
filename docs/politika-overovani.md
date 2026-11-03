@@ -52,6 +52,7 @@ EN 319 102-1 dělí ověřování na řídicí aplikaci (Driving Application, DA
 | Podepsaný objekt | dokument s vloženým podpisem (PDF, kontejner ASiC, CMS/PKCS#7 s obsahem, XML, JSON) |
 | Externí podpis | samostatný soubor podpisu (.p7s, .xml, …) předložený vedle podepsaného obsahu |
 | Evidenční záznam | záznam podle RFC 4998 nebo RFC 6283 předložený vedle dokumentu |
+| ==Obal== | ==kontejner ASiC, datová zpráva, obalující podpis nebo dokument PDF s přílohou, z něhož byl dokument předán k ověření tlačítkem „Ověřit v AnEP“; jeho časové razítko slouží jako důkaz existence (8.4)== |
 | Čas ověření | aktuální čas, nebo okamžik zadaný uživatelem (viz 11.3) |
 | Heslo | heslo k PDF, které jej bez hesla neotevře |
 | Kotvy důvěry | důvěryhodné seznamy EU a vlastní úložiště certifikátů (kapitola 5) |
@@ -149,7 +150,7 @@ Vyprší-li nebo je-li zneplatněn certifikát autority až poté, co vydala pod
 ### 7.1 Zdroje a jejich pořadí
 
 1. Revokační údaje vložené v podpisu nebo v dokumentu (slovník DSS/VRI u PDF, atributy CAdES a XAdES).
-2. On-line: nejprve OCSP, potom CRL z distribučního bodu certifikátu.
+2. On-line: nejprve OCSP, potom CRL z distribučního bodu certifikátu. ==Spojení jdou přímo, nebo přes proxy podle nastavení aplikace (podle systému, zadaná, žádná); na to, který údaj se získá a jak se posoudí, to vliv nemá.==
 3. Vlastní úložiště CRL, je-li v něm nějaký seznam — jako poslední záchrana, když on-line zdroje k danému certifikátu nic použitelného nevrátí. Z uložených seznamů se vybere ten, který stav certifikátu v době jeho platnosti dokládá nejlépe. ==U dokumentu předaného k ověření z obalu (oddíl 8.4), kterému razítko obalu samo nestačilo, se ověření zopakuje a seznam z úložiště se vybírá k okamžiku razítka obalu; jinak by se u dokumentu bez vlastního razítka vybíral k času ověření a seznam z doby platnosti certifikátu by nemohl posloužit.==
 
 ### 7.2 Údaje vydané po expiraci certifikátu
@@ -285,6 +286,10 @@ Druh podpisu se uvádí podle nařízení eIDAS (kvalifikovaný elektronický po
 
 U uznávaného elektronického podpisu se uvádí, zda může mít účinky úředně ověřeného podpisu podle § 6 odst. 2 zákona č. 12/2020 Sb. Že je má, se uvádí jen tehdy, když kvalifikovaný certifikát nese zapsaný osobní doklad držitele. Doklad se čte z atributu serialNumber předmětu certifikátu podle registračních schémat ETSI EN 319 412-1 čl. 5.1.3, a to jen ze dvou: `IDCCZ-` (občanský průkaz) a `PASCZ-` (cestovní pas). Jiné hodnoty se uvádějí jako identifikátor držitele bez výkladu.
 
+==U platného kvalifikovaného či uznávaného elektronického podpisu se uvádí, že postačuje pro podání (úkon fyzické osoby) vůči orgánu veřejné moci v elektronické podobě podle § 6 zákona č. 297/2016 Sb.; u platné kvalifikované či uznávané elektronické pečeti obdobně pro úkon právnické osoby podle § 9 téhož zákona. Nejde-li o podpis dokumentu ve formátu PDF, připojí se upozornění, že většina orgánů veřejné moci přijímá elektronicky podepsaná podání jen ve formátu PDF. U platného zaručeného elektronického podpisu se naopak uvádí, že pro podání vůči orgánu veřejné moci podle § 6 téhož zákona nepostačuje.==
+
+==Je-li prvek neplatný pro **porušení integrity** (podepsaný obsah se po podpisu změnil), druh se zachová a označí jako neplatný — například „neplatný kvalifikovaný elektronický podpis“ nebo „neplatná uznávaná elektronická pečeť“. Výklad dodá, že podpis současný obsah dokumentu nekryje, a proto se k podpisu na dokumentu v této podobě neváží účinky, které by jinak měl podle nařízení eIDAS a zákona č. 297/2016 Sb. U jiných příčin neplatnosti se druh uvádí jako dosud.==
+
 Předmět certifikátu může nést **více atributů serialNumber** — například číslo dokladu a vedle něj klientské číslo vydavatele. Posuzují se všechny, nikoli jen první; nese-li certifikát dokladů více, uvedou se všechny.
 
 ### 12.4 Protokoly
@@ -352,6 +357,16 @@ Celkový verdikt je **platný**, obstojí-li integrita, matematika podpisu, cert
 
 ==**Oficiální sestavení AnEP.** Od verze 1.1.0 nese instalátor i spustitelný soubor AnEP podpis kódu autora aplikace. Je-li program podepsán certifikátem, který AnEP zná jako certifikát svého autora, a podpis je platný, AnEP uvede, že jde o oficiální sestavení. Rozhoduje otisk certifikátu, ne jméno v něm: předmět certifikátu pro podpis kódu nenese jedinečný identifikátor osoby. Je-li program platně podepsán certifikátem se jménem autora od téže certifikační autority, který AnEP nezná (například obnoveným certifikátem, který starší verze AnEP ještě nezná), uvede to jen jako náznak a zobrazí otisk certifikátu k porovnání se stránkou aplikace. Program, který se podle jména souboru vydává za AnEP, ale je nepodepsaný, podepsaný někým jiným nebo s neplatným podpisem, AnEP označí jako neoficiální. Na celkový verdikt podpisu kódu to nemá vliv.==
 
+### 12.9 ==Elektronické autorizační razítko==
+
+==U podpisu, jehož certifikát nese v organizační jednotce (OU) označení „Elektronické autorizační razítko“ (vydávají je Česká komora architektů a Česká komora autorizovaných inženýrů a techniků činných ve výstavbě), AnEP posoudí požadavky § 13 odst. 3 písm. b) zákona č. 360/1992 Sb.:==
+
+- ==podpis je platný kvalifikovaný elektronický podpis,==
+- ==je opatřen kvalifikovaným elektronickým časovým razítkem,==
+- ==certifikát uvádí jméno autorizované osoby, číslo, pod nímž je zapsána v seznamu autorizovaných osob (druhá položka OU), obor, popřípadě specializaci (položka title), a označení Komory (položka O).==
+
+==U každého údaje se uvede hodnota z certifikátu, nebo že chybí. U čísla autorizace AnEP upozorní na neobvyklý tvar (u ČKA mívá pět číslic, u ČKAIT sedm); na výsledek ověření podpisu to vliv nemá. Posouzení vychází z výsledku ověření a z údajů certifikátu; zda je osoba v seznamu autorizovaných osob skutečně zapsána a zda autorizace trvá, AnEP neověřuje.==
+
 ## 13 Omezení podle ETSI TS 119 172-1
 
 Tabulka uvádí, jak AnEP naplňuje omezení podle přílohy A.4.2.1 (tabulka A.2) a přílohy C normy ETSI TS 119 172-1.
@@ -410,4 +425,4 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 | ==1.13== | ==1. 11. 2026== | ==oddíl 8.4: nový zdroj důkazu existence — platné časové razítko obalu (kontejneru ASiC, obalujícího podpisu, datové zprávy, dokumentu PDF s přílohami), z něhož byl dokument předán k ověření tlačítkem „Ověřit v AnEP“, i vnějšího obalu, v němž obal leží; razítko externího podpisu pro vlastní podpisy dokumentu PDF== |
 | ==1.14== | ==1. 11. 2026== | ==oddíl 12.8: rozpoznání oficiálního sestavení AnEP podle otisku certifikátu autora; program, který se jménem vydává za AnEP a autor ho nepodepsal, se označí jako neoficiální; verdikt podpisu kódu se nemění== |
 | ==1.15== | ==3. 11. 2026== | ==oddíl 7.1: u dokumentu předaného z obalu, kterému razítko obalu samo nestačilo, se seznam z vlastního úložiště CRL vybírá k okamžiku razítka obalu, ne k času ověření; platí pro AnEP 1.1.1== |
-| ==1.16== | ==3. 11. 2026== | ==beze změny obsahu; AnEP 1.2.0 mění jen to, kudy vede síť (proxy) a že protokol DSS se zobrazí bez přístupu k internetu — ověřování se nemění; platí pro AnEP 1.2.0== |
+| ==1.16== | ==3. 11. 2026== | ==doplněno, co aplikace dělá už od verze 1.1.0 a politika dosud neuváděla: oddíl 3.2 obal jako vstup; oddíl 12.3 podání vůči orgánu veřejné moci (§ 6 a 9 zákona č. 297/2016 Sb.) a druh prvku s porušenou integritou; nový oddíl 12.9 elektronické autorizační razítko; oddíl 7.1 on-line zdroje přes proxy podle nastavení. Ověřování samo se nemění; platí pro AnEP 1.2.0== |
