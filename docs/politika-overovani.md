@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika ověřování podpisu**
 
-==Verze 1.15== · stav ke dni ==3. 11. 2026== · AnEP 1.0.0, knihovna DSS 6.5.1
+==Verze 1.15== · stav ke dni ==3. 11. 2026== · ==AnEP 1.1.1==, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -29,7 +29,7 @@ Dokument je stavěný jako politika ověřování podpisu ve smyslu ETSI TS 119 
 |---|---|
 | Název | Politika ověřování elektronických podpisů AnEP |
 | Verze | ==1.14== ze dne ==1. 11. 2026== |
-| Platí pro | AnEP 1.0.0 (repozitář signature-analyzer, stav po commitu ==11f98cf==) |
+| Platí pro | ==AnEP 1.1.1 (repozitář signature-analyzer, značka v1.1.1)== |
 | Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.13== |
 | Ověřovací jádro | knihovna DSS (Digital Signature Service) 6.5.1 Evropské komise |
 | Postup ověřování | ETSI EN 319 102-1 V1.4.0 (2024-03) |
@@ -409,4 +409,4 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 | ==1.12== | ==31. 10. 2026== | ==oddíl 4: podpisy CB-AdES aplikace nově i uchovává; ověřování samo se nemění; číslo verze sjednocené s verzí 1.12 politiky uchovávání== |
 | ==1.13== | ==1. 11. 2026== | ==oddíl 8.4: nový zdroj důkazu existence — platné časové razítko obalu (kontejneru ASiC, obalujícího podpisu, datové zprávy, dokumentu PDF s přílohami), z něhož byl dokument předán k ověření tlačítkem „Ověřit v AnEP“, i vnějšího obalu, v němž obal leží; razítko externího podpisu pro vlastní podpisy dokumentu PDF== |
 | ==1.14== | ==1. 11. 2026== | ==oddíl 12.8: rozpoznání oficiálního sestavení AnEP podle otisku certifikátu autora; program, který se jménem vydává za AnEP a autor ho nepodepsal, se označí jako neoficiální; verdikt podpisu kódu se nemění== |
-| ==1.15== | ==3. 11. 2026== | ==oddíl 7.1: u dokumentu předaného z obalu, kterému razítko obalu samo nestačilo, se seznam z vlastního úložiště CRL vybírá k okamžiku razítka obalu, ne k času ověření== |
+| ==1.15== | ==3. 11. 2026== | ==oddíl 7.1: u dokumentu předaného z obalu, kterému razítko obalu samo nestačilo, se seznam z vlastního úložiště CRL vybírá k okamžiku razítka obalu, ne k času ověření; platí pro AnEP 1.1.1== |
