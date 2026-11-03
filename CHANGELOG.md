@@ -5,6 +5,14 @@ pro soupis změn ke každé nové vydané verzi.
 
 ## Verze 1.1.1 (změny oproti 1.1.0)
 
+### Instalátor pro Windows
+
+- **Hlášení, když je tatáž verze už nainstalována.** Instalátor spuštěný na počítači, kde
+  je AnEP v téže verzi už nainstalován, se dosud po chvíli beze slova zavřel. Nově ohlásí,
+  že tato verze už nainstalována je, a poradí ji pro novou instalaci napřed odinstalovat.
+- **Spuštění AnEP po instalaci.** Závěrečná obrazovka instalátoru nabízí volbu „Spustit
+  AnEP“; ve výchozím stavu není zaškrtnutá.
+
 ### Ověřování
 
 - **Vlastní seznamy CRL i u důkazu z obalu.** Dokument předaný tlačítkem „Ověřit v AnEP“
