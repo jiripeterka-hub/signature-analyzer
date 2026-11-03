@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — podklad pro posouzení podle zákona o kybernetické bezpečnosti a aktu o kybernetické odolnosti**
 
-Verze 1.1 (návrh) · stav ke dni 3. 11. 2026 · AnEP 1.1.1 a připravovaná verze, knihovna DSS 6.5.1
+Verze 1.1 (návrh) · stav ke dni 3. 11. 2026 · AnEP 1.2.0, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -42,7 +42,7 @@ Dokument přesto požadavky přílohy I a obsah přílohy VII sleduje dobrovoln�
 | Položka | Hodnota |
 |---|---|
 | Název | AnEP — Analyzátor elektronických podpisů |
-| Verze | 1.1.1 (připravuje se další vydání) |
+| Verze | 1.2.0 |
 | Výrobce (autor) | Jiří Peterka, jiri@peterka.cz |
 | Stránka | https://bajecnysvet.cz/anep/ |
 | Licence | EUPL 1.2 (české a anglické znění přiloženo); licence přibalených knihoven v souboru NOTICE.txt a ve složce licenses |
@@ -249,7 +249,7 @@ Přiřazení k paragrafům vyhlášky č. 409/2025 Sb. Uvádí, co k opatření 
 | R6 | Hesla k autoritám razítek a ke klientskému certifikátu uložená v čitelné podobě v `settings.properties`; heslo přenášené nešifrovaně při adrese `http://` | zneužití účtu u autority razítek | soubor v profilu uživatele | ukládat hesla chráněně (Windows DPAPI) a varovat před `http://` u autorit s heslem |
 | R7 | Únik informací o ověřovaných podpisech vydavatelům přes OCSP | vydavatel ví, čí podpisy organizace kdy ověřovala | žádné | volba vypnout OCSP; revokace z vlastního úložiště CRL |
 | R8 | Přibalené běhové prostředí obsahuje moduly, které aplikace nepotřebuje (ladicí agent JDWP, vzdálená správa JVM, překladač, jshell) | větší prostor útoku, pokud by je někdo zapnul parametry spuštění | moduly nejsou ve výchozím spuštění aktivní | omezit sadu modulů běhového prostředí na nezbytné |
-| R9 | Síť s povinnou proxy nebo s inspekcí TLS | proxy s přihlášením aplikace nepodporuje (do verze 1.1.1 nepoužívala proxy vůbec); kontrola verze za inspekcí TLS selže | volba proxy (od připravované verze); provoz bez sítě; důvěra kořenům Windows u spojení DSS | doplnit přihlášení k proxy, je-li v síti vyžadováno; sjednotit důvěru pro kontrolu verze |
+| R9 | Síť s povinnou proxy nebo s inspekcí TLS | proxy s přihlášením aplikace nepodporuje (do verze 1.1.1 včetně nepoužívala proxy vůbec); kontrola verze za inspekcí TLS selže | volba proxy (od verze 1.2.0); provoz bez sítě; důvěra kořenům Windows u spojení DSS | doplnit přihlášení k proxy, je-li v síti vyžadováno; sjednotit důvěru pro kontrolu verze |
 | R10 | Podvržený instalátor | spuštění cizího kódu | podepsaný instalátor; AnEP rozpozná oficiální sestavení | ověřovat podpis před instalací; centrální distribuce |
 | R11 | Chybějící závazek podpory | zranitelnost zůstane neopravena | — | stanovit dobu podpory a postup hlášení zranitelností |
 

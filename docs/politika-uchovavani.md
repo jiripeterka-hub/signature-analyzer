@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika uchovávání ověřitelnosti**
 
-==Verze 1.15 · stav ke dni 3. 11. 2026== · ==AnEP 1.1.1==, knihovna DSS 6.5.1
+==Verze 1.16 · stav ke dni 3. 11. 2026== · ==AnEP 1.2.0==, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -36,8 +36,8 @@ Rozdělení je věcné: politika ověřování popisuje **dnešní** ověření,
 |---|---|
 | Název | Politika uchovávání elektronických podpisů AnEP |
 | Verze | ==1.13 ze dne 1. 11. 2026== |
-| Platí pro | ==AnEP 1.1.1 (repozitář signature-analyzer, značka v1.1.1)== |
-| Navazuje na | Politika ověřování elektronických podpisů AnEP, verze ==1.13== |
+| Platí pro | ==AnEP 1.2.0 (repozitář signature-analyzer, značka v1.2.0)== |
+| Navazuje na | Politika ověřování elektronických podpisů AnEP, verze ==1.16== |
 | Struktura dokumentu | ETSI TS 119 511 V1.1.1 (2019-06) |
 | Pojmy a schéma uchování | ETSI TS 119 512 V1.2.1 (2023-05), schéma F.4 „pds+wos+aug“ |
 | Cílová úroveň podpisů | B-LTA podle ETSI EN 319 142-1 (PAdES), EN 319 122-1 (CAdES), EN 319 132-1 (XAdES), TS 119 182-1 (JAdES), ==TS 119 152-1 (CB-AdES)== a EN 319 162-1 (ASiC) |
@@ -330,3 +330,4 @@ Z TS 119 512 AnEP odpovídá schématu F.4 se dvěma odchylkami uvedenými v 3.2
 | ==1.12== | ==31. 10. 2026== | ==oddíly 2 a 8.1: podpisy CB-AdES (COSE) se uchovávají jako ostatní formáty AdES — knihovna DSS je rozšíří na úroveň B-LTA; odloučený podpis jen spolu s podepsaným dokumentem; výsledek ověří validátory podle standardů, které formát CB-AdES podporují, nikoli CzechPOINT ani podatelny== |
 | ==1.13== | ==1. 11. 2026== | ==číslo verze sjednocené s verzí 1.13 politiky ověřování, která přidává důkaz existence z obalu, z něhož byl dokument předán k ověření; forenzní balíček z takového dokumentu nese i obal== |
 | ==1.15== | ==3. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.15 politiky ověřování; platí pro AnEP 1.1.1== |
+| ==1.16== | ==3. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.16 politiky ověřování; platí pro AnEP 1.2.0== |

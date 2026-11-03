@@ -14,8 +14,8 @@
 # Vyžaduje JDK 21+ s jpackage v JAVA_HOME a Maven.
 set -euo pipefail
 
-APP_VERSION="${1:-1.1.1}"
-RELEASE="${2:-1.1.1}"
+APP_VERSION="${1:-1.2.0}"
+RELEASE="${2:-1.2.0}"
 APP_NAME="AnEP"
 MAIN_CLASS="cz.digitalnikontinuita.anep.Main"
 APP_JAR="signature-analyzer.jar"

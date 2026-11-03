@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — s kým, kdy a proč se aplikace spojuje po síti**
 
-Verze 1.1 (návrh) · stav ke dni 3. 11. 2026 · AnEP 1.1.1 a připravovaná verze, knihovna DSS 6.5.1
+Verze 1.1 (návrh) · stav ke dni 3. 11. 2026 · AnEP 1.2.0, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -91,7 +91,7 @@ Odkazy v textech aplikace (znění předpisů, stránky vydavatelů certifikát�
 
 ### 3.7 Co síť nepoužívá
 
-- **Zobrazení protokolu DSS** (záložka Protokoly DSS) — od připravované verze bez sítě, viz kapitola 6.
+- **Zobrazení protokolu DSS** (záložka Protokoly DSS) — od verze 1.2.0 bez sítě, viz kapitola 6.
 - **Inspektor struktury podpisu** — přepočet otisků u XAdES rozkládá jen odkazy na soubory kontejneru nebo na předložený oddělený dokument; na adresy uvedené v dokumentu se nespojuje.
 - **Rozbor dokumentu** — PDF, kontejnery, datové zprávy, přílohy a odkazy eLegalizace se čtou jen z místních souborů.
 - **Zahřátí aplikace po spuštění** — zkušební ověření přibaleného vzorku probíhá bez online zdrojů.
@@ -115,7 +115,7 @@ Pravidla podle jmen serverů nestačí pro K2 až K5: kdo chce ověřovat revoka
 
 ### 4.2 Proxy
 
-Od připravované verze se všechna spojení K1 až K7 řídí jednou volbou v Pokročilém nastavení, oddíl „Připojení k internetu (proxy)“:
+Od verze 1.2.0 se všechna spojení K1 až K7 řídí jednou volbou v Pokročilém nastavení, oddíl „Připojení k internetu (proxy)“:
 
 | Volba | Chování |
 |---|---|
@@ -160,8 +160,8 @@ Automatické testy aplikace (`NetworkProxyTest`) spouštějí místní zkušebn�
 
 | Kdy | Verze | Změna |
 |---|---|---|
-| připravovaná | další vydání | **Proxy.** Všechna spojení se řídí volbou proxy (výchozí podle nastavení systému, nebo zadaná, nebo žádná); dosud knihovna DSS chodila vždy přímo. |
-| připravovaná | další vydání | **Protokol DSS bez přístupu k internetu.** Záložka Protokoly DSS si dosud při každém zobrazení stahovala styly a skripty (Bootstrap, jQuery) z `cdn.jsdelivr.net` a `code.jquery.com`; jejich provozovatelé se tak mohli dozvědět, kdy si kdo protokol prohlíží. Obě knihovny jsou nově součástí aplikace; spojení odpadá. |
+| 3. 11. 2026 | 1.2.0 | **Proxy.** Všechna spojení se řídí volbou proxy (výchozí podle nastavení systému, nebo zadaná, nebo žádná); dosud knihovna DSS chodila vždy přímo. |
+| 3. 11. 2026 | 1.2.0 | **Protokol DSS bez přístupu k internetu.** Záložka Protokoly DSS si dosud při každém zobrazení stahovala styly a skripty (Bootstrap, jQuery) z `cdn.jsdelivr.net` a `code.jquery.com`; jejich provozovatelé se tak mohli dozvědět, kdy si kdo protokol prohlíží. Obě knihovny jsou nově součástí aplikace; spojení odpadá. |
 | 1. 11. 2026 | 1.1.0 | **Kontrola nové verze** (K7) — nové spojení, jen na stisk odkazu v okně O aplikaci. |
 | 30. 10. 2026 | 1.1.0 | **Ověření podpisu programů** v prohlížeči kontejnerů — revokace certifikátů podpisu kódu přes spojení K2 a K3, napřed seznam CRL. |
 | 16. 10. 2026 | před 1.0.0 | **Mezipaměť důvěryhodných seznamů** přesunuta do `%APPDATA%\SignatureAnalyzer\tl-cache`; první spuštění po změně seznamy jednou stáhne znovu. |
@@ -170,7 +170,7 @@ Verze 1.0.0 (22. 10. 2026) je výchozím stavem: spojení K1 až K6 a K8 v ní b
 
 ## 7 Doporučení
 
-1. **Proxy s přihlášením.** Nastavení proxy je od připravované verze k dispozici (oddíl 4.2); kde proxy vyžaduje přihlášení, je potřeba výjimka pro aplikaci, nebo doplnit přihlášení k proxy.
+1. **Proxy s přihlášením.** Nastavení proxy je od verze 1.2.0 k dispozici (oddíl 4.2); kde proxy vyžaduje přihlášení, je potřeba výjimka pro aplikaci, nebo doplnit přihlášení k proxy.
 2. **Kontrola verze za inspekcí TLS.** Sjednotit důvěru pro HTTPS se spojeními DSS (přidat úložiště Windows), aby kontrola verze fungovala i za inspekcí TLS.
 3. **Hesla k autoritám razítek.** Upozornit uživatele, je-li u autority s přihlášením jménem a heslem zadána adresa `http://`, protože heslo pak putuje nešifrovaně.
 4. **Volba bez OCSP.** Zvážit nastavení, které vypne dotazy OCSP (K2), pro pracoviště, která nechtějí vydavatelům prozrazovat, čí podpisy ověřují.
