@@ -36,7 +36,8 @@ class ReasonTextsTest {
 
     /** Zástupná slova, která aplikace umí doplnit. Cokoli jiného by ve větě zůstalo viset. */
     private static final Set<String> PLACEHOLDERS =
-            Set.of("{autorita}", "{vydavatel}", "{certifikat}", "{konec}", "{po-pripnuti}");
+            Set.of("{autorita}", "{vydavatel}", "{certifikat}", "{konec}", "{po-pripnuti}",
+                    "{obal}");
 
     private static final Pattern PLACEHOLDER = Pattern.compile("\\{[^}]*}");
 

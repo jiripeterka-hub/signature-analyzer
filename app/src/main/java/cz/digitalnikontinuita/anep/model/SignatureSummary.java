@@ -1087,6 +1087,22 @@ public class SignatureSummary {
     }
 
     /**
+     * Jméno obalu, z něhož důkaz existence pochází (situace 57 i důkaz, který nestačil), tak jak
+     * ho texty uvádějí v závorce za slovem „obal" (pokyn uživatele 3. 11. 2026). U vnořených
+     * obalů cesta od vnějšího k vnitřnímu („zprava.zfo → kontejner.sce"); {@code null}, když
+     * důkaz z obalu není.
+     */
+    private String envelopeName;
+
+    public String getEnvelopeName()                      { return envelopeName; }
+    public void setEnvelopeName(String name)             { this.envelopeName = name; }
+
+    /** Totéž jako „ (jméno)" pro vložení za slovo „obal"; prázdné, když jméno není. */
+    public String envelopeRef() {
+        return envelopeName == null || envelopeName.isBlank() ? "" : " (" + envelopeName + ")";
+    }
+
+    /**
      * Soubory kontejneru, které tento prvek podepisuje, jak je jmenuje rozsah podpisu v DSS
      * (3. 11. 2026). Prázdný seznam mimo kontejnery: u PDF či odloučeného podpisu by řádek jen
      * opakoval jméno ověřovaného souboru. Nález uživatele nad sloučeným kontejnerem ASiC-E, kde

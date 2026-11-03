@@ -1739,7 +1739,8 @@ public class AdvisorView {
         // není (nález uživatele 1. 11. 2026).
         if (found.contains(57) && sig.getEnvelopeProofTime() != null) {
             return gendered(sig, "jeho", "její", "jeho")
-                    + " platnost stojí na důkazu existence z obalu, z něhož byl dokument předán"
+                    + " platnost stojí na důkazu existence z obalu" + sig.envelopeRef()
+                    + ", z něhož byl dokument předán"
                     + " k ověření, a nové razítko na samotném dokumentu by ho nenahradilo;"
                     + " ověřitelnost je proto třeba udržovat na celém obalu (ten lze v AnEP"
                     + " otevřít a ověřit samostatně)";
@@ -3302,7 +3303,8 @@ public class AdvisorView {
 
         block.getChildren().add(unlabelledRow(
                 "Aplikace AnEP dokázala ověřit platnost " + genitiv + " díky důkazu existence"
-                + " z obalu, z něhož byl dokument předán k ověření: časové razítko obalu s časem "
+                + " z obalu" + sig.envelopeRef()
+                + ", z něhož byl dokument předán k ověření: časové razítko obalu s časem "
                 + shortDateTime(sig.getEnvelopeProofTime()) + " dokládá, že dokument i s "
                 + gendered(sig, "podpisem", "pečetí", "razítkem")
                 + " existoval nejpozději v ten okamžik. Samotný dokument bez obalu by jako"
@@ -4391,7 +4393,8 @@ public class AdvisorView {
             // z 12. 9. 2026: u prvku se situací 54 tu stálo „že existoval dříve, nedokládá nic",
             // ačkoli závěr o platnosti právě na tom důkazu stál.
             if (sig.getDetectedSituations().contains(57) && sig.getEnvelopeProofDetail() != null) {
-                return sb.append(". Dřívější existenci dokládá časové razítko obalu, z něhož byl"
+                return sb.append(". Dřívější existenci dokládá časové razítko obalu"
+                        + sig.envelopeRef() + ", z něhož byl"
                         + " dokument předán k ověření, a právě k okamžiku, který tím doložil,"
                         + " se platnost posuzovala — viz poznámku k výsledku.").toString();
             }
@@ -4440,7 +4443,7 @@ public class AdvisorView {
                         .append(count)
                         .append(one ? ", ověřit jako platné se ho ale nepodařilo"
                                     : ", ověřit jako platné se ale nepodařilo ani jedno");
-                if (byEnvelope) return sb.append(".").append(ENVELOPE_DECIDES).toString();
+                if (byEnvelope) return sb.append(".").append(envelopeDecides(sig)).toString();
                 return sb.append(", takže dřívější existenci ").append(genitiveType(sig))
                         .append(one ? " nedokládá." : " nedokládají.")
                         .toString();
@@ -4467,7 +4470,7 @@ public class AdvisorView {
                 // vysvětluje situace 52; zdejší věta ji nemá opakovat.
                 case PROVES_NOTHING -> sb.append(" Dřívější existenci ").append(genitiveType(sig))
                         .append(one ? " ale nedokládá." : " ale nedokládá žádné z nich.");
-                default -> sb.append(byEnvelope ? ENVELOPE_DECIDES
+                default -> sb.append(byEnvelope ? envelopeDecides(sig)
                         : " Rozhodný okamžik se ale opírá o jiný údaj než o razítka,"
                         + " která nese sám prvek.");
             }
@@ -4550,7 +4553,8 @@ public class AdvisorView {
               .append(shortDate(tsuUntil))
               .append(many ? "), razítka ale **obstála díky obalu**" : "), razítko ale"
                       + " **obstálo díky obalu**")
-              .append(": časové razítko obalu, z něhož byl dokument předán k ověření, s časem ")
+              .append(": časové razítko obalu").append(sig.envelopeRef())
+              .append(", z něhož byl dokument předán k ověření, s časem ")
               .append(shortDateTime(sig.getEnvelopeProofTime()))
               .append(", dokládá, že dokument i s ")
               .append(many ? "nimi" : "ním")
@@ -5295,7 +5299,8 @@ public class AdvisorView {
             boolean coveredButFailed = wrappedButFailed
                     || sig.getCoveringProofDetail() != null && !found.contains(54);
             if (wrappedButFailed) {
-                sb.append("Dřívější existenci sice dokládá časové razítko obalu, z něhož byl"
+                sb.append("Dřívější existenci sice dokládá časové razítko obalu"
+                        + sig.envelopeRef() + ", z něhož byl"
                         + " dokument předán k ověření, ověření k tomu okamžiku ale neuspělo ani"
                         + " tak: překážkou není doba vzniku, nýbrž něco jiného.");
             } else if (coveredButFailed) {
@@ -5706,10 +5711,12 @@ public class AdvisorView {
         return sig.getEnvelopeProofTime() != null && sig.getDetectedSituations().contains(57);
     }
 
-    private static final String ENVELOPE_DECIDES =
-            " Dřívější existenci ale dokládá časové razítko obalu, z něhož byl dokument předán"
-            + " k ověření, a **rozhodným okamžikem se stal čas, který doložilo** — viz poznámku"
-            + " k výsledku. Vyjmutý z obalu tento důkaz dokument ztrácí.";
+    private static String envelopeDecides(SignatureSummary sig) {
+        return " Dřívější existenci ale dokládá časové razítko obalu" + sig.envelopeRef()
+                + ", z něhož byl dokument předán"
+                + " k ověření, a **rozhodným okamžikem se stal čas, který doložilo** — viz poznámku"
+                + " k výsledku. Vyjmutý z obalu tento důkaz dokument ztrácí.";
+    }
 
     static boolean envelopeHoldsTimestamps(SignatureSummary sig) {
         java.time.Instant proof = sig.getEnvelopeProofTime();
@@ -6682,7 +6689,8 @@ public class AdvisorView {
             return packaging;
         }
         return packaging + " To ale platí jen o formátu: platnost " + genitiveType(sig)
-                + " stojí na důkazu existence z obalu, z něhož byl dokument předán k ověření,"
+                + " stojí na důkazu existence z obalu" + sig.envelopeRef()
+                + ", z něhož byl dokument předán k ověření,"
                 + " a bez obalu by " + gendered(sig, "jako platný ověřen nebyl",
                         "jako platná ověřena nebyla", "jako platné ověřeno nebylo")
                 + ". Dokument je proto třeba uchovávat"
@@ -8460,7 +8468,7 @@ public class AdvisorView {
                 String wrapped = ReasonTexts.get("4/obal", "problem");
                 if (wrapped != null) {
                     return ReasonTexts.fill(wrapped, "{konec}",
-                            TimeUtil.format(sig.getCertNotAfter()));
+                            TimeUtil.format(sig.getCertNotAfter()), "{obal}", sig.envelopeRef());
                 }
             }
             if (sig.getCoveringProofDetail() != null && sig.getCertNotAfter() != null) {
@@ -10126,8 +10134,13 @@ public class AdvisorView {
             done.setContentText("Obsahuje dokument beze změny, "
                     + (res.envelopes() == 0 ? ""
                        : envelope != null && envelope.detached()
-                         ? "externí podpis, k němuž byl předložen, "
-                         : res.envelopes() == 1 ? "obal, z něhož byl předán k ověření, "
+                         ? "externí podpis" + (envelope.envelopeName() != null
+                                 ? " (" + envelope.envelopeName() + ")" : "")
+                           + ", k němuž byl předložen, "
+                         : res.envelopes() == 1 ? "obal" + (envelope != null
+                                 && envelope.envelopeName() != null
+                                 ? " (" + envelope.envelopeName() + ")" : "")
+                           + ", z něhož byl předán k ověření, "
                          : "obaly, z nichž byl předán k ověření (" + res.envelopes() + "), ")
                     + res.revocations() + "x revokační informace a "
                     + res.certificates() + "x certifikát, protokoly ověření, popis a soupis"

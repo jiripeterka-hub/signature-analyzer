@@ -609,7 +609,7 @@ problem =
 problem =
   Podpis (či pečeť) nemá vlastní časové razítko a je založen na certifikátu, který již expiroval
   (tj. již skončila řádná doba jeho platnosti). K tomu došlo {konec}. Dřívější existenci ale
-  dokládá platné časové razítko obalu, z něhož byl dokument předán k ověření. Aplikace
+  dokládá platné časové razítko obalu{obal}, z něhož byl dokument předán k ověření. Aplikace
   k tomu doloženému okamžiku ověření zopakovala a ani tak neuspělo — překážka tedy leží jinde
   než v době vzniku; popisují ji další důvody a blok „Průběh ověřování".
 

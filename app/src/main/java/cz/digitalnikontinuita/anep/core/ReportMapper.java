@@ -595,6 +595,11 @@ public class ReportMapper {
                         unhelpfulEnvelopeProofDetail(unhelpfulEnvelope),
                         unhelpfulEnvelope.when());
             }
+            EnvelopeProof named = envelopeProof != null ? envelopeProof : unhelpfulEnvelope;
+            if (named != null) {
+                summaries.get(summaries.size() - 1).setEnvelopeName(named.via() != null
+                        ? named.envelopeName() + " → " + named.via() : named.envelopeName());
+            }
             summaries.get(summaries.size() - 1).setSignedFiles(signedContainerFiles(sw));
         }
 

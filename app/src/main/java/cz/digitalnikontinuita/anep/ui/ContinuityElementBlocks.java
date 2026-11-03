@@ -591,7 +591,8 @@ final class ContinuityElementBlocks {
                     // Důkaz z obalu (situace 57): razítko nese obal, ne dokument, a dokument
                     // vyjmutý z obalu ho ztrácí — proto i výzva uchovávat celý obal.
                     : sig.getEnvelopeProofTimestamp() != null
-                      ? " Dřívější existenci " + gen + " prokazují časová razítka obalu, z něhož"
+                      ? " Dřívější existenci " + gen + " prokazují časová razítka obalu"
+                        + sig.envelopeRef() + ", z něhož"
                         + " byl dokument předán k ověření, takže je rozhodující, jak dlouho bude"
                         + " uznatelné nejnovější z nich. Uchovávat je proto třeba celý obal,"
                         + " ne jen dokument z něj vyjmutý."
@@ -610,7 +611,8 @@ final class ContinuityElementBlocks {
         // nedozvěděl (nález nad přílohou datové zprávy, 1. 11. 2026).
         if (actNow && sig.getEnvelopeProofTimestamp() != null) {
             sb.append(" Dřívější existenci ").append(gen).append(" přitom prokazují časová"
-                    + " razítka obalu, z něhož byl dokument předán k ověření; uchovávat je proto"
+                    + " razítka obalu" + sig.envelopeRef()
+                    + ", z něhož byl dokument předán k ověření; uchovávat je proto"
                     + " třeba celý obal, ne jen dokument z něj vyjmutý.");
         }
         return sb.toString();
@@ -1354,7 +1356,7 @@ final class ContinuityElementBlocks {
                 return "Certifikátům vlastních časových razítek " + gen + " už skončila řádná"
                         + " doba platnosti a tyto nástroje razítko po expiraci jeho certifikátu"
                         + " za platné nepovažují. Důkaz existence " + gen + " v dřívější době tu"
-                        + " nese obal, z něhož byl dokument předán k ověření"
+                        + " nese obal" + sig.envelopeRef() + ", z něhož byl dokument předán k ověření"
                         + (AdvisorView.envelopeHoldsTimestamps(sig)
                                 ? ", a jeho razítko vzniklo ještě za platnosti těch certifikátů"
                                 : "")
@@ -1409,7 +1411,8 @@ final class ContinuityElementBlocks {
             if (sig.getEnvelopeProofTimestamp() != null) {
                 return AdvisorView.capitalize(AdvisorView.elementCert(sig, AdvisorView.Case.NOMINATIV))
                         + " už expiroval a důkaz existence " + gen + " v dřívější době nese"
-                        + " obal, z něhož byl dokument předán k ověření, ne dokument sám."
+                        + " obal" + sig.envelopeRef()
+                        + ", z něhož byl dokument předán k ověření, ne dokument sám."
                         + " Nástroj, kterému se předá jen dokument, o něm nemusí vědět;"
                         + " jak naloží s celým obalem, se předem říct nedá.";
             }

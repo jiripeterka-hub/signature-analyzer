@@ -712,7 +712,8 @@ public class ResultView {
                     // Důkaz z obalu (situace 57): u prvku bez vlastního razítka tu stálo
                     // „deklarovaný čas", ačkoli čas doložilo razítko obalu (příloha datové
                     // zprávy, 1. 11. 2026).
-                    bstNote = "čas časového razítka obalu, z něhož byl dokument předán k ověření";
+                    bstNote = "čas časového razítka obalu" + sig.envelopeRef()
+                            + ", z něhož byl dokument předán k ověření";
                 } else if (sig.hasValidTimestamp()) {
                     bstNote = "čas časového razítka";
                 } else if (sig.isUsedCustomValidationTime()) {
