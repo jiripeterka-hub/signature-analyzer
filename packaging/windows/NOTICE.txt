@@ -163,6 +163,21 @@ souřadnic na absolutní a rozměr doladěn. Ostatní ikony aplikace vlastní p�
 nemají.
 
 ────────────────────────────────────────────────────────────────────────
+Vzhled protokolů DSS (záložka s protokolem ověření)
+Bootstrap 4.6.2 — Copyright (c) 2011-2022 Twitter, Inc. a The Bootstrap Authors
+(https://getbootstrap.com)
+Licence: MIT License
+Text licence: licenses\Bootstrap-MIT.txt
+
+jQuery 3.6.4 (slim) — Copyright OpenJS Foundation and other contributors
+(https://jquery.com)
+Licence: MIT License
+Text licence: licenses\jQuery-MIT.txt
+
+Obě knihovny jsou součástí aplikace beze změny; protokol, který DSS vydává
+jako HTML, se s nimi vykresluje bez přístupu k internetu.
+
+────────────────────────────────────────────────────────────────────────
 Zdrojové kódy použitých knihoven
 
 Licence LGPL, GPL a MPL žádají, aby byl příjemci dostupný odpovídající zdrojový

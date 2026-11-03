@@ -3,6 +3,17 @@
 Změny ve verzích aplikace AnEP (Analyzátor elektronických podpisů). Slouží jako podklad
 pro soupis změn ke každé nové vydané verzi.
 
+## Připravovaná verze
+
+### Protokoly a soukromí
+
+- **Protokol DSS bez přístupu k internetu.** Záložka s protokolem ověření si dosud při
+  každém zobrazení stahovala styly a skripty (Bootstrap, jQuery) z cizích serverů
+  cdn.jsdelivr.net a code.jquery.com; jejich provozovatelé se tak mohli dozvědět, kdy si
+  kdo protokol prohlíží, a bez připojení se protokol zobrazil bez úprav. Obě knihovny jsou
+  nově součástí aplikace a protokol se vykreslí i offline. Jejich licence (MIT) jsou
+  uvedeny v souboru NOTICE.txt a ve složce licenses.
+
 ## Verze 1.1.1 (změny oproti 1.1.0)
 
 ### Instalátor pro Windows

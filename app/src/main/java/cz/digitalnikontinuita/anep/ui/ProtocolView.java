@@ -232,11 +232,32 @@ public class ProtocolView {
         }
     }
 
+    /**
+     * Bootstrap 4.6.2 a jQuery 3.6.4 (slim), přibalené v {@code resources/protokol/} a vložené
+     * přímo do stránky. Do 3. 11. 2026 se stahovaly z cdn.jsdelivr.net a code.jquery.com při
+     * každém zobrazení protokolu — jediný síťový přístup aplikace, který s ověřováním nesouvisí,
+     * a provozovatelům CDN prozrazoval, kdy si kdo protokol prohlíží; bez sítě se protokol
+     * vykreslil bez stylů. Soubory jsou beze změny z npm, otisky souhlasí se zveřejněnými SRI.
+     * Načtou se jednou za běh aplikace.
+     */
+    private static String bundled(String name) {
+        return BUNDLED.computeIfAbsent(name, n -> {
+            try (InputStream in = ProtocolView.class.getResourceAsStream("/protokol/" + n)) {
+                return in == null ? "" : new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            } catch (java.io.IOException e) {
+                return "";
+            }
+        });
+    }
+
+    private static final java.util.Map<String, String> BUNDLED =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
     private String wrapBootstrap(String fragment) {
         return "<!DOCTYPE html><html lang=\"cs\"><head>"
                 + "<meta charset=\"UTF-8\">"
                 + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-                + "<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css\">"
+                + "<style>" + bundled("bootstrap.min.css") + "</style>"
                 + "<style>"
                 + "body{padding:16px;font-size:14px;} "
                 + ".card{margin-bottom:1rem;} "
@@ -252,8 +273,8 @@ public class ProtocolView {
                 + "</style>"
                 + "</head><body>"
                 + fragment
-                + "<script src=\"https://code.jquery.com/jquery-3.6.4.slim.min.js\"></script>"
-                + "<script src=\"https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js\"></script>"
+                + "<script>" + bundled("jquery-3.6.4.slim.min.js") + "</script>"
+                + "<script>" + bundled("bootstrap.bundle.min.js") + "</script>"
                 + "</body></html>";
     }
 
