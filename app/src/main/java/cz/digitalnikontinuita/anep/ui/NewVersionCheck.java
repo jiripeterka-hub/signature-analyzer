@@ -59,6 +59,8 @@ final class NewVersionCheck {
         HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(TIMEOUT)
                 .followRedirects(HttpClient.Redirect.NORMAL)
+                // Táž volba proxy jako u ostatních spojení (Nastavení, 3. 11. 2026).
+                .proxy(cz.digitalnikontinuita.anep.core.NetworkProxy.SELECTOR)
                 .build();
         HttpRequest req = HttpRequest.newBuilder(INFO_URL)
                 .timeout(TIMEOUT)

@@ -5,6 +5,20 @@ pro soupis změn ke každé nové vydané verzi.
 
 ## Připravovaná verze
 
+### Připojení k internetu
+
+- **Proxy.** Aplikace dosud chodila na internet vždy přímo a proxy nastavenou v systému
+  nepoužívala. V síti, kde musí veškerý provoz jít přes proxy, proto neprošla obnova
+  důvěryhodných seznamů, dotazy na revokaci (OCSP, CRL) ani žádosti o časové razítko
+  a aplikace se chovala jako bez připojení. Nově se ve výchozím stavu použije proxy podle
+  nastavení systému (kde žádná není, jde se přímo jako dosud). V Pokročilém nastavení přibyl
+  oddíl „Připojení k internetu (proxy)“, kde lze místo toho zadat adresu a port proxy
+  s výjimkami pro servery, k nimž se má jít přímo, nebo proxy vypnout. Změna platí hned
+  po uložení. Proxy, která vyžaduje přihlášení, aplikace zatím nepodporuje.
+- **Opravený popis obnovy seznamů.** Vysvětlivka u důvěryhodných seznamů EU v Nastavení
+  uváděla, že se seznamy obnovují, je-li mezipaměť starší než 24 hodin. Ve skutečnosti se
+  na pozadí kontroluje každý národní seznam zvlášť, nejvýš jednou za 12 hodin.
+
 ### Protokoly a soukromí
 
 - **Protokol DSS bez přístupu k internetu.** Záložka s protokolem ověření si dosud při

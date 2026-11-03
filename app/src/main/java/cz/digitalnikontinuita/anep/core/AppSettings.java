@@ -58,6 +58,23 @@ public class AppSettings {
     private List<TsaProfile> tsaProfiles           = new ArrayList<>();
     private int selectedTsaIndex                   = -1;
 
+    // Proxy (3. 11. 2026). Ukládá se jako služby výš: říká, kudy vede síť, ne jak přísně se
+    // soudí. Platit začne nastavením do NetworkProxy — při load() a save().
+    private static final String KEY_PROXY_MODE       = "proxy.mode";
+    private static final String KEY_PROXY_HOST       = "proxy.host";
+    private static final String KEY_PROXY_PORT       = "proxy.port";
+    private static final String KEY_PROXY_EXCLUSIONS = "proxy.exclusions";
+
+    private NetworkProxy.Config proxy              = NetworkProxy.DEFAULT;
+
+    public NetworkProxy.Config getProxy()          { return proxy; }
+
+    /** Uloží volbu a hned ji uplatní: spojení, která běží, si ji přečtou při další žádosti. */
+    public void setProxy(NetworkProxy.Config v) {
+        this.proxy = v == null ? NetworkProxy.DEFAULT : v;
+        NetworkProxy.configure(this.proxy);
+    }
+
     // ---- accessors ----
 
     public boolean isAcceptNewerOcsp()                  { return acceptNewerOcsp; }
@@ -248,6 +265,15 @@ public class AppSettings {
         }
         s.selectedTsaIndex = integer(p, KEY_TSA_SELECTED, -1);
         if (s.selectedTsaIndex >= s.tsaProfiles.size()) s.selectedTsaIndex = -1;
+
+        NetworkProxy.Mode mode = NetworkProxy.Mode.SYSTEM;
+        try {
+            mode = NetworkProxy.Mode.valueOf(p.getProperty(KEY_PROXY_MODE, "SYSTEM").trim());
+        } catch (IllegalArgumentException ignored) { }
+        s.setProxy(new NetworkProxy.Config(mode,
+                p.getProperty(KEY_PROXY_HOST, ""),
+                integer(p, KEY_PROXY_PORT, 0),
+                NetworkProxy.parseExclusions(p.getProperty(KEY_PROXY_EXCLUSIONS, ""))));
         return s;
     }
 
@@ -306,6 +332,11 @@ public class AppSettings {
                     t.getSigningKey() != null ? t.getSigningKey().persist() : "");
         }
         p.setProperty(KEY_TSA_SELECTED,      Integer.toString(selectedTsaIndex));
+        p.setProperty(KEY_PROXY_MODE,        proxy.mode().name());
+        p.setProperty(KEY_PROXY_HOST,        proxy.host());
+        p.setProperty(KEY_PROXY_PORT,        Integer.toString(proxy.port()));
+        p.setProperty(KEY_PROXY_EXCLUSIONS,  String.join(", ", proxy.exclusions()));
+        NetworkProxy.configure(proxy);
 
         try (OutputStream out = Files.newOutputStream(SETTINGS_FILE)) {
             p.store(out, "Analyzátor podpisů — nastavení validační politiky");

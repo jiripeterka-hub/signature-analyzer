@@ -2101,7 +2101,10 @@ public class ReportMapper {
     /** Downloads raw bytes from a URL with an 8 s connect / 12 s read timeout. */
     private static byte[] downloadBytes(String urlStr) {
         try {
-            java.net.URLConnection conn = new java.net.URI(urlStr).toURL().openConnection();
+            java.net.URI uri = new java.net.URI(urlStr);
+            // Proxy výslovně: URLConnection by jinak vzal výchozí výběr JDK, a ne volbu
+            // z Nastavení (NetworkProxy, 3. 11. 2026).
+            java.net.URLConnection conn = uri.toURL().openConnection(NetworkProxy.proxyFor(uri));
             conn.setConnectTimeout(8_000);
             conn.setReadTimeout(12_000);
             conn.setRequestProperty("User-Agent", "AnEP/1.0 CRL-Check");

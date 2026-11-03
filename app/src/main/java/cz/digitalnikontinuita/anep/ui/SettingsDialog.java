@@ -1,6 +1,7 @@
 package cz.digitalnikontinuita.anep.ui;
 
 import cz.digitalnikontinuita.anep.core.AppSettings;
+import cz.digitalnikontinuita.anep.core.NetworkProxy;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -10,9 +11,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.Separator;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -262,10 +266,74 @@ public class SettingsDialog {
 
         HBox lotlRow = new HBox(8, btnRefreshLotl, makeInfoButton(stage,
                 "Důvěryhodné seznamy EU (EUTL)",
-                "Aplikace uchovává stažený obsah seznamů EU v lokální mezipaměti a při spuštění " +
-                "jej aktualizuje pouze tehdy, je-li mezipaměť starší než 24 hodin. " +
+                "Aplikace uchovává stažený obsah seznamů EU v lokální mezipaměti. Po spuštění " +
+                "na pozadí zjišťuje, zda nevyšla novější verze, a to u každého národního " +
+                "seznamu nejvýš jednou za 12 hodin. " +
                 "Tlačítkem lze vynutit okamžité stažení aktuálního obsahu."));
         lotlRow.setAlignment(Pos.CENTER_LEFT);
+
+        // --- Připojení k internetu (proxy), 3. 11. 2026 ---
+        // Dřív tu nic nebylo a knihovna DSS chodila vždy přímo; v síti, kde vše jde přes proxy,
+        // pak neprošly seznamy, revokace ani razítka. Viz NetworkProxy.
+        Label headingProxy = new Label("Připojení k internetu (proxy)");
+        headingProxy.setStyle("-fx-font-weight:bold;-fx-font-size:14px;");
+
+        ToggleGroup proxyGroup = new ToggleGroup();
+        RadioButton rbProxySystem = new RadioButton("Podle nastavení systému");
+        RadioButton rbProxyManual = new RadioButton("Zadaná proxy");
+        RadioButton rbProxyDirect = new RadioButton("Bez proxy (přímé spojení)");
+        rbProxySystem.setToggleGroup(proxyGroup);
+        rbProxyManual.setToggleGroup(proxyGroup);
+        rbProxyDirect.setToggleGroup(proxyGroup);
+
+        NetworkProxy.Config proxyInit = settings.getProxy();
+        switch (proxyInit.mode()) {
+            case MANUAL -> rbProxyManual.setSelected(true);
+            case DIRECT -> rbProxyDirect.setSelected(true);
+            default     -> rbProxySystem.setSelected(true);
+        }
+
+        TextField tfProxyHost = new TextField(proxyInit.host());
+        tfProxyHost.setPromptText("adresa, např. proxy.example.cz");
+        tfProxyHost.setPrefWidth(230);
+        TextField tfProxyPort = new TextField(proxyInit.port() > 0
+                ? Integer.toString(proxyInit.port()) : "");
+        tfProxyPort.setPromptText("port");
+        tfProxyPort.setPrefWidth(70);
+        TextField tfProxyExclusions = new TextField(String.join(", ", proxyInit.exclusions()));
+        tfProxyExclusions.setPromptText("bez proxy, např. *.justice.cz");
+        tfProxyExclusions.setPrefWidth(306);
+
+        HBox proxyHostRow = new HBox(6, tfProxyHost, new Label(":"), tfProxyPort);
+        proxyHostRow.setAlignment(Pos.CENTER_LEFT);
+        proxyHostRow.setPadding(new Insets(0, 0, 0, 24));
+        HBox proxyExclRow = new HBox(6, tfProxyExclusions);
+        proxyExclRow.setPadding(new Insets(0, 0, 0, 24));
+
+        Runnable syncProxyFields = () -> {
+            boolean manual = rbProxyManual.isSelected();
+            tfProxyHost.setDisable(!manual);
+            tfProxyPort.setDisable(!manual);
+            tfProxyExclusions.setDisable(!manual);
+        };
+        syncProxyFields.run();
+        proxyGroup.selectedToggleProperty().addListener((obs, old, now) -> syncProxyFields.run());
+
+        HBox proxyModeRow = infoRow(rbProxySystem, makeInfoButton(stage,
+                "Připojení k internetu (proxy)",
+                "Kudy aplikace chodí na internet: pro důvěryhodné seznamy EU, revokační údaje " +
+                "(OCSP, CRL), certifikáty vydavatelů, časová razítka a kontrolu nové verze. " +
+                "Ověřovaný dokument se nikam neodesílá.\n\n" +
+                "Podle nastavení systému (výchozí): proxy, kterou má Windows v nastavení " +
+                "Internetu. Když žádnou nemá, jde se přímo.\n\n" +
+                "Zadaná proxy: adresa a port proxy HTTP. Do výjimek patří servery, k nimž se má " +
+                "jít přímo (oddělte čárkou; *.example.cz platí pro celou doménu).\n\n" +
+                "Bez proxy: vždy přímo.\n\n" +
+                "Proxy vyžadující přihlášení aplikace nepodporuje. Změna platí hned " +
+                "po uložení, bez restartu."));
+
+        VBox proxyBox = new VBox(6, proxyModeRow, rbProxyManual, proxyHostRow, proxyExclRow,
+                rbProxyDirect);
 
         // --- Advanced save/cancel ---
         Button btnSaveAdv = new Button("Uložit");
@@ -310,6 +378,9 @@ public class SettingsDialog {
                 headingLotl,
                 lotlRow,
                 refreshStatus,
+                new Separator(),
+                headingProxy,
+                proxyBox,
                 new Separator(),
                 new HBox(8, btnSaveAdv, btnCancelAdv)
         );
@@ -457,6 +528,26 @@ public class SettingsDialog {
         // Pro toho, kdo do pokročilého nastavení nevkročí, se nemění nic: posluchač u cbStandard
         // pokročilá zaškrtávátka rovnou nastaví, takže se odsud přečte přesně týž stav jako dřív.
         Runnable persist = () -> {
+            NetworkProxy.Mode proxyMode = rbProxyManual.isSelected() ? NetworkProxy.Mode.MANUAL
+                    : rbProxyDirect.isSelected() ? NetworkProxy.Mode.DIRECT
+                    : NetworkProxy.Mode.SYSTEM;
+            int proxyPort = 0;
+            try { proxyPort = Integer.parseInt(tfProxyPort.getText().trim()); }
+            catch (NumberFormatException ignored) { }
+            if (proxyMode == NetworkProxy.Mode.MANUAL
+                    && (tfProxyHost.getText().isBlank() || proxyPort < 1 || proxyPort > 65535)) {
+                // Neuložit tiše nepoužitelnou proxy: NetworkProxy by s ní šel přímo a uživatel
+                // by se divil, proč zadaná proxy nefunguje.
+                root.getChildren().setAll(advancedPane);
+                Alert a = new Alert(Alert.AlertType.WARNING,
+                        "U zadané proxy vyplňte adresu a port (1–65535).");
+                a.initOwner(stage);
+                a.setHeaderText(null);
+                a.showAndWait();
+                return;
+            }
+            settings.setProxy(new NetworkProxy.Config(proxyMode, tfProxyHost.getText(),
+                    proxyPort, NetworkProxy.parseExclusions(tfProxyExclusions.getText())));
             settings.setAcceptNewerOcsp(cbNewerOcsp.isSelected());
             settings.setAcceptExpiredRevocationSources(cbExpiredRevocSources.isSelected());
             settings.setIgnoreSha1Deprecated(cbSha1.isSelected());

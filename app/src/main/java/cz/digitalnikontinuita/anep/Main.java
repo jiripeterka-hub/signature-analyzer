@@ -88,6 +88,11 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         StartupTrace.mark("main() entered");
+        // Proxy podle nastavení systému (NetworkProxy, režim SYSTEM). Výchozí ProxySelector JDK
+        // čte tuto vlastnost jen při svém vzniku, proto dřív, než cokoli sáhne na síť.
+        if (System.getProperty("java.net.useSystemProxies") == null) {
+            System.setProperty("java.net.useSystemProxies", "true");
+        }
         // JavaFX replaces the context classloader on its Application Thread with its
         // own module classloader, which doesn't see classpath jars. DSS's ServiceLoader
         // calls happen on background threads that inherit this broken classloader, so

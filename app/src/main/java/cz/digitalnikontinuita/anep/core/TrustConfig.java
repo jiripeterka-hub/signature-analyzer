@@ -998,9 +998,32 @@ public class TrustConfig {
      * causing legitimate CAs absent from ~/.jdk-cacerts to be rejected.
      */
     static CommonsDataLoader createDataLoader() {
-        CommonsDataLoader loader = new CommonsDataLoader();
+        CommonsDataLoader loader = new CommonsDataLoader() {
+            @Override
+            protected synchronized org.apache.hc.client5.http.impl.classic.HttpClientBuilder
+                    getHttpClientBuilder(String url) {
+                return viaProxy(super.getHttpClientBuilder(url));
+            }
+        };
         applyCustomCaTrustStrategy(loader);
         return loader;
+    }
+
+    /**
+     * Trasa přes proxy podle {@link NetworkProxy} — u všech tří zavaděčů, jimiž jde veškerý
+     * provoz DSS (seznamy, AIA, CRL, OCSP, razítka).
+     *
+     * <p>Plánovač, ne {@code ProxyConfig} DSS: ten nese jednu pevnou adresu, kdežto proxy podle
+     * systému se volí pro každý cíl zvlášť (výjimky, skript PAC) a volba v Nastavení se má projevit
+     * i u zavaděče, který vznikl při startu. {@code SystemDefaultRoutePlanner} se ptá
+     * {@link NetworkProxy#SELECTOR} při každé žádosti. Před 3. 11. 2026 tu nebylo nic a DSS šel
+     * vždy přímo — viz {@link NetworkProxy}.
+     */
+    static org.apache.hc.client5.http.impl.classic.HttpClientBuilder viaProxy(
+            org.apache.hc.client5.http.impl.classic.HttpClientBuilder builder) {
+        return builder.setRoutePlanner(
+                new org.apache.hc.client5.http.impl.routing.SystemDefaultRoutePlanner(
+                        NetworkProxy.SELECTOR));
     }
 
     /**
@@ -1016,7 +1039,13 @@ public class TrustConfig {
      */
     static eu.europa.esig.dss.service.http.commons.OCSPDataLoader createOcspDataLoader() {
         eu.europa.esig.dss.service.http.commons.OCSPDataLoader loader =
-                new eu.europa.esig.dss.service.http.commons.OCSPDataLoader();
+                new eu.europa.esig.dss.service.http.commons.OCSPDataLoader() {
+                    @Override
+                    protected synchronized org.apache.hc.client5.http.impl.classic.HttpClientBuilder
+                            getHttpClientBuilder(String url) {
+                        return viaProxy(super.getHttpClientBuilder(url));
+                    }
+                };
         applyCustomCaTrustStrategy(loader);
         return loader;
     }
@@ -1043,7 +1072,7 @@ public class TrustConfig {
                     @Override
                     protected synchronized org.apache.hc.client5.http.impl.classic.HttpClientBuilder
                             getHttpClientBuilder(String url) {
-                        return super.getHttpClientBuilder(url).disableContentCompression();
+                        return viaProxy(super.getHttpClientBuilder(url).disableContentCompression());
                     }
                 };
         applyCustomCaTrustStrategy(loader);
