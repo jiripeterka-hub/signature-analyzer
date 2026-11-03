@@ -24,3 +24,6 @@ __pycache__/
 # na https://bajecnysvet.cz/anep/. Generátory gen-*.py dělají jen neupravenou předlohu
 # a ta do repozitáře nepatří, aby nevypadala jako vydaný dokument.
 docs/*.docx
+
+# Vedlejší produkt maven-shade; od 3. 11. 2026 se generuje do app/target/.
+app/dependency-reduced-pom.xml

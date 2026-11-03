@@ -233,6 +233,10 @@
               <goal>shade</goal>
             </goals>
             <configuration>
+              <!-- Vedlejší produkt shade (POM bez zabalených závislostí) nikdo nečte; v adresáři
+                   modulu jen při každém sestavení měnil verzovaný soubor. Od 3. 11. 2026 jde do
+                   target/ a v gitu není. -->
+              <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
               <!-- JavaFX must NOT end up inside the fat jar: the packaged app loads it from
                    the module path (app/fx), and a second copy on the classpath makes the JVM
                    refuse to start ("JavaFX runtime components are missing"). -->
