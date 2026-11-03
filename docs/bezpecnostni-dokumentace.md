@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — podklad pro posouzení podle zákona o kybernetické bezpečnosti a aktu o kybernetické odolnosti**
 
-Verze 1.1 (návrh) · stav ke dni 3. 11. 2026 · AnEP 1.2.0, knihovna DSS 6.5.1
+Verze 1.2 (návrh) · stav ke dni 3. 11. 2026 · AnEP 1.2.0, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -29,7 +29,7 @@ Dokument předpokládá, že provozovatel je v **režimu vyšších povinností*
 
 ### 1.3 Postavení AnEP podle aktu o kybernetické odolnosti
 
-AnEP je svobodný software s otevřeným zdrojovým kódem (licence EUPL 1.2), který autor jako fyzická osoba zveřejňuje bezplatně na své stránce. Podle bodu 18 odůvodnění nařízení se poskytování takového softwaru, které výrobce nezpeněžuje, nepovažuje za obchodní činnost, a software tak není „dodáván na trh“ ve smyslu nařízení. **Povinnosti výrobce podle aktu o kybernetické odolnosti se proto na AnEP v nynější podobě distribuce nevztahují.** Nevztahuje se na něj ani režim správce softwaru s otevřeným zdrojovým kódem (bod 19 odůvodnění), který míří na právnické osoby.
+AnEP je svobodný software s otevřeným zdrojovým kódem (licence EUPL 1.2), který autor jako fyzická osoba zveřejňuje bezplatně na své stránce; celý zdrojový kód je veřejně dostupný na GitHubu (kapitola 2.1). Podle bodu 18 odůvodnění nařízení se poskytování takového softwaru, které výrobce nezpeněžuje, nepovažuje za obchodní činnost, a software tak není „dodáván na trh“ ve smyslu nařízení. **Povinnosti výrobce podle aktu o kybernetické odolnosti se proto na AnEP v nynější podobě distribuce nevztahují.** Nevztahuje se na něj ani režim správce softwaru s otevřeným zdrojovým kódem (bod 19 odůvodnění), který míří na právnické osoby.
 
 Posouzení se může změnit, pokud by autor za AnEP nebo za jeho podporu, úpravy či provoz přijímal úplatu, například na základě smlouvy s resortem. Pak by šlo o dodávání v rámci obchodní činnosti a povinnosti výrobce by od 11. 12. 2027 (hlášení od 11. 9. 2026) platily plně.
 
@@ -46,12 +46,30 @@ Dokument přesto požadavky přílohy I a obsah přílohy VII sleduje dobrovoln�
 | Výrobce (autor) | Jiří Peterka, jiri@peterka.cz |
 | Stránka | https://bajecnysvet.cz/anep/ |
 | Licence | EUPL 1.2 (české a anglické znění přiloženo); licence přibalených knihoven v souboru NOTICE.txt a ve složce licenses |
+| Zdrojový kód | veřejný repozitář https://github.com/jiripeterka-hub/signature-analyzer (větev `master`); každé vydání má značku, verze 1.2.0 značku `v1.2.0` |
 | Platforma | Windows 10 a 11, 64bitové; sestavení pro Linux |
 | Distribuce | instalátor MSI a přenosný archiv ZIP pro Windows, archiv pro Linux |
 | Podpis instalátoru | podpis kódu (Authenticode, SHA-256) certifikátem autora od Certum Code Signing 2021 CA, s časovým razítkem Certum; otisk SHA-256 certifikátu `13930456cefa0384b6376360866f06df3e355c5fa58a52c16acddbe909f0a73c`, platnost 1. 11. 2026 – 1. 11. 2027 |
 | Hlavní komponenty | DSS 6.5.1 (Evropská komise), Apache PDFBox, Bouncy Castle, Apache Santuario, Apache HttpClient 5.6, Apache FOP 2.11, Saxon-HE 12.5, JavaFX 21.0.4, přibalené běhové prostředí Javy |
 
 Verzi nainstalované aplikace ukazuje okno O aplikaci. Pravost instalátoru lze ověřit ve vlastnostech souboru (Digitální podpisy) porovnáním otisku certifikátu s údajem výše a na stránce aplikace; AnEP sám ji ověří v prohlížeči kontejnerů (řádek „Sestavení AnEP“).
+
+### 2.1 Zdrojový kód a vlastní sestavení
+
+Úplný zdrojový kód AnEP je veřejně dostupný v repozitáři **https://github.com/jiripeterka-hub/signature-analyzer**. Obsahuje kód aplikace, automatické testy, ověřovací politiku (`policy/constraint.xml`), skripty pro sestavení balíčků pro Windows a Linux, popis architektury (`docs/architecture.md`) a soupis změn (`CHANGELOG.md`). Každé vydání je označeno značkou (`v1.0`, `v1.1.0`, `v1.1.1`, `v1.2.0`), takže lze dohledat přesný stav kódu, z něhož byla daná verze sestavena. Linuxové balíčky se sestavují veřejně v GitHub Actions (workflow `linux-portable.yml`) a záznam o každém sestavení je v repozitáři k nahlédnutí.
+
+Pro povinnou osobu to znamená tři věci:
+
+- **Kód lze prověřit.** Vlastní bezpečnostní rozbor, revize kódu nebo test podle § 24 vyhlášky nemusí stát jen na tomto dokumentu; lze ho provést nad týmž kódem, z něhož vznikají vydané balíčky.
+- **Aplikaci si může sestavit každý sám.** Licence EUPL 1.2 dovoluje kód užívat, měnit i šířit. Organizace si tak může sestavit vlastní instanci z ověřeného stavu kódu (například ze značky `v1.2.0`) a nemusí spoléhat na instalátor stažený ze stránky autora. Potřebuje k tomu JDK 21 nebo novější a Maven 3.9 nebo novější, pro instalátor MSI ještě WiX Toolset v3; postup je v souboru `README.md` v repozitáři (`mvn -pl app -am package`, balíčky skriptem `packaging/windows/dist.ps1` nebo `packaging/linux/dist.sh`). Knihovny třetích stran se při sestavení stahují z repozitáře Maven Central.
+- **Údržba nestojí jen na autorovi.** Kdyby autor přestal aplikaci udržovat, může opravy zranitelností nebo aktualizace knihoven provést organizace sama nebo jejím jménem někdo jiný (riziko R11).
+
+Vlastní sestavení má dvě odlišnosti, s nimiž je třeba počítat:
+
+- **Není podepsané autorem.** Podpis instalátoru a programu je vázán na certifikát autora, který ke zdrojovému kódu nepatří. Vlastní sestavení je proto nepodepsané, nebo podepsané certifikátem organizace, a AnEP sám je v prohlížeči kontejnerů neoznačí jako oficiální sestavení. Organizace, která sestavuje sama, by měla sestavení podepsat vlastním certifikátem pro podpis kódu a evidovat otisky výsledných balíčků (§ 7 vyhlášky).
+- **Jméno.** Licence se nevztahuje na jméno „AnEP“ a ikonu aplikace. Kdo kód upraví a upravenou verzi dále šíří, má ji pojmenovat jinak; sestavení beze změny kódu pro vlastní potřebu organizace se to netýká.
+
+Zda je sestavení reprodukovatelné, tedy zda z téže značky vznikne bajtově totožný balíček, ověřováno nebylo; přibalené běhové prostředí Javy se bere z JDK na počítači, kde se sestavuje.
 
 ## 3 Zamýšlený účel a bezpečnostní prostředí
 
@@ -199,7 +217,7 @@ Součástí repozitáře je přes sto tříd automatických testů (JUnit), kter
 
 ### 9.1 Instalace
 
-1. Instalátor stahujte jen ze stránky https://bajecnysvet.cz/anep/.
+1. Instalátor stahujte jen ze stránky https://bajecnysvet.cz/anep/, nebo si aplikaci sestavte ze zdrojového kódu podle kapitoly 2.1.
 2. Před instalací ověřte digitální podpis instalátoru a otisk certifikátu (kapitola 2).
 3. Na spravovaných stanicích instalujte centrálně a evidujte verzi a otisk SHA-256 instalátoru.
 
@@ -224,14 +242,14 @@ Přiřazení k paragrafům vyhlášky č. 409/2025 Sb. Uvádí, co k opatření 
 |---|---|---|---|
 | § 7 | Řízení aktiv | identifikace, komponenty, místní data (kap. 2, 4.3) | zařadit AnEP do evidence aktiv, určit garanta a hodnotu aktiva |
 | § 8 | Řízení rizik | rizika R1–R9 (kap. 11) | posoudit rizika v kontextu vlastní sítě a přijmout opatření |
-| § 9 | Řízení dodavatelů | postavení autora a licence (kap. 1.3, 2) | posoudit, zda je autor dodavatelem či významným dodavatelem; bez smluvního vztahu žádné smluvní záruky (podpora, hlášení incidentů) nejsou |
+| § 9 | Řízení dodavatelů | postavení autora a licence; veřejný zdrojový kód a možnost vlastního sestavení (kap. 1.3, 2, 2.1) | posoudit, zda je autor dodavatelem či významným dodavatelem; bez smluvního vztahu žádné smluvní záruky (podpora, hlášení incidentů) nejsou; rozhodnout, zda používat balíčky autora, nebo sestavovat sama |
 | § 11 | Řízení změn | soupis změn ke každé verzi, Přehled online komunikace (kap. 6) | nové verze před nasazením vyzkoušet a schválit |
-| § 12 | Akvizice, vývoj a údržba | bezpečnostní vlastnosti, kryptografie, aktualizace (kap. 6–8) | zohlednit chybějící dobu podpory a SBOM; požadavky uplatnit vůči autorovi, je-li smluvní vztah |
+| § 12 | Akvizice, vývoj a údržba | bezpečnostní vlastnosti, kryptografie, aktualizace (kap. 6–8); zdrojový kód (kap. 2.1) | zohlednit chybějící dobu podpory a SBOM; požadavky uplatnit vůči autorovi, je-li smluvní vztah; při vlastním sestavení oddělit sestavovací prostředí a podepisovat výsledné balíčky |
 | § 13, § 20 | Řízení přístupu a oprávnění | aplikace nemá účty (kap. 3.2) | přístup řídit účty operačního systému; omezit, kdo smí měnit `trusted-certs` |
 | § 14 | Zvládání událostí a incidentů | kontakt na autora (kap. 8.3) | zapojit AnEP do vlastního postupu zvládání incidentů |
 | § 18 | Bezpečnost komunikačních sítí | cíle, porty a protokoly, volba proxy (Přehled online komunikace, kap. 2 a 4) | povolit jen nezbytný odchozí provoz; nastavit proxy; rozhodnout o OCSP |
 | § 22 | Zaznamenávání událostí | aplikace bezpečnostní události nezaznamenává (kap. 6, bod l) | zaznamenávat na úrovni operačního systému a síťových prvků (spuštění aplikace, odchozí spojení) |
-| § 24 | Aplikační bezpečnost | prostor útoku (kap. 5), stav testování (kap. 8.5) | před nasazením a po významné změně provést test podle § 24 v rozsahu odpovídajícím aktivu; prověřit závislosti na známé zranitelnosti |
+| § 24 | Aplikační bezpečnost | prostor útoku (kap. 5), stav testování (kap. 8.5), zdrojový kód k revizi (kap. 2.1) | před nasazením a po významné změně provést test podle § 24 v rozsahu odpovídajícím aktivu; prověřit závislosti na známé zranitelnosti |
 | § 25 | Kryptografické algoritmy | kap. 7 | autority razítek nastavovat přes HTTPS |
 | § 26 | Zajišťování dostupnosti | provoz bez sítě (Přehled online komunikace, kap. 4.4) | zajistit dostupnost důvěryhodných seznamů (síť, případně přenos mezipaměti) |
 
@@ -250,12 +268,12 @@ Přiřazení k paragrafům vyhlášky č. 409/2025 Sb. Uvádí, co k opatření 
 | R7 | Únik informací o ověřovaných podpisech vydavatelům přes OCSP | vydavatel ví, čí podpisy organizace kdy ověřovala | žádné | volba vypnout OCSP; revokace z vlastního úložiště CRL |
 | R8 | Přibalené běhové prostředí obsahuje moduly, které aplikace nepotřebuje (ladicí agent JDWP, vzdálená správa JVM, překladač, jshell) | větší prostor útoku, pokud by je někdo zapnul parametry spuštění | moduly nejsou ve výchozím spuštění aktivní | omezit sadu modulů běhového prostředí na nezbytné |
 | R9 | Síť s povinnou proxy nebo s inspekcí TLS | proxy s přihlášením aplikace nepodporuje (do verze 1.1.1 včetně nepoužívala proxy vůbec); kontrola verze za inspekcí TLS selže | volba proxy (od verze 1.2.0); provoz bez sítě; důvěra kořenům Windows u spojení DSS | doplnit přihlášení k proxy, je-li v síti vyžadováno; sjednotit důvěru pro kontrolu verze |
-| R10 | Podvržený instalátor | spuštění cizího kódu | podepsaný instalátor; AnEP rozpozná oficiální sestavení | ověřovat podpis před instalací; centrální distribuce |
-| R11 | Chybějící závazek podpory | zranitelnost zůstane neopravena | — | stanovit dobu podpory a postup hlášení zranitelností |
+| R10 | Podvržený instalátor | spuštění cizího kódu | podepsaný instalátor; AnEP rozpozná oficiální sestavení | ověřovat podpis před instalací; centrální distribuce; případně vlastní sestavení ze značky vydání (kap. 2.1) |
+| R11 | Chybějící závazek podpory | zranitelnost zůstane neopravena | veřejný zdrojový kód pod EUPL 1.2: opravu může provést a aplikaci sestavit i někdo jiný než autor (kap. 2.1) | stanovit dobu podpory a postup hlášení zranitelností |
 
 ### 11.2 Zbytková rizika
 
-Po přijetí opatření v pravém sloupci zůstávají hlavně rizika spojená s rozborem nedůvěryhodných souborů (R1) a se závislostí na jediném autorovi (R11). Pro provoz v síti justice je nejvýznamnější riziko R3, protože se týká samotného základu důvěry, a riziko R9, které rozhoduje o tom, zda aplikace v síti s proxy dosáhne na aktuální data; po zavedení volby proxy zbývá z něj proxy s přihlášením.
+Po přijetí opatření v pravém sloupci zůstávají hlavně rizika spojená s rozborem nedůvěryhodných souborů (R1) a se závislostí na jediném autorovi (R11); tu zmírňuje veřejný zdrojový kód, který si organizace může sama prověřit, opravit a sestavit. Pro provoz v síti justice je nejvýznamnější riziko R3, protože se týká samotného základu důvěry, a riziko R9, které rozhoduje o tom, zda aplikace v síti s proxy dosáhne na aktuální data; po zavedení volby proxy zbývá z něj proxy s přihlášením.
 
 ## 12 Rozdíl oproti požadavkům aktu o kybernetické odolnosti
 
