@@ -726,6 +726,12 @@ public class ResultView {
             }
         }
 
+        // Co prvek v kontejneru podepisuje (3. 11. 2026). Ve sloučeném kontejneru se to
+        // u každého podpisu liší a závěr o platnosti se týká jen těchto souborů.
+        if (!isTs && !sig.getSignedFiles().isEmpty()) {
+            card.getChildren().add(row(signedFilesLabel(sig), String.join(", ", sig.getSignedFiles())));
+        }
+
         // One line, no detail: an evidence record changes what the reader can conclude about
         // the signature's age, so it belongs in the simple overview — but everything about
         // what it covers and how well belongs in Rozšířený přehled.
@@ -738,6 +744,13 @@ public class ResultView {
         }
 
         return card;
+    }
+
+    /** Popisek řádku se soubory, které prvek v kontejneru podepisuje — viz getSignedFiles(). */
+    static String signedFilesLabel(SignatureSummary sig) {
+        boolean one = sig.getSignedFiles().size() == 1;
+        if (sig.isSeal() || sig.isMark()) return one ? "Zapečetěný soubor:" : "Zapečetěné soubory:";
+        return one ? "Podepsaný soubor:" : "Podepsané soubory:";
     }
 
     /** One sentence naming what the records covering this signature do or fail to do. */

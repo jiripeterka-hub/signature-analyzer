@@ -17,6 +17,12 @@ pro soupis změn ke každé nové vydané verzi.
 
 ### Výklad výsledků
 
+- **Co který podpis v kontejneru podepisuje.** U podpisů a pečetí v kontejneru ASiC uvádí
+  Zjednodušený i Rozšířený přehled nový řádek „Podepsané soubory“ (u pečeti „Zapečetěné
+  soubory“) se jmény dokumentů, které daný prvek podepisuje. Ve sloučeném kontejneru, kde
+  každý podpis podepisuje jiné dokumenty nebo jejich kombinaci, je tak vidět, k čemu se
+  který závěr o platnosti vztahuje. U podepsaného archivu .zip (ASiC-S) uvede i soubory
+  v něm; u dokumentu PDF a u externího podpisu se řádek neukazuje.
 - **Důkaz z obalu, který nestačil.** Když dokument předaný tlačítkem „Ověřit v AnEP“
   z kontejneru, datové zprávy či jiného obalu neobstál ani s časovým razítkem obalu, karta
   Analýzy to nově řekne: v poznámce k výsledku, v bloku „Průběh ověřování“ i ve znění důvodu

@@ -771,6 +771,12 @@ public class ExtendedView {
         String formatLbl = isTs ? "Formát časového razítka:" : (isSeal ? "Formát pečeti:" : "Formát podpisu:");
         String formatVal = isTs ? timestampFormatLabel() : formatSignatureLabel(sig.getFormat());
         card.getChildren().add(row(formatLbl, formatVal));
+        // Co prvek v kontejneru podepisuje — viz SignatureSummary.getSignedFiles(). Mezi řádky,
+        // které čte každý: ve sloučeném kontejneru se závěr o platnosti týká jen těchto souborů.
+        if (!isTs && !sig.getSignedFiles().isEmpty()) {
+            card.getChildren().add(row(ResultView.signedFilesLabel(sig),
+                    String.join(", ", sig.getSignedFiles())));
+        }
 
         // Odsud dál je karta složená z pojmenovaných bloků, všechny zavřené. Řádky nad tímto
         // místem — čeho se nález týká, jak dopadl a v jakém je formátu — čte každý; všechno

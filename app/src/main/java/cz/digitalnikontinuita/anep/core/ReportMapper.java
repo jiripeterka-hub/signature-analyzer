@@ -595,6 +595,7 @@ public class ReportMapper {
                         unhelpfulEnvelopeProofDetail(unhelpfulEnvelope),
                         unhelpfulEnvelope.when());
             }
+            summaries.get(summaries.size() - 1).setSignedFiles(signedContainerFiles(sw));
         }
 
         DiagnosticData dd = baseDd;
@@ -5863,6 +5864,56 @@ public class ReportMapper {
     static String unhelpfulEnvelopeProofDetail(EnvelopeProof proof) {
         return envelopeProofHead(proof) + ". Ověření se k tomu okamžiku zopakovalo, platnost se"
                 + " ale prokázat nepodařilo ani tak: překážkou je něco jiného než doba vzniku.";
+    }
+
+    /**
+     * Soubory kontejneru, které podpis podepisuje — z rozsahu podpisu v DSS (3. 11. 2026).
+     *
+     * <p>Jen u podpisu uloženého v kontejneru ASiC ({@code META-INF/…}); jinde je podepsaným
+     * obsahem ověřovaný soubor sám a řádek by nic neřekl. Ve sloučeném kontejneru přitom může
+     * každý podpis podepisovat jinou skupinu dokumentů a čtenář, který řeší právní účinky,
+     * musí vědět, k čemu se který závěr vztahuje.
+     *
+     * <p>Bere se celý soubor (FULL), soubor uvnitř podepsaného archivu .zip v ASiC-S (ARCHIVED),
+     * a s poznámkou i podepsaná část souboru (PARTIAL) a soubor podepsaný jen otiskem
+     * (DIGEST). Protipodpis a jiné rozsahy nad podpisy sem nepatří — nepodepisují dokument.
+     * Soubory v {@code META-INF/} (manifest ASiC) se vynechávají: jsou technickým nosičem otisků,
+     * ne dokumentem, a prohlížeč kontejneru je ukazuje zvlášť.
+     */
+    static List<String> signedContainerFiles(SignatureWrapper sw) {
+        if (sw == null || sw.getFilename() == null
+                || !sw.getFilename().toUpperCase(java.util.Locale.ROOT).startsWith("META-INF/")) {
+            return List.of();
+        }
+        // Obsah archivu jen u podepsaného archivu .zip (ASiC-S s více soubory, „package.zip").
+        // DSS rozsah ARCHIVED vydává i u dokumentu, který je ZIP jen technicky: u ASiC-S
+        // s dokumentem .docx vyjmenoval přes dvacet jeho vnitřních částí (změřeno 3. 11. 2026
+        // na D:\tmp\asic\container-signed-cades-baseline-b.asics).
+        String archive = null;
+        for (var scope : sw.getSignatureScopes()) {
+            if (scope.getScope() == eu.europa.esig.dss.enumerations.SignatureScopeType.FULL
+                    && scope.getName() != null
+                    && scope.getName().toLowerCase(java.util.Locale.ROOT).endsWith(".zip")) {
+                archive = archive == null ? scope.getName() : "";
+            }
+        }
+        boolean listArchive = archive != null && !archive.isEmpty();
+        java.util.LinkedHashSet<String> out = new java.util.LinkedHashSet<>();
+        for (var scope : sw.getSignatureScopes()) {
+            String name = scope.getName();
+            if (name == null || name.isBlank() || scope.getScope() == null) continue;
+            if (name.toUpperCase(java.util.Locale.ROOT).startsWith("META-INF/")) continue;
+            switch (scope.getScope()) {
+                case FULL -> out.add(name);
+                case ARCHIVED -> {
+                    if (listArchive) out.add(name + " (v archivu " + archive + ")");
+                }
+                case PARTIAL -> out.add(name + " (jen část)");
+                case DIGEST -> out.add(name + " (jen otiskem)");
+                default -> { }
+            }
+        }
+        return List.copyOf(out);
     }
 
     /** Úvod vět o důkazu z obalu: který obal, které razítko a co z něj plyne. */

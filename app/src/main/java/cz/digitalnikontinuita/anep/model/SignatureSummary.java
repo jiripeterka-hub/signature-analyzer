@@ -1086,6 +1086,17 @@ public class SignatureSummary {
         this.unhelpfulEnvelopeProofTime = when;
     }
 
+    /**
+     * Soubory kontejneru, které tento prvek podepisuje, jak je jmenuje rozsah podpisu v DSS
+     * (3. 11. 2026). Prázdný seznam mimo kontejnery: u PDF či odloučeného podpisu by řádek jen
+     * opakoval jméno ověřovaného souboru. Nález uživatele nad sloučeným kontejnerem ASiC-E, kde
+     * každý ze čtyř podpisů podepisuje jiné dokumenty — online DSS to ukazuje, AnEP dosud ne.
+     */
+    private List<String> signedFiles = List.of();
+
+    public List<String> getSignedFiles()                  { return signedFiles; }
+    public void setSignedFiles(List<String> files)        { this.signedFiles = List.copyOf(files); }
+
     /** True when at least one evidence record actually proves this signature's earlier existence. */
     public boolean hasProvingEvidenceRecord() {
         return evidenceRecords.stream().anyMatch(EvidenceRecordEntry::providesProof);
