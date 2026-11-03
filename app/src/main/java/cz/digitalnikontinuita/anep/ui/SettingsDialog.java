@@ -12,6 +12,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
@@ -70,7 +71,9 @@ public class SettingsDialog {
         stage.setTitle("Nastavení");
         stage.initOwner(owner);
         stage.initModality(Modality.APPLICATION_MODAL);
-        stage.setResizable(false);
+        // Roztahovat jde na výšku (3. 11. 2026, pokyn uživatele): pokročilá stránka se po přidání
+        // proxy na nízkou obrazovku nevejde. Obsah je proto v ScrollPane a šířka se drží — viz fit().
+        stage.setResizable(true);
 
         VBox root = new VBox();
 
@@ -335,12 +338,6 @@ public class SettingsDialog {
         VBox proxyBox = new VBox(6, proxyModeRow, rbProxyManual, proxyHostRow, proxyExclRow,
                 rbProxyDirect);
 
-        // --- Advanced save/cancel ---
-        Button btnSaveAdv = new Button("Uložit");
-        btnSaveAdv.setStyle("-fx-font-size:12px;");
-        Button btnCancelAdv = new Button("Zrušit");
-        btnCancelAdv.setOnAction(e -> stage.close());
-
         // --- Advanced "back" button ---
         Button btnToBasic = new Button("← Základní nastavení");
         btnToBasic.setStyle("-fx-font-size:11px;");
@@ -349,11 +346,9 @@ public class SettingsDialog {
         advancedPane.setPadding(new Insets(20));
         advancedPane.setMinWidth(440);
         advancedPane.getChildren().addAll(
+                // Pořadí od nejčastěji po nejméně používané (3. 11. 2026, pokyn uživatele):
+                // čas ověření proto až před proxy, ne nahoře.
                 btnToBasic,
-                new Separator(),
-                headingTime,
-                customTimeRow,
-                timeRow,
                 new Separator(),
                 headingPolicy,
                 notePolicy,
@@ -379,10 +374,12 @@ public class SettingsDialog {
                 lotlRow,
                 refreshStatus,
                 new Separator(),
-                headingProxy,
-                proxyBox,
+                headingTime,
+                customTimeRow,
+                timeRow,
                 new Separator(),
-                new HBox(8, btnSaveAdv, btnCancelAdv)
+                headingProxy,
+                proxyBox
         );
 
         // ================================================================
@@ -432,10 +429,13 @@ public class SettingsDialog {
         Button btnToAdvanced = new Button("Pokročilé nastavení...");
         btnToAdvanced.setStyle("-fx-font-size:11px;");
 
-        Button btnSaveBasic = new Button("Uložit");
-        btnSaveBasic.setStyle("-fx-font-size:12px;");
-        Button btnCancelBasic = new Button("Zrušit");
-        btnCancelBasic.setOnAction(e -> stage.close());
+        // Uložit a Zrušit jsou jednou, v pruhu pod posouvaným obsahem (3. 11. 2026, pokyn
+        // uživatele). Dřív stála na konci každé stránky; jakmile se okno dalo zmenšit a obsah
+        // posouvat, zůstala mimo dohled a nemuselo být zřejmé, že nějaké stisknout.
+        Button btnSave = new Button("Uložit");
+        btnSave.setStyle("-fx-font-size:12px;");
+        Button btnCancel = new Button("Zrušit");
+        btnCancel.setOnAction(e -> stage.close());
 
         VBox basicPane = new VBox(12);
         basicPane.setPadding(new Insets(20));
@@ -463,9 +463,7 @@ public class SettingsDialog {
                 new Separator(),
                 btnToAdvanced,
                 new Separator(),
-                btnAbout,
-                new Separator(),
-                new HBox(8, btnSaveBasic, btnCancelBasic)
+                btnAbout
         );
 
         // ================================================================
@@ -485,7 +483,7 @@ public class SettingsDialog {
 
         btnToAdvanced.setOnAction(e -> {
             root.getChildren().setAll(advancedPane);
-            Platform.runLater(stage::sizeToScene);
+            Platform.runLater(() -> fit(stage, ADVANCED_HEIGHT));
         });
 
         btnToBasic.setOnAction(e -> {
@@ -493,7 +491,7 @@ public class SettingsDialog {
             cbStandard.setSelected(advancedIsStandard.getAsBoolean());
             suppressStandardListener[0] = false;
             root.getChildren().setAll(basicPane);
-            Platform.runLater(stage::sizeToScene);
+            Platform.runLater(() -> fit(stage, Double.MAX_VALUE));
         });
 
         // cbStandard controls only signature/seal-related advanced settings; cbTsStandards is independent
@@ -513,9 +511,10 @@ public class SettingsDialog {
             }
         });
 
-        // Uloží se stav ovládacích prvků, ne odvozenina z přehledového zaškrtávátka — a obě
-        // tlačítka Uložit ukládají totéž. Dialog je jeden, nastavení je jedno; která z jeho dvou
-        // stránek je zrovna vidět, nesmí rozhodovat o tom, co se zapíše.
+        // Uloží se stav ovládacích prvků, ne odvozenina z přehledového zaškrtávátka — z obou
+        // stránek totéž (od 3. 11. 2026 je tlačítko Uložit jen jedno, v pruhu dole). Dialog je
+        // jeden, nastavení je jedno; která z jeho dvou stránek je zrovna vidět, nesmí
+        // rozhodovat o tom, co se zapíše.
         //
         // Dřív měla každá stránka vlastní zápis a každý zahazoval to, co bylo na té druhé.
         // Z pokročilé se nezapisoval režim razítek ani expertní mód. Ze základní se zapisovaly
@@ -567,18 +566,60 @@ public class SettingsDialog {
             stage.close();
         };
 
-        btnSaveBasic.setDefaultButton(true);
-        btnSaveBasic.setOnAction(e -> persist.run());
-        btnSaveAdv.setDefaultButton(true);
-        btnSaveAdv.setOnAction(e -> persist.run());
+        btnSave.setDefaultButton(true);
+        btnSave.setOnAction(e -> persist.run());
 
         // ================================================================
         // SHOW
         // ================================================================
 
         root.getChildren().add(startAdvanced ? advancedPane : basicPane);
-        stage.setScene(new Scene(root));
+        ScrollPane scroll = new ScrollPane(root);
+        scroll.setFitToWidth(true);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        HBox buttonBar = new HBox(8, btnSave, btnCancel);
+        buttonBar.setPadding(new Insets(10, 20, 10, 20));
+        buttonBar.setStyle("-fx-border-color:#cccccc transparent transparent transparent;");
+        javafx.scene.layout.BorderPane frame = new javafx.scene.layout.BorderPane(scroll);
+        frame.setBottom(buttonBar);
+        stage.setScene(new Scene(frame));
+        stage.setOnShown(e -> fit(stage, startAdvanced ? ADVANCED_HEIGHT : Double.MAX_VALUE));
         stage.showAndWait();
+    }
+
+    /**
+     * Výška, se kterou se otevře pokročilé nastavení (3. 11. 2026, pokyn uživatele; nejprve 900,
+     * týž den zkráceno na 500): vejde se i na malý monitor; zbytek se posune.
+     */
+    private static final double ADVANCED_HEIGHT = 500;
+
+    /**
+     * Velikost okna podle obsahu, nejvýš na výšku obrazovky, a pevná šířka.
+     *
+     * <p>Výška se dá měnit myší a obsah se pak posouvá. Šířka ne: stránky jsou sázené na pevnou
+     * šířku a širší okno by jen přidalo prázdné místo vpravo. Šířka svislého posuvníku se přidává
+     * vždy: posuvník se objeví, i když uživatel okno teprve zmenší, a bez rezervy by ubral obsahu
+     * pravý okraj (stránky mají minimální šířku a vodorovný posuvník je vypnutý).
+     *
+     * @param maxHeight strop výšky; u pokročilé stránky {@link #ADVANCED_HEIGHT}
+     */
+    private static void fit(Stage stage, double maxHeight) {
+        stage.setMinWidth(0);
+        stage.setMaxWidth(Double.MAX_VALUE);
+        stage.sizeToScene();
+        stage.setWidth(stage.getWidth() + 18);
+        javafx.geometry.Rectangle2D screen = javafx.stage.Screen.getScreensForRectangle(
+                        stage.getX(), stage.getY(), Math.max(1, stage.getWidth()), 1)
+                .stream().findFirst().orElse(javafx.stage.Screen.getPrimary()).getVisualBounds();
+        double cap = Math.min(maxHeight, screen.getHeight());
+        if (stage.getHeight() > cap) stage.setHeight(cap);
+        // Okno otevřené níž na obrazovce by po přepnutí na vyšší stránku přečnívalo dolů.
+        if (stage.getY() + stage.getHeight() > screen.getMaxY()) {
+            stage.setY(Math.max(screen.getMinY(), screen.getMaxY() - stage.getHeight()));
+        }
+        stage.setMinWidth(stage.getWidth());
+        stage.setMaxWidth(stage.getWidth());
+        stage.setMinHeight(200);
     }
 
     /** Wraps a main control and an info button in an HBox with the main control expanding. */

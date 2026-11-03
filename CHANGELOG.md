@@ -15,6 +15,12 @@ pro soupis změn ke každé nové vydané verzi.
   oddíl „Připojení k internetu (proxy)“, kde lze místo toho zadat adresu a port proxy
   s výjimkami pro servery, k nimž se má jít přímo, nebo proxy vypnout. Změna platí hned
   po uložení. Proxy, která vyžaduje přihlášení, aplikace zatím nepodporuje.
+- **Okno Nastavení s posuvníkem.** Okno Nastavení jde nově zmenšit a zvětšit na výšku
+  a obsah se v něm posouvá; vyšší než obrazovka se už neotevře. Pokročilé nastavení se
+  otevírá vysoké 500 bodů, takže se vejde i na malý monitor. Tlačítka Uložit a Zrušit
+  stojí v pevném pruhu na spodku okna a při posouvání obsahu zůstávají vidět. Oddíl „Čas
+  ověření“ se v něm přesunul níž, před nastavení proxy: nahoře jsou volby, které se
+  používají nejčastěji.
 - **Opravený popis obnovy seznamů.** Vysvětlivka u důvěryhodných seznamů EU v Nastavení
   uváděla, že se seznamy obnovují, je-li mezipaměť starší než 24 hodin. Ve skutečnosti se
   na pozadí kontroluje každý národní seznam zvlášť, nejvýš jednou za 12 hodin.
