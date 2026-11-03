@@ -866,15 +866,18 @@ public class ValidatorFactory {
         // k nejstaršímu důkazu, a důkazy se zkusí nad tím. Nález uživatele 3. 11. 2026: PDF
         // úrovně B z kontejneru ASiC-E, CRL vydaný za platnosti certifikátu vložený do úložiště
         // podle rady u důvodu 12 — a výsledek se nepohnul.
+        ValidationOutcome base = outcome;
         if (!open.isEmpty() && source.elementBytes() != null
                 && !CustomCrlStore.listCrls().isEmpty()) {
+            ValidationOutcome againOutcome = null;
             Reports again = null;
             Date previous = CRL_REFERENCE_TIME.get();
             try {
                 CRL_REFERENCE_TIME.set(Date.from(candidates.get(0).when()));
-                again = validate(new eu.europa.esig.dss.model.InMemoryDocument(
+                againOutcome = validate(new eu.europa.esig.dss.model.InMemoryDocument(
                                 source.elementBytes(), source.elementPath()),
-                        (DSSDocument) null, certificateVerifier, null).reports();
+                        (DSSDocument) null, certificateVerifier, null);
+                again = againOutcome.reports();
             } catch (Exception e) {
                 // Bez druhého ověření zůstává výsledek prvního.
             } finally {
@@ -893,6 +896,19 @@ public class ValidatorFactory {
                 // líp druhý pokus — ten už měl k dispozici i seznam z úložiště.
                 open.removeIf(id -> tried.contains(id) && !stillOpen.contains(id));
                 failed.putAll(failedAgain);
+                // Pomohlo-li druhé ověření, stanou se jeho protokoly protokoly celého výsledku.
+                // Diagnostická data výsledku čtou všechny záložky (Rozšířený přehled, Detailní
+                // rozbor, revokační výčty), a dokud zůstávala z prvního ověření, seznam
+                // z úložiště, o který se platný závěr opřel, v nich nebyl — Rozšířený přehled
+                // o něm mlčel (nález uživatele 3. 11. 2026). Jen tehdy, když druhé ověření dalo
+                // v prvním průchodu tentýž závěr u všech ostatních prvků: jiný okamžik dotazu na
+                // úložiště by jinak mohl nepozorovaně změnit závěr o prvku, kterého se obal
+                // netýká. Prvky, kvůli nimž se ověřovalo znovu, se nesrovnávají — u nich se
+                // první průchod s CRL liší právě tím, oč jde (pod-indikace už není „chybí
+                // revokační údaj").
+                if (stillOpen.size() < tried.size() && sameVerdicts(reports, again, wanted)) {
+                    base = againOutcome;
+                }
             }
         }
         // Přepíše i záporný přepočet od krycího prvku: ten ReportMapper nečte (bere jen kladný)
@@ -900,9 +916,29 @@ public class ValidatorFactory {
         for (String id : open) {
             if (failed.containsKey(id)) out.put(id, failed.get(id));
         }
-        if (out.equals(outcome.derivedTimeResults())) return outcome;
-        return new ValidationOutcome(reports, outcome.skippedRevocations(), Map.copyOf(out),
-                outcome.unreadableSigningTimes());
+        if (base == outcome && out.equals(outcome.derivedTimeResults())) return outcome;
+        return new ValidationOutcome(base.reports(), base.skippedRevocations(), Map.copyOf(out),
+                base.unreadableSigningTimes());
+    }
+
+    /** Dávají oba protokoly u každého podpisu i razítka mimo {@code except} tentýž závěr? */
+    private static boolean sameVerdicts(Reports a, Reports b, java.util.Collection<String> except) {
+        SimpleReport x = a.getSimpleReport();
+        SimpleReport y = b.getSimpleReport();
+        if (x == null || y == null) return false;
+        java.util.Set<String> ids = new java.util.HashSet<>(x.getSignatureIdList());
+        ids.addAll(x.getTimestampIdList());
+        java.util.Set<String> other = new java.util.HashSet<>(y.getSignatureIdList());
+        other.addAll(y.getTimestampIdList());
+        if (!ids.equals(other)) return false;
+        for (String id : ids) {
+            if (except.contains(id)) continue;
+            if (x.getIndication(id) != y.getIndication(id)
+                    || x.getSubIndication(id) != y.getSubIndication(id)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

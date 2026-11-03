@@ -12,8 +12,8 @@ pro soupis změn ke každé nové vydané verzi.
   a seznam z doby platnosti certifikátu proto nepoužil, ani když dřívější existenci
   dokládalo razítko obalu. Nyní se, pokud razítko obalu samo nestačí, úložiště zeptá
   k okamžiku tohoto razítka. Podpis, kterému chyběl jen revokační údaj z doby platnosti
-  certifikátu, tak může vyjít platný. Karta pak seznam z úložiště uvede jako zdroj
-  revokační informace a neoznačí ho za chybějící.
+  certifikátu, tak může vyjít platný. Analýza i Rozšířený přehled pak seznam z úložiště
+  uvedou jako zdroj revokační informace a neoznačí ho za chybějící.
 
 ### Výklad výsledků
 
