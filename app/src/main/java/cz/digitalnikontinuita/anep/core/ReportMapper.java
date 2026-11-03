@@ -532,9 +532,18 @@ public class ReportMapper {
                     s33.tolerantDetail(), s33.tolerantCrlBytes(),
                     s34.failReason(),
                     signingTool,
-                    buildValidationCourse(id, dd, simpleReport, settings, bestSigTime,
+                    // Důkaz z obalu, který nestačil, je pořád doložená existence — jen ho DSS
+                    // neuplatnilo, protože ověřování skončilo dřív, než na snížení rozhodného
+                    // okamžiku došlo. Rozšířený přehled pak ukazoval jen „dle DSS: teď" a o obalu
+                    // mlčel (nález uživatele 3. 11. 2026); s doloženou existencí ukáže oba časy
+                    // a vysvětlí, proč se rozcházejí, stejně jako u vlastního razítka prvku.
+                    buildValidationCourse(id, dd, simpleReport, settings,
+                            unhelpfulEnvelope != null && (bestSigTime == null
+                                    || unhelpfulEnvelope.when().isBefore(bestSigTime))
+                                    ? unhelpfulEnvelope.when() : bestSigTime,
                             tsTimesAsc, outcome.skippedRevocations(), strayPrefixBytes,
-                            reports.getXmlDetailedReport(), envelopeProof),
+                            reports.getXmlDetailedReport(),
+                            envelopeProof != null ? envelopeProof : unhelpfulEnvelope),
                     mapEvidenceRecords(dd.getEvidenceRecords(), id, simpleReport, fileName),
                     situations.contains(43)
                             ? withdrawnTimestampServiceDetail(

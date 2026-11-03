@@ -24,6 +24,9 @@ pro soupis změn ke každé nové vydané verzi.
   existenci nedokládá nic. Dosud karta o obalu mlčela a ukázala jen tento důvod. Nově se
   ukážou i důvody, které ověření s razítkem obalu skutečně zastavily — typicky chybějící
   revokační informace k podpisovému certifikátu, včetně rady vložit seznam CRL z vhodné doby.
+  Rozšířený přehled v bloku „Rozhodný okamžik ověření“ uvede čas razítka obalu jako prokázanou
+  existenci podpisu a vysvětlí, proč rozhodný okamžik podle DSS zůstal u času ověření:
+  ověřování skončilo dřív, než se k razítku dostalo.
 
 ### Prohlížeč kontejnerů
 
