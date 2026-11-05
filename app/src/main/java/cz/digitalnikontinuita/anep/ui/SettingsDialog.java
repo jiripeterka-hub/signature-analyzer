@@ -298,6 +298,19 @@ public class SettingsDialog {
             default     -> rbProxySystem.setSelected(true);
         }
 
+        // Protokol (5. 11. 2026, požadavek uživatele): zadaná proxy dosud mohla být jen HTTP.
+        ToggleGroup proxyProtocolGroup = new ToggleGroup();
+        RadioButton rbProtocolHttp = new RadioButton("HTTP");
+        RadioButton rbProtocolSocks = new RadioButton("SOCKS");
+        rbProtocolHttp.setToggleGroup(proxyProtocolGroup);
+        rbProtocolSocks.setToggleGroup(proxyProtocolGroup);
+        (proxyInit.protocol() == NetworkProxy.Protocol.SOCKS ? rbProtocolSocks : rbProtocolHttp)
+                .setSelected(true);
+        Label labelProtocol = new Label("Protokol:");
+        HBox proxyProtocolRow = new HBox(10, labelProtocol, rbProtocolHttp, rbProtocolSocks);
+        proxyProtocolRow.setAlignment(Pos.CENTER_LEFT);
+        proxyProtocolRow.setPadding(new Insets(0, 0, 0, 24));
+
         TextField tfProxyHost = new TextField(proxyInit.host());
         tfProxyHost.setPromptText("adresa, např. proxy.example.cz");
         tfProxyHost.setPrefWidth(230);
@@ -317,6 +330,7 @@ public class SettingsDialog {
 
         Runnable syncProxyFields = () -> {
             boolean manual = rbProxyManual.isSelected();
+            proxyProtocolRow.setDisable(!manual);
             tfProxyHost.setDisable(!manual);
             tfProxyPort.setDisable(!manual);
             tfProxyExclusions.setDisable(!manual);
@@ -331,13 +345,15 @@ public class SettingsDialog {
                 "Ověřovaný dokument se nikam neodesílá.\n\n" +
                 "Podle nastavení systému (výchozí): proxy, kterou má Windows v nastavení " +
                 "Internetu. Když žádnou nemá, jde se přímo.\n\n" +
-                "Zadaná proxy: adresa a port proxy HTTP. Do výjimek patří servery, k nimž se má " +
-                "jít přímo (oddělte čárkou; *.example.cz platí pro celou doménu).\n\n" +
+                "Zadaná proxy: protokol, adresa a port proxy. Do výjimek patří servery, k nimž se " +
+                "má jít přímo (oddělte čárkou; *.example.cz platí pro celou doménu). U protokolu " +
+                "SOCKS překládá jména serverů tento počítač, ne proxy, a kontrola nové verze " +
+                "jde přímo, mimo proxy.\n\n" +
                 "Bez proxy: vždy přímo.\n\n" +
                 "Proxy vyžadující přihlášení aplikace nepodporuje. Změna platí hned " +
                 "po uložení, bez restartu."));
 
-        VBox proxyBox = new VBox(6, proxyModeRow, rbProxyManual, proxyHostRow, proxyExclRow,
+        VBox proxyBox = new VBox(6, proxyModeRow, rbProxyManual, proxyProtocolRow, proxyHostRow, proxyExclRow,
                 rbProxyDirect);
 
         // --- Advanced "back" button ---
@@ -585,7 +601,8 @@ public class SettingsDialog {
                 return;
             }
             settings.setProxy(new NetworkProxy.Config(proxyMode, tfProxyHost.getText(),
-                    proxyPort, NetworkProxy.parseExclusions(tfProxyExclusions.getText())));
+                    proxyPort, NetworkProxy.parseExclusions(tfProxyExclusions.getText()),
+                    rbProtocolSocks.isSelected() ? NetworkProxy.Protocol.SOCKS : NetworkProxy.Protocol.HTTP));
             settings.setAcceptNewerOcsp(cbNewerOcsp.isSelected());
             settings.setAcceptExpiredRevocationSources(cbExpiredRevocSources.isSelected());
             settings.setIgnoreSha1Deprecated(cbSha1.isSelected());

@@ -9,6 +9,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Volba proxy pro všechna spojení aplikace — jediné místo, které o ní rozhoduje.
@@ -43,20 +45,44 @@ import java.util.Locale;
  * </ul>
  *
  * <p>Přihlášení k proxy aplikace neumí; proxy, která ho vyžaduje (HTTP 407), spojení odmítne.
+ *
+ * <h2>Dvě rozhodnutí o jednom spojení (5. 11. 2026)</h2>
+ *
+ * <p>Nález uživatele: v síti s HTTP proxy, kde systém zároveň uváděl SOCKS, končilo každé spojení
+ * timeoutem, i se zadanou proxy. Plánovač tras HTTP klienta rozhodne jen, přes kterou HTTP proxy se
+ * jde. Soket k ní pak otevírá {@code new Socket()} a ten se sám ptá výchozího výběru JDK na adresu
+ * {@code socket://proxy:port}; při {@code useSystemProxies=true} dostal SOCKS ze systému a spojení
+ * na proxy se vydalo přes něj. Změřeno na falešné proxy mimo zpětnou smyčku: s SOCKS v JVM proxy
+ * nedostala nic a po 44 s přišlo „Can't connect to SOCKS proxy“, s přímým soketem dostala CONNECT
+ * za 1 s. Tuto třídu proto {@link #install()} dělá i výchozím výběrem JDK, aby volba platila také
+ * pro sokety ({@link #selectForSocket}).
+ *
+ * <p>SOCKS jde jen touto cestou: plánovač tras SOCKS přeskočí, zvolí přímou trasu a tunel vznikne
+ * na úrovni soketu. Jméno cílového serveru se přitom překládá v počítači, ne na proxy, protože
+ * HTTP klient do soketu předává už přeloženou adresu. Klient JDK (kontrola verze) SOCKS nepoužije
+ * a jde přímo; změřeno testem v {@code NetworkProxyTest}.
  */
 public final class NetworkProxy extends ProxySelector {
 
     public enum Mode { SYSTEM, MANUAL, DIRECT }
 
+    /** Protokol zadané proxy; v režimu {@link Mode#MANUAL}. */
+    public enum Protocol { HTTP, SOCKS }
+
     /**
      * @param exclusions jména serverů, k nimž se jde přímo i v režimu {@link Mode#MANUAL};
      *                   {@code *.justice.cz} kryje i {@code justice.cz} samo
      */
-    public record Config(Mode mode, String host, int port, List<String> exclusions) {
+    public record Config(Mode mode, String host, int port, List<String> exclusions, Protocol protocol) {
         public Config {
             mode = mode == null ? Mode.SYSTEM : mode;
             host = host == null ? "" : host.trim();
             exclusions = exclusions == null ? List.of() : List.copyOf(exclusions);
+            protocol = protocol == null ? Protocol.HTTP : protocol;
+        }
+
+        public Config(Mode mode, String host, int port, List<String> exclusions) {
+            this(mode, host, port, exclusions, Protocol.HTTP);
         }
 
         /** Ruční režim bez použitelné adresy se chová jako přímé spojení. */
@@ -71,11 +97,45 @@ public final class NetworkProxy extends ProxySelector {
 
     private static volatile Config config = DEFAULT;
 
+    /** Výběr JDK podle systému, jaký byl před {@link #install()}; do té doby null. */
+    private static volatile ProxySelector system;
+
+    /**
+     * HTTP proxy, které systémový výběr vrátil pro některý cíl. Soket na takovou adresu musí jít
+     * přímo, i když systém uvádí zároveň SOCKS. Adresu nelze spočítat dopředu: při skriptu PAC
+     * závisí na cíli. Velikost omezuje počet proxy v síti.
+     */
+    private static final Set<String> SYSTEM_HTTP_PROXIES = ConcurrentHashMap.newKeySet();
+
     private NetworkProxy() { }
 
     public static Config config() { return config; }
 
     public static void configure(Config c) { config = c == null ? DEFAULT : c; }
+
+    /**
+     * Udělá z této třídy výchozí výběr proxy v JDK. Volá se z {@code Main.main} hned po nastavení
+     * {@code java.net.useSystemProxies}. Sondy mimo {@code Main} to nemají a sokety se v nich řídí
+     * systémem jako dřív.
+     */
+    public static synchronized void install() {
+        ProxySelector current = ProxySelector.getDefault();
+        if (current != SELECTOR) install(current);
+    }
+
+    /** Pro testy: systémový výběr se dá podstrčit, skutečné nastavení systému se měnit nedá. */
+    static synchronized void install(ProxySelector systemSelector) {
+        system = systemSelector;
+        SYSTEM_HTTP_PROXIES.clear();
+        ProxySelector.setDefault(SELECTOR);
+    }
+
+    /** Pro testy: vrátí výchozí výběr, aby nezůstal viset na další testy v téže JVM. */
+    static synchronized void uninstall(ProxySelector previous) {
+        system = null;
+        SYSTEM_HTTP_PROXIES.clear();
+        ProxySelector.setDefault(previous);
+    }
 
     /**
      * Výjimky ze zápisu uživatele: odděluje čárka, středník nebo mezera, jako ve Windows.
@@ -102,21 +162,66 @@ public final class NetworkProxy extends ProxySelector {
         Config c = config;
         String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase(Locale.ROOT);
         if (isLocal(host)) return List.of(Proxy.NO_PROXY);
+        if ("socket".equalsIgnoreCase(uri.getScheme())) return selectForSocket(uri, host, c);
         switch (c.mode()) {
             case DIRECT:
                 return List.of(Proxy.NO_PROXY);
             case MANUAL:
                 if (!c.manualUsable() || excluded(host, c.exclusions())) return List.of(Proxy.NO_PROXY);
-                return List.of(new Proxy(Proxy.Type.HTTP,
-                        InetSocketAddress.createUnresolved(c.host(), c.port())));
+                return List.of(manualProxy(c));
             case SYSTEM:
             default:
-                ProxySelector sys = ProxySelector.getDefault();
-                // Bez té podmínky by se volal sám sebe, kdyby ho někdo nastavil jako výchozí.
-                if (sys == null || sys == this) return List.of(Proxy.NO_PROXY);
-                List<Proxy> l = sys.select(uri);
-                return l == null || l.isEmpty() ? List.of(Proxy.NO_PROXY) : l;
+                List<Proxy> l = askSystem(uri);
+                for (Proxy p : l) {
+                    if (p.type() == Proxy.Type.HTTP && p.address() instanceof InetSocketAddress a) {
+                        SYSTEM_HTTP_PROXIES.add(key(a.getHostString(), a.getPort()));
+                    }
+                }
+                return l;
         }
+    }
+
+    /**
+     * Otázka soketu: {@code socket://cíl:port}, kde cílem je buď samotná HTTP proxy, nebo server
+     * při přímé trase. SOCKS se použije, jen když je opravdu zvolený; jinak by se jím vydalo i
+     * spojení na zadanou HTTP proxy, nebo spojení při volbě „bez proxy“.
+     */
+    private List<Proxy> selectForSocket(URI uri, String host, Config c) {
+        switch (c.mode()) {
+            case DIRECT:
+                return List.of(Proxy.NO_PROXY);
+            case MANUAL:
+                if (c.protocol() != Protocol.SOCKS || !c.manualUsable()
+                        || excluded(host, c.exclusions())) {
+                    return List.of(Proxy.NO_PROXY);
+                }
+                return List.of(manualProxy(c));
+            case SYSTEM:
+            default:
+                // Síť, kde systém uvádí jen SOCKS, musí fungovat dál: mimo známé HTTP proxy
+                // rozhoduje systém.
+                if (SYSTEM_HTTP_PROXIES.contains(key(host, uri.getPort()))) {
+                    return List.of(Proxy.NO_PROXY);
+                }
+                return askSystem(uri);
+        }
+    }
+
+    private List<Proxy> askSystem(URI uri) {
+        ProxySelector sys = system != null ? system : ProxySelector.getDefault();
+        // Bez té podmínky by se volal sám sebe, kdyby ho někdo nastavil jako výchozí.
+        if (sys == null || sys == this) return List.of(Proxy.NO_PROXY);
+        List<Proxy> l = sys.select(uri);
+        return l == null || l.isEmpty() ? List.of(Proxy.NO_PROXY) : l;
+    }
+
+    private static Proxy manualProxy(Config c) {
+        return new Proxy(c.protocol() == Protocol.SOCKS ? Proxy.Type.SOCKS : Proxy.Type.HTTP,
+                InetSocketAddress.createUnresolved(c.host(), c.port()));
+    }
+
+    private static String key(String host, int port) {
+        return host.toLowerCase(Locale.ROOT) + ":" + port;
     }
 
     @Override

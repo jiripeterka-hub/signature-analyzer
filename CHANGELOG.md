@@ -5,6 +5,17 @@ pro soupis změn ke každé nové vydané verzi.
 
 ## Připravovaná verze
 
+### Připojení k internetu
+
+- **Oprava: spojení na proxy se vydávalo přes SOCKS.** Pokud systém uváděl proxy SOCKS, šlo přes ni
+  i spojení na HTTP proxy, včetně proxy zadané v Nastavení, a volba „Bez proxy“ ji také neobešla.
+  V takové síti končila obnova důvěryhodných seznamů a další spojení vypršením času. Zadaná HTTP
+  proxy i HTTP proxy ze systému se nyní používají přímo a volba „Bez proxy“ jde vždy přímo.
+  Sítě, kde systém uvádí jen SOCKS, fungují jako dosud.
+- **Zadaná proxy může být i SOCKS.** U zadané proxy lze v Pokročilém nastavení zvolit protokol
+  HTTP nebo SOCKS. U SOCKS překládá jména serverů tento počítač, ne proxy, a kontrola nové verze
+  jde přímo, mimo proxy. Přihlášení k proxy aplikace dále nepodporuje.
+
 ### Vzhled
 
 - **Velikost rozhraní.** V Nastavení přibyla volba „Velikost rozhraní“: podle systému (výchozí),

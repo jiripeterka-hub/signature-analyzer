@@ -63,6 +63,7 @@ public class AppSettings {
     private static final String KEY_PROXY_MODE       = "proxy.mode";
     private static final String KEY_PROXY_HOST       = "proxy.host";
     private static final String KEY_PROXY_PORT       = "proxy.port";
+    private static final String KEY_PROXY_PROTOCOL   = "proxy.protocol";
     private static final String KEY_PROXY_EXCLUSIONS = "proxy.exclusions";
 
     private NetworkProxy.Config proxy              = NetworkProxy.DEFAULT;
@@ -296,10 +297,16 @@ public class AppSettings {
         try {
             mode = NetworkProxy.Mode.valueOf(p.getProperty(KEY_PROXY_MODE, "SYSTEM").trim());
         } catch (IllegalArgumentException ignored) { }
+        // Soubory uložené před 5. 11. 2026 klíč nemají; zadaná proxy byla vždy HTTP.
+        NetworkProxy.Protocol protocol = NetworkProxy.Protocol.HTTP;
+        try {
+            protocol = NetworkProxy.Protocol.valueOf(p.getProperty(KEY_PROXY_PROTOCOL, "HTTP").trim());
+        } catch (IllegalArgumentException ignored) { }
         s.setProxy(new NetworkProxy.Config(mode,
                 p.getProperty(KEY_PROXY_HOST, ""),
                 integer(p, KEY_PROXY_PORT, 0),
-                NetworkProxy.parseExclusions(p.getProperty(KEY_PROXY_EXCLUSIONS, ""))));
+                NetworkProxy.parseExclusions(p.getProperty(KEY_PROXY_EXCLUSIONS, "")),
+                protocol));
         return s;
     }
 
@@ -362,6 +369,7 @@ public class AppSettings {
         p.setProperty(KEY_PROXY_MODE,        proxy.mode().name());
         p.setProperty(KEY_PROXY_HOST,        proxy.host());
         p.setProperty(KEY_PROXY_PORT,        Integer.toString(proxy.port()));
+        p.setProperty(KEY_PROXY_PROTOCOL,    proxy.protocol().name());
         p.setProperty(KEY_PROXY_EXCLUSIONS,  String.join(", ", proxy.exclusions()));
         NetworkProxy.configure(proxy);
 

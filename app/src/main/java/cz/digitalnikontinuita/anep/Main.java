@@ -1,6 +1,7 @@
 package cz.digitalnikontinuita.anep;
 
 import cz.digitalnikontinuita.anep.core.AppSettings;
+import cz.digitalnikontinuita.anep.core.NetworkProxy;
 import cz.digitalnikontinuita.anep.core.StartupTrace;
 import cz.digitalnikontinuita.anep.core.UiScale;
 import cz.digitalnikontinuita.anep.ui.MainView;
@@ -122,6 +123,8 @@ public class Main extends Application {
         if (System.getProperty("java.net.useSystemProxies") == null) {
             System.setProperty("java.net.useSystemProxies", "true");
         }
+        // Až po té vlastnosti: třída NetworkProxy dědí z ProxySelector, a ten ji čte při zavedení.
+        NetworkProxy.install();
         // JavaFX replaces the context classloader on its Application Thread with its
         // own module classloader, which doesn't see classpath jars. DSS's ServiceLoader
         // calls happen on background threads that inherit this broken classloader, so

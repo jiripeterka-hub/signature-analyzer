@@ -120,14 +120,16 @@ Od verze 1.2.0 se všechna spojení K1 až K7 řídí jednou volbou v Pokročil�
 | Volba | Chování |
 |---|---|
 | Podle nastavení systému (výchozí) | proxy podle nastavení Internetu ve Windows; kde žádná není, přímo |
-| Zadaná proxy | zadaná adresa a port proxy HTTP; servery ve výjimkách (např. `*.justice.cz`) přímo |
+| Zadaná proxy | zadaný protokol (HTTP nebo SOCKS), adresa a port; servery ve výjimkách (např. `*.justice.cz`) přímo |
 | Bez proxy | vždy přímo |
 
-Spojení HTTPS jdou přes proxy tunelem (metoda CONNECT), takže proxy nevidí jejich obsah; spojení HTTP (OCSP, CRL, většina autorit razítek) vidí celé. Spojení na `localhost` jdou vždy přímo. Změna volby platí hned po uložení, i pro spojení, která už aplikace má otevřená. Volba se ukládá do `settings.properties` (klíče `proxy.mode`, `proxy.host`, `proxy.port`, `proxy.exclusions`), takže ji lze na spravovaných stanicích rozdat i souborem.
+Spojení HTTPS jdou přes proxy tunelem (metoda CONNECT), takže proxy nevidí jejich obsah; spojení HTTP (OCSP, CRL, většina autorit razítek) vidí celé. Spojení na `localhost` jdou vždy přímo. Změna volby platí hned po uložení, i pro spojení, která už aplikace má otevřená. Volba se ukládá do `settings.properties` (klíče `proxy.mode`, `proxy.protocol`, `proxy.host`, `proxy.port`, `proxy.exclusions`), takže ji lze na spravovaných stanicích rozdat i souborem.
 
 **Omezení.** Proxy, která vyžaduje přihlášení (HTTP 407, včetně integrovaného přihlášení Windows), aplikace nepodporuje. U volby podle nastavení systému je ověřena pevně zadaná proxy; zda se uplatní i automatická konfigurace (skript PAC, WPAD), závisí na běhovém prostředí Javy a ověřeno není — kde se v síti používá, doporučuje se zadat proxy ručně.
 
-Do verze 1.1.1 včetně knihovna DSS, přes kterou běží spojení K1 až K4 a K6, proxy nepoužívala vůbec, ani systémovou, ani zadanou vlastnostmi Javy (měření v oddílu 5.1); v síti s povinnou proxy se aplikace chovala jako bez sítě.
+**Protokol SOCKS.** Spojení knihovny DSS (K1 až K4 a K6) jdou přes zadanou proxy SOCKS, jména serverů ale překládá tento počítač, ne proxy; v síti bez vlastního překladu jmen tato spojení selžou. Kontrola verze (K7) SOCKS nepoužije a jde přímo.
+
+Do verze 1.1.1 včetně knihovna DSS, přes kterou běží spojení K1 až K4 a K6, proxy nepoužívala vůbec, ani systémovou, ani zadanou vlastnostmi Javy (měření v oddílu 5.1); v síti s povinnou proxy se aplikace chovala jako bez sítě. Ve verzi 1.2.0 se spojení na HTTP proxy, i zadanou, vydávalo přes SOCKS, pokud ho systém uváděl, a volba „Bez proxy“ ho neobcházela; v takové síti spojení končila vypršením času. Od následující verze jde spojení na HTTP proxy přímo.
 
 ### 4.3 Inspekce TLS
 
