@@ -37,6 +37,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class PrintExportTest {
 
+    @Test
+    @DisplayName("Druhý řádek záhlaví nese verzi, a když žádná není, jen název protokolu")
+    void headerSubtitleCarriesVersion() {
+        assertEquals("verze 1.2.0  ·  Rozšířený přehled",
+                PrintUtil.headerSubtitle("1.2.0", "Rozšířený přehled"));
+        assertEquals("Rozšířený přehled", PrintUtil.headerSubtitle(null, "Rozšířený přehled"));
+    }
+
     private static boolean toolkitUp;
 
     @BeforeAll

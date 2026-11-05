@@ -651,10 +651,28 @@ final class PrintUtil {
           .append("      <fo:table-cell display-align=\"center\">\n")
           .append("        <fo:block font-weight=\"bold\" font-size=\"10pt\">")
           .append("AnEP (Analyzátor elektronických podpisů)</fo:block>\n")
-          .append("        <fo:block font-size=\"8.5pt\">").append(esc(title))
+          // Mezera 5,6 bodu (5. 11. 2026, pokyn uživatele): účaří druhého řádku tak leží na úrovni
+          // spodku podstavce globu v logu; naměřeno z vysázeného PDF při 720 dpi. Buňka je centrovaná,
+          // takže mezera posouvá druhý řádek dolů o polovinu a první nahoru o polovinu.
+          .append("        <fo:block font-size=\"8.5pt\" space-before=\"5.6pt\">")
+          .append(esc(headerSubtitle(AboutDialog.version(), title)))
           .append("</fo:block>\n")
           .append("      </fo:table-cell>\n    </fo:table-row>\n")
           .append("  </fo:table-body>\n</fo:table>\n</fo:block>\n");
+    }
+
+    /**
+     * Druhý řádek pruhu: verze aplikace a název protokolu (5. 11. 2026, pokyn uživatele).
+     *
+     * <p>Protokol vypovídá o ověření a výsledek ověření závisí i na verzi aplikace, tak se má dát
+     * zpětně zjistit, která ho vytvořila. V pruhu, ne v panelu pod ním: pruh mají všechny protokoly,
+     * panel záznam o úkonu nemá.
+     *
+     * <p>Bez verze (spuštění z přeložených tříd, kde není manifest) se údaj vynechá. Slova jako
+     * „vývojová verze“ by se v protokolu předaném dál četla jako vlastnost výsledku.
+     */
+    static String headerSubtitle(String version, String title) {
+        return version == null ? title : "verze " + version + "  ·  " + title;
     }
 
     /**

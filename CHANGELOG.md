@@ -5,6 +5,12 @@ pro soupis změn ke každé nové vydané verzi.
 
 ## Připravovaná verze
 
+### Protokoly
+
+- **Číslo verze v protokolu.** Generované protokoly uvádějí v zeleném záhlaví číslo verze AnEP,
+  a to na druhém řádku před názvem protokolu. Lze tak zpětně zjistit, která verze protokol
+  vytvořila.
+
 ### Připojení k internetu
 
 - **Oprava: spojení na proxy se vydávalo přes SOCKS.** Pokud systém uváděl proxy SOCKS, šlo přes ni
