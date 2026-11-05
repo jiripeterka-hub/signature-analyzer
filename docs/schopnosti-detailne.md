@@ -151,7 +151,7 @@
 ## Protokoly a export
 
 * ze Zjednodušeného přehledu, Rozšířeného přehledu i Detailního rozboru se generuje protokol jako **PDF/A-2b**, tedy v archivním formátu, který přijímají Formátová pravidla Národního archivu
-* protokol nese záhlaví s údaji o souboru a okamžikem ověření, vizualizaci podpisu v rámečku, výklad pojmů a výčet toho, čím se ověřování řídilo; do protokolu jde i to, co má čtenář na obrazovce sbalené
+* protokol nese záhlaví s údaji o souboru, okamžikem ověření <mark>a číslem verze AnEP, která protokol vytvořila</mark>, vizualizaci podpisu v rámečku, výklad pojmů a výčet toho, čím se ověřování řídilo; do protokolu jde i to, co má čtenář na obrazovce sbalené
 * dvě volby, obě ve výchozím stavu vypnuté:
    * **vložit ověřovaný soubor** — protokol pak nese i soubor, o kterém vypovídá, takže se dá ověřit znovu z jediného souboru; vysází se ale jako PDF/A-3
    * **opatřit časovým razítkem** — doloží, kdy protokol vznikl a že se od té doby nezměnil; nabídne se jen tehdy, je-li nastavený nějaký zdroj
@@ -170,8 +170,8 @@
 
 ## Nastavení, úložiště a provoz
 
-* **základní nastavení** má čtyři věci: přepínač přísnosti, ověřování časových razítek podle standardů, expertní mód (zpřístupní Detailní rozbor a Protokoly DSS a bloky o dokumentu v Analýze) a okno „O aplikaci“<mark> — v něm i odkaz, kterým se na požádání zjistí, zda vyšla nová verze (sama od sebe se aplikace nikam neozývá a nic nestahuje ani neinstaluje)</mark>; změny se projeví ihned, bez restartu
-* **pokročilé nastavení** přidává jednotlivé ústupky, správu vlastních důvěryhodných certifikátů a vlastních CRL seznamů, zdroje časových razítek, ruční obnovu důvěryhodných seznamů EU, ověření k zadanému datu a času <mark>a připojení k internetu (proxy: podle nastavení systému, zadaná s výjimkami, nebo žádná); okno jde zmenšit na výšku, obsah se posouvá a tlačítka Uložit a Zrušit zůstávají dole</mark>
+* **základní nastavení** má <mark>pět věcí</mark>: přepínač přísnosti, ověřování časových razítek podle standardů, expertní mód (zpřístupní Detailní rozbor a Protokoly DSS a bloky o dokumentu v Analýze), <mark>velikost rozhraní (podle systému, nebo 100 až 200 %; zvětší celé rozhraní včetně písma a na výsledek ověření nemá vliv)</mark> a okno „O aplikaci“<mark> — v něm i odkaz, kterým se na požádání zjistí, zda vyšla nová verze (sama od sebe se aplikace nikam neozývá a nic nestahuje ani neinstaluje)</mark>; změny se projeví ihned, bez restartu<mark>, jen velikost rozhraní až po novém spuštění</mark>
+* **pokročilé nastavení** přidává jednotlivé ústupky, správu vlastních důvěryhodných certifikátů a vlastních CRL seznamů, zdroje časových razítek, ruční obnovu důvěryhodných seznamů EU, ověření k zadanému datu a času <mark>a připojení k internetu (proxy: podle nastavení systému, zadaná HTTP nebo SOCKS s výjimkami, nebo žádná); okno jde zmenšit na výšku, obsah se posouvá a tlačítka Uložit a Zrušit zůstávají dole</mark>
 * vše uživatelské leží v `%APPDATA%\SignatureAnalyzer`: nastavení, profily zdrojů razítek, vlastní úložiště CRL, vlastní důvěryhodné certifikáty a mezipaměť důvěryhodných seznamů; do systému aplikace jinak nezasahuje
 * <mark>**síť** — ověřovaný dokument se nikam neodesílá; po síti jdou jen důvěryhodné seznamy, revokační informace, chybějící certifikáty vydavatelů, žádosti o časové razítko (jen otisk dat) a kontrola nové verze na požádání. Protokoly DSS se zobrazí i bez připojení. Podrobně to popisuje dokument Přehled online komunikace AnEP</mark>
 * aplikace se šíří pod **EUPL verze 1.2** (má závazné české znění) a dodává se jako instalátor .msi i jako **přenosná verze**, obojí s vlastním běhovým prostředím<mark>; instalátor i spouštěč AnEP.exe nesou podpis kódu autora s časovým razítkem. Zdrojový kód je veřejně na GitHubu (https://github.com/jiripeterka-hub/signature-analyzer), takže si aplikaci může sestavit kdokoli sám</mark>

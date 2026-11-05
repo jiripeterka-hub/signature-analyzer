@@ -37,7 +37,7 @@ from docx_kit import (AKCENT, AKCENT_TMAVY, INKOUST, INKOUST_SVET, PISMO_LEHKE,
 ZDE = os.path.dirname(os.path.abspath(__file__))
 CIL = os.path.join(ZDE, 'AnEP-manual-pokrocily.docx')
 
-STAV_KE_DNI = '3. 11. 2026'
+STAV_KE_DNI = '5. 11. 2026'
 TITULEK = 'AnEP — uživatelský manuál pro pokročilé uživatele'
 
 
@@ -1128,7 +1128,8 @@ def kapitola_14(doc):
     odstavec(doc, 'Ze Zjednodušeného přehledu, Rozšířeného přehledu i Detailního rozboru se '
                   'generuje protokol jako PDF/A-2b, tedy v archivním formátu, který přijímají '
                   'Formátová pravidla Národního archivu. Protokol nese záhlaví s údaji '
-                  'o souboru a okamžikem ověření, vizualizaci podpisu v rámečku, výklad pojmů '
+                  'o souboru, okamžikem ověření ==a číslem verze AnEP, která protokol vytvořila==, '
+                  'vizualizaci podpisu v rámečku, výklad pojmů '
                   'a výčet toho, čím se ověřování řídilo. Protokol z obou přehledů se jmenuje '
                   'podle souboru, o kterém vypovídá.')
     odstavec(doc, 'Okamžik v záhlaví je okamžik **ověření**, ne vzniku protokolu: ten může být '
@@ -1313,9 +1314,14 @@ def kapitola_16(doc):
               'Vypnutí znamená přísnější posuzování razítek podle řádné platnosti jejich '
               'certifikátů.'],
              ['Expertní mód',
-              'Zpřístupní záložky Detailní rozbor a Protokoly DSS a některé úkony.']],
+              'Zpřístupní záložky Detailní rozbor a Protokoly DSS a některé úkony.'],
+             ['==Velikost rozhraní==',
+              '==Podle systému (výchozí), nebo 100, 125, 150, 175 či 200 %. Zvětší nebo zmenší '
+              'celé rozhraní včetně písma a ovládacích prvků; okno, které by se nevešlo na '
+              'obrazovku, se zmenší. Na výsledek ověření nemá vliv.==']],
             [6.0, 10.6])
-    odstavec(doc, 'Změny se projeví ihned, bez nutnosti restartu aplikace.')
+    odstavec(doc, 'Změny se projeví ihned, bez nutnosti restartu aplikace==; jen velikost '
+                  'rozhraní až po novém spuštění==.')
 
     nadpis2(doc, '16.2', 'Pokročilé nastavení')
     odstavec(doc, '==Oddíly jdou od nejčastěji po nejméně používané:==')
@@ -1332,7 +1338,7 @@ def kapitola_16(doc):
                   'nastavení se otevírá vysoké 500 bodů. Tlačítka **Uložit** a **Zrušit** stojí '
                   'v pevném pruhu na spodku okna a ukládají obě stránky najednou.==')
     obrazek(doc, 'Dialog Nastavení v základní podobě.',
-            'tři zaškrtávací pole a tlačítko Pokročilé nastavení', vyska=6.5)
+            'tři zaškrtávací pole, volba velikosti rozhraní a tlačítko Pokročilé nastavení', vyska=6.5)
 
     nadpis2(doc, '16.3', 'O aplikaci')
     odstavec(doc, 'Okno „O aplikaci“ uvádí, k čemu aplikace slouží a že její výstupy jsou bez '
@@ -1350,14 +1356,16 @@ def kapitola_16(doc):
               '==Výchozí. Proxy, kterou má Windows v nastavení Internetu; když žádnou nemá, jde se '
               'přímo.=='],
              ['==Zadaná proxy==',
-              '==Adresa a port proxy HTTP. Do výjimek patří servery, k nimž se má jít přímo '
+              '==Protokol (HTTP nebo SOCKS), adresa a port proxy. Do výjimek patří servery, '
+              'k nimž se má jít přímo '
               '(odděleno čárkou; `*.example.cz` platí pro celou doménu).=='],
              ['==Bez proxy==', '==Vždy přímo.==']],
             [5.0, 11.6])
     odstavec(doc, '==Volba platí pro všechna spojení aplikace — důvěryhodné seznamy, revokační '
                   'informace, certifikáty vydavatelů, časová razítka i kontrolu nové verze — '
-                  'a projeví se hned po uložení, bez restartu. Proxy, která vyžaduje přihlášení, '
-                  'aplikace nepodporuje.==')
+                  'a projeví se hned po uložení, bez restartu. U protokolu SOCKS překládá jména '
+                  'serverů tento počítač, ne proxy, a kontrola nové verze jde přímo, mimo proxy. '
+                  'Proxy, která vyžaduje přihlášení, aplikace nepodporuje.==')
     obrazek(doc, '==Pokročilé nastavení: oddíl Připojení k internetu (proxy) a pruh tlačítek.==',
             'spodní část pokročilého nastavení', vyska=6.5)
 
@@ -1371,8 +1379,11 @@ def kapitola_17(doc):
              ['==Důvěryhodné seznamy se neobnoví, revokace ani razítka nefungují, ačkoli '
               'počítač na internet může==',
               '==Síť nejspíš vede přes proxy. V pokročilém nastavení zvolte v oddílu Připojení '
-              'k internetu zadanou proxy (adresu a port zjistíte u správce sítě), případně '
+              'k internetu zadanou proxy (protokol, adresu a port zjistíte u správce sítě), případně '
               'podle nastavení systému.=='],
+             ['==Rozhraní je na daném monitoru špatně čitelné==',
+              '==V Nastavení zvolte větší velikost rozhraní. Projeví se po novém spuštění '
+              'aplikace.=='],
              ['Stav platnosti zůstal neznámý u staršího podpisu',
               'Podívejte se do Analýzy na důvody a doporučení. Nejčastěji chybějí revokační '
               'informace — zkuste ústupky, vlastní úložiště CRL, nebo přijměte, že už to nejde.'],

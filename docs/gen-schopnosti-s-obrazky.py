@@ -35,7 +35,7 @@ from docx_kit import (AKCENT, AKCENT_TMAVY, INKOUST, INKOUST_SVET, PISMO_LEHKE,
 ZDE = os.path.dirname(os.path.abspath(__file__))
 CIL = os.path.join(ZDE, 'AnEP-schopnosti-s-obrazky.docx')
 
-STAV_KE_DNI = '3. 11. 2026'
+STAV_KE_DNI = '5. 11. 2026'
 TITULEK = 'AnEP — přehled schopností'
 
 
@@ -889,7 +889,8 @@ def kapitola_11(doc):
     odstavec(doc, 'Protokol se generuje ze Zjednodušeného přehledu, z Rozšířeného přehledu '
                   'i z Detailního rozboru — každý o té hloubce, ve které vznikl — a vždy jako '
                   '**PDF/A-2b**, tedy v archivním formátu, který přijímají Formátová pravidla '
-                  'Národního archivu. Nese záhlaví s údaji o souboru a s okamžikem ověření, '
+                  'Národního archivu. Nese záhlaví s údaji o souboru, s okamžikem ověření '
+                  '==a s číslem verze AnEP, která protokol vytvořila==, '
                   'vizualizaci podpisu v rámečku, výklad pojmů uvozený „tj.:“ a výčet toho, '
                   'čím se ověřování řídilo. Protokol z obou přehledů se jmenuje podle souboru, '
                   'o kterém vypovídá.')
@@ -998,19 +999,23 @@ def kapitola_13(doc):
         '**Ověřování časových razítek podle standardů** — přísnější posuzování razítek.',
         '**Expertní mód** — zpřístupní Detailní rozbor a Protokoly DSS a bloky '
         'o dokumentu v Analýze.',
+        '==**Velikost rozhraní** — podle systému, nebo 100 až 200 %; zvětší celé rozhraní '
+        'včetně písma a na výsledek ověření nemá vliv.==',
         '**O aplikaci** — k čemu aplikace slouží, že její výstupy jsou bez záruky, dále verze, '
         'autor, licence a složka s licencemi použitých knihoven==, a odkaz, kterým se na '
         'požádání zjistí, zda vyšla nová verze; sama od sebe se aplikace nikam neozývá a nic '
         'nestahuje ani neinstaluje==.',
     ])
-    odstavec(doc, 'Změny se projeví ihned, bez restartu.')
+    odstavec(doc, 'Změny se projeví ihned, bez restartu==; jen velikost rozhraní až po novém '
+                  'spuštění==.')
     obrazek(doc, 'Základní nastavení.', 'okno Nastavení, základní podoba', vyska=7.0)
 
     nadpis2(doc, '13.2', 'Pokročilé nastavení')
     odstavec(doc, 'Jednotlivé ústupky, správa vlastních důvěryhodných certifikátů a vlastních '
                   'CRL seznamů, zdroje časových razítek, ruční obnova důvěryhodných seznamů EU, '
                   'ověření k zadanému datu a času ==a připojení k internetu (proxy): podle nastavení '
-                  'systému, zadaná adresa a port s výjimkami, nebo žádná. Okno jde zmenšit na výšku, '
+                  'systému, zadaná (protokol HTTP nebo SOCKS, adresa a port, výjimky), nebo žádná. '
+                  'Okno jde zmenšit na výšku, '
                   'obsah se posouvá a tlačítka Uložit a Zrušit zůstávají v pruhu dole.==')
     obrazek(doc, '==Pokročilé nastavení — připojení k internetu (proxy).==',
             'spodní část pokročilého nastavení s oddílem proxy a pruhem tlačítek', vyska=7.0)
