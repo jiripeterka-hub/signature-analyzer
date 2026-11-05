@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — s kým, kdy a proč se aplikace spojuje po síti**
 
-Verze 1.1 (návrh) · stav ke dni 3. 11. 2026 · AnEP 1.2.0, knihovna DSS 6.5.1
+Verze 1.1 (návrh) · stav ke dni 5. 11. 2026 · AnEP 1.3.0, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -127,9 +127,9 @@ Spojení HTTPS jdou přes proxy tunelem (metoda CONNECT), takže proxy nevidí j
 
 **Omezení.** Proxy, která vyžaduje přihlášení (HTTP 407, včetně integrovaného přihlášení Windows), aplikace nepodporuje. U volby podle nastavení systému je ověřena pevně zadaná proxy; zda se uplatní i automatická konfigurace (skript PAC, WPAD), závisí na běhovém prostředí Javy a ověřeno není — kde se v síti používá, doporučuje se zadat proxy ručně.
 
-**Protokol SOCKS.** Spojení knihovny DSS (K1 až K4 a K6) jdou přes zadanou proxy SOCKS, jména serverů ale překládá tento počítač, ne proxy; v síti bez vlastního překladu jmen tato spojení selžou. Kontrola verze (K7) SOCKS nepoužije a jde přímo.
+**Protokol SOCKS** (od verze 1.3.0). Spojení knihovny DSS (K1 až K4 a K6) jdou přes zadanou proxy SOCKS, jména serverů ale překládá tento počítač, ne proxy; v síti bez vlastního překladu jmen tato spojení selžou. Kontrola verze (K7) SOCKS nepoužije a jde přímo.
 
-Do verze 1.1.1 včetně knihovna DSS, přes kterou běží spojení K1 až K4 a K6, proxy nepoužívala vůbec, ani systémovou, ani zadanou vlastnostmi Javy (měření v oddílu 5.1); v síti s povinnou proxy se aplikace chovala jako bez sítě. Ve verzi 1.2.0 se spojení na HTTP proxy, i zadanou, vydávalo přes SOCKS, pokud ho systém uváděl, a volba „Bez proxy“ ho neobcházela; v takové síti spojení končila vypršením času. Od následující verze jde spojení na HTTP proxy přímo.
+Do verze 1.1.1 včetně knihovna DSS, přes kterou běží spojení K1 až K4 a K6, proxy nepoužívala vůbec, ani systémovou, ani zadanou vlastnostmi Javy (měření v oddílu 5.1); v síti s povinnou proxy se aplikace chovala jako bez sítě. Ve verzi 1.2.0 se spojení na HTTP proxy, i zadanou, vydávalo přes SOCKS, pokud ho systém uváděl, a volba „Bez proxy“ ho neobcházela; v takové síti spojení končila vypršením času. Od verze 1.3.0 jde spojení na HTTP proxy přímo.
 
 ### 4.3 Inspekce TLS
 
@@ -162,6 +162,8 @@ Automatické testy aplikace (`NetworkProxyTest`) spouštějí místní zkušebn�
 
 | Kdy | Verze | Změna |
 |---|---|---|
+| 5. 11. 2026 | 1.3.0 | **Zadaná proxy může být i SOCKS.** Nová volba protokolu u zadané proxy; omezení v oddílu 4.2. |
+| 5. 11. 2026 | 1.3.0 | **Spojení na HTTP proxy jde přímo.** Ve verzi 1.2.0 se vydávalo přes SOCKS, pokud ho systém uváděl, a volba „Bez proxy“ ho neobcházela. |
 | 3. 11. 2026 | 1.2.0 | **Proxy.** Všechna spojení se řídí volbou proxy (výchozí podle nastavení systému, nebo zadaná, nebo žádná); dosud knihovna DSS chodila vždy přímo. |
 | 3. 11. 2026 | 1.2.0 | **Protokol DSS bez přístupu k internetu.** Záložka Protokoly DSS si dosud při každém zobrazení stahovala styly a skripty (Bootstrap, jQuery) z `cdn.jsdelivr.net` a `code.jquery.com`; jejich provozovatelé se tak mohli dozvědět, kdy si kdo protokol prohlíží. Obě knihovny jsou nově součástí aplikace; spojení odpadá. |
 | 1. 11. 2026 | 1.1.0 | **Kontrola nové verze** (K7) — nové spojení, jen na stisk odkazu v okně O aplikaci. |

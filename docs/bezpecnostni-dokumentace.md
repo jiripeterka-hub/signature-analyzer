@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — podklad pro posouzení podle zákona o kybernetické bezpečnosti a aktu o kybernetické odolnosti**
 
-Verze 1.2 (návrh) · stav ke dni 3. 11. 2026 · AnEP 1.2.0, knihovna DSS 6.5.1
+Verze 1.2 (návrh) · stav ke dni 5. 11. 2026 · AnEP 1.3.0, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -42,11 +42,11 @@ Dokument přesto požadavky přílohy I a obsah přílohy VII sleduje dobrovoln�
 | Položka | Hodnota |
 |---|---|
 | Název | AnEP — Analyzátor elektronických podpisů |
-| Verze | 1.2.0 |
+| Verze | 1.3.0 |
 | Výrobce (autor) | Jiří Peterka, jiri@peterka.cz |
 | Stránka | https://bajecnysvet.cz/anep/ |
 | Licence | EUPL 1.2 (české a anglické znění přiloženo); licence přibalených knihoven v souboru NOTICE.txt a ve složce licenses |
-| Zdrojový kód | veřejný repozitář https://github.com/jiripeterka-hub/signature-analyzer (větev `master`); každé vydání má značku, verze 1.2.0 značku `v1.2.0` |
+| Zdrojový kód | veřejný repozitář https://github.com/jiripeterka-hub/signature-analyzer (větev `master`); každé vydání má značku, verze 1.3.0 značku `v1.3.0` |
 | Platforma | Windows 10 a 11, 64bitové; sestavení pro Linux |
 | Distribuce | instalátor MSI a přenosný archiv ZIP pro Windows, archiv pro Linux |
 | Podpis instalátoru | podpis kódu (Authenticode, SHA-256) certifikátem autora od Certum Code Signing 2021 CA, s časovým razítkem Certum; otisk SHA-256 certifikátu `13930456cefa0384b6376360866f06df3e355c5fa58a52c16acddbe909f0a73c`, platnost 1. 11. 2026 – 1. 11. 2027 |
@@ -61,7 +61,7 @@ Verzi nainstalované aplikace ukazuje okno O aplikaci. Pravost instalátoru lze 
 Pro povinnou osobu to znamená tři věci:
 
 - **Kód lze prověřit.** Vlastní bezpečnostní rozbor, revize kódu nebo test podle § 24 vyhlášky nemusí stát jen na tomto dokumentu; lze ho provést nad týmž kódem, z něhož vznikají vydané balíčky.
-- **Aplikaci si může sestavit každý sám.** Licence EUPL 1.2 dovoluje kód užívat, měnit i šířit. Organizace si tak může sestavit vlastní instanci z ověřeného stavu kódu (například ze značky `v1.2.0`) a nemusí spoléhat na instalátor stažený ze stránky autora. Potřebuje k tomu JDK 21 nebo novější a Maven 3.9 nebo novější, pro instalátor MSI ještě WiX Toolset v3; postup je v souboru `README.md` v repozitáři (`mvn -pl app -am package`, balíčky skriptem `packaging/windows/dist.ps1` nebo `packaging/linux/dist.sh`). Knihovny třetích stran se při sestavení stahují z repozitáře Maven Central.
+- **Aplikaci si může sestavit každý sám.** Licence EUPL 1.2 dovoluje kód užívat, měnit i šířit. Organizace si tak může sestavit vlastní instanci z ověřeného stavu kódu (například ze značky `v1.3.0`) a nemusí spoléhat na instalátor stažený ze stránky autora. Potřebuje k tomu JDK 21 nebo novější a Maven 3.9 nebo novější, pro instalátor MSI ještě WiX Toolset v3; postup je v souboru `README.md` v repozitáři (`mvn -pl app -am package`, balíčky skriptem `packaging/windows/dist.ps1` nebo `packaging/linux/dist.sh`). Knihovny třetích stran se při sestavení stahují z repozitáře Maven Central.
 - **Údržba nestojí jen na autorovi.** Kdyby autor přestal aplikaci udržovat, může opravy zranitelností nebo aktualizace knihoven provést organizace sama nebo jejím jménem někdo jiný (riziko R11).
 
 Vlastní sestavení má dvě odlišnosti, s nimiž je třeba počítat:
@@ -267,7 +267,7 @@ Přiřazení k paragrafům vyhlášky č. 409/2025 Sb. Uvádí, co k opatření 
 | R6 | Hesla k autoritám razítek a ke klientskému certifikátu uložená v čitelné podobě v `settings.properties`; heslo přenášené nešifrovaně při adrese `http://` | zneužití účtu u autority razítek | soubor v profilu uživatele | ukládat hesla chráněně (Windows DPAPI) a varovat před `http://` u autorit s heslem |
 | R7 | Únik informací o ověřovaných podpisech vydavatelům přes OCSP | vydavatel ví, čí podpisy organizace kdy ověřovala | žádné | volba vypnout OCSP; revokace z vlastního úložiště CRL |
 | R8 | Přibalené běhové prostředí obsahuje moduly, které aplikace nepotřebuje (ladicí agent JDWP, vzdálená správa JVM, překladač, jshell) | větší prostor útoku, pokud by je někdo zapnul parametry spuštění | moduly nejsou ve výchozím spuštění aktivní | omezit sadu modulů běhového prostředí na nezbytné |
-| R9 | Síť s povinnou proxy nebo s inspekcí TLS | proxy s přihlášením aplikace nepodporuje (do verze 1.1.1 včetně nepoužívala proxy vůbec); kontrola verze za inspekcí TLS selže | volba proxy (od verze 1.2.0); provoz bez sítě; důvěra kořenům Windows u spojení DSS | doplnit přihlášení k proxy, je-li v síti vyžadováno; sjednotit důvěru pro kontrolu verze |
+| R9 | Síť s povinnou proxy nebo s inspekcí TLS | proxy s přihlášením aplikace nepodporuje (do verze 1.1.1 včetně nepoužívala proxy vůbec); kontrola verze za inspekcí TLS selže | volba proxy (od verze 1.2.0, od verze 1.3.0 i SOCKS); provoz bez sítě; důvěra kořenům Windows u spojení DSS | doplnit přihlášení k proxy, je-li v síti vyžadováno; sjednotit důvěru pro kontrolu verze |
 | R10 | Podvržený instalátor | spuštění cizího kódu | podepsaný instalátor; AnEP rozpozná oficiální sestavení | ověřovat podpis před instalací; centrální distribuce; případně vlastní sestavení ze značky vydání (kap. 2.1) |
 | R11 | Chybějící závazek podpory | zranitelnost zůstane neopravena | veřejný zdrojový kód pod EUPL 1.2: opravu může provést a aplikaci sestavit i někdo jiný než autor (kap. 2.1) | stanovit dobu podpory a postup hlášení zranitelností |
 

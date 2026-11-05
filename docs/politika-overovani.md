@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika ověřování podpisu**
 
-==Verze 1.16== · stav ke dni ==3. 11. 2026== · ==AnEP 1.2.0==, knihovna DSS 6.5.1
+==Verze 1.17== · stav ke dni ==5. 11. 2026== · ==AnEP 1.3.0==, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -28,9 +28,9 @@ Dokument je stavěný jako politika ověřování podpisu ve smyslu ETSI TS 119 
 | Položka | Hodnota |
 |---|---|
 | Název | Politika ověřování elektronických podpisů AnEP |
-| Verze | ==1.16== ze dne ==3. 11. 2026== |
-| Platí pro | ==AnEP 1.2.0 (repozitář signature-analyzer, značka v1.2.0)== |
-| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.16== |
+| Verze | ==1.17== ze dne ==5. 11. 2026== |
+| Platí pro | ==AnEP 1.3.0 (repozitář signature-analyzer, značka v1.3.0)== |
+| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.17== |
 | Ověřovací jádro | knihovna DSS (Digital Signature Service) 6.5.1 Evropské komise |
 | Postup ověřování | ETSI EN 319 102-1 V1.4.0 (2024-03) |
 | Struktura dokumentu | ETSI TS 119 172-1 (politika ověřování podpisu) |
@@ -426,3 +426,4 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 | ==1.14== | ==1. 11. 2026== | ==oddíl 12.8: rozpoznání oficiálního sestavení AnEP podle otisku certifikátu autora; program, který se jménem vydává za AnEP a autor ho nepodepsal, se označí jako neoficiální; verdikt podpisu kódu se nemění== |
 | ==1.15== | ==3. 11. 2026== | ==oddíl 7.1: u dokumentu předaného z obalu, kterému razítko obalu samo nestačilo, se seznam z vlastního úložiště CRL vybírá k okamžiku razítka obalu, ne k času ověření; platí pro AnEP 1.1.1== |
 | ==1.16== | ==3. 11. 2026== | ==doplněno, co aplikace dělá už od verze 1.1.0 a politika dosud neuváděla: oddíl 3.2 obal jako vstup; oddíl 12.3 podání vůči orgánu veřejné moci (§ 6 a 9 zákona č. 297/2016 Sb.) a druh prvku s porušenou integritou; nový oddíl 12.9 elektronické autorizační razítko; oddíl 7.1 on-line zdroje přes proxy podle nastavení. Ověřování samo se nemění; platí pro AnEP 1.2.0== |
+| ==1.17== | ==5. 11. 2026== | ==beze změny obsahu; AnEP 1.3.0 mění velikost rozhraní, spojení přes proxy (na to, který údaj se získá a jak se posoudí, to nemá vliv) a uvádí číslo verze v protokolech; platí pro AnEP 1.3.0== |
