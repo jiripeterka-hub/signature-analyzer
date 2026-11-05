@@ -3,6 +3,17 @@
 Změny ve verzích aplikace AnEP (Analyzátor elektronických podpisů). Slouží jako podklad
 pro soupis změn ke každé nové vydané verzi.
 
+## Připravovaná verze
+
+### Vzhled
+
+- **Velikost rozhraní.** V Nastavení přibyla volba „Velikost rozhraní“: podle systému (výchozí),
+  nebo 100, 125, 150, 175 či 200 %. Zvětší celé rozhraní aplikace včetně písma a ovládacích
+  prvků a pomůže tam, kde je na daném monitoru špatně čitelné. Volba se pamatuje, projeví se
+  po novém spuštění aplikace a na výsledek ověření nemá vliv.
+- **Okna se vejdou na obrazovku.** Okno, které by bylo větší než obrazovka (typicky při velkém
+  měřítku rozhraní), se při otevření zmenší a posune tak, aby na ni celé vešlo.
+
 ## Verze 1.2.0 (změny oproti 1.1.1)
 
 ### Připojení k internetu

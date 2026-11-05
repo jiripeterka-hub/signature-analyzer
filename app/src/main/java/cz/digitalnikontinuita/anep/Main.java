@@ -1,10 +1,15 @@
 package cz.digitalnikontinuita.anep;
 
+import cz.digitalnikontinuita.anep.core.AppSettings;
 import cz.digitalnikontinuita.anep.core.StartupTrace;
+import cz.digitalnikontinuita.anep.core.UiScale;
 import cz.digitalnikontinuita.anep.ui.MainView;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 
@@ -48,6 +53,8 @@ public class Main extends Application {
                     if (w instanceof Stage st && st.getIcons().isEmpty()) {
                         st.getIcons().addAll(appIcons);
                     }
+                    // Až po zobrazení: rozměry oken, která se řídí obsahem, jsou známé teprve pak.
+                    if (w instanceof Stage st) Platform.runLater(() -> keepOnScreen(st));
                 }
             }
         });
@@ -86,6 +93,28 @@ public class Main extends Application {
         }
     }
 
+    /**
+     * Okno větší než obrazovka zmenší a posune tak, aby se na ni vešlo (5. 11. 2026).
+     *
+     * <p>Rozměry oken jsou v kódu dané v logických bodech a měřítko je násobí: hlavní okno 980 × 640
+     * má při 180 % na šířku i výšku přes 1700 × 1150 pixelů, inspektor struktury přes 2100 na šířku.
+     * Na obrazovce 1920 × 1080 by tlačítka a posuvníky zůstaly mimo dohled. Na jednom místě ze
+     * stejného důvodu jako ikony výše: oken je mnoho a každé další by na to zapomnělo.
+     */
+    private static void keepOnScreen(Stage st) {
+        if (!st.isShowing() || st.isMaximized() || st.isFullScreen() || st.isIconified()) return;
+        double centerX = st.getX() + st.getWidth() / 2;
+        double centerY = st.getY() + st.getHeight() / 2;
+        Rectangle2D screen = Screen.getScreensForRectangle(centerX, centerY, 1, 1).stream()
+                .findFirst().orElse(Screen.getPrimary()).getVisualBounds();
+        if (st.getWidth() > screen.getWidth()) st.setWidth(screen.getWidth());
+        if (st.getHeight() > screen.getHeight()) st.setHeight(screen.getHeight());
+        if (st.getX() + st.getWidth() > screen.getMaxX()) st.setX(screen.getMaxX() - st.getWidth());
+        if (st.getY() + st.getHeight() > screen.getMaxY()) st.setY(screen.getMaxY() - st.getHeight());
+        if (st.getX() < screen.getMinX()) st.setX(screen.getMinX());
+        if (st.getY() < screen.getMinY()) st.setY(screen.getMinY());
+    }
+
     public static void main(String[] args) {
         StartupTrace.mark("main() entered");
         // Proxy podle nastavení systému (NetworkProxy, režim SYSTEM). Výchozí ProxySelector JDK
@@ -99,6 +128,8 @@ public class Main extends Application {
         // SPI providers like dss-cms-object are never found. Capture the real classloader
         // here (before JavaFX starts) and restore it inside start().
         AppClassLoader.set(Thread.currentThread().getContextClassLoader());
+        // Funguje jen přes Launcher: při spuštění přímo přes tuto třídu běží JavaFX už teď.
+        UiScale.applyBeforeToolkit(AppSettings.readUiScalePercent());
         launch(args);
     }
 }

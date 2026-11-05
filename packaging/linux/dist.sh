@@ -17,7 +17,7 @@ set -euo pipefail
 APP_VERSION="${1:-1.2.0}"
 RELEASE="${2:-1.2.0}"
 APP_NAME="AnEP"
-MAIN_CLASS="cz.digitalnikontinuita.anep.Main"
+MAIN_CLASS="cz.digitalnikontinuita.anep.Launcher"
 APP_JAR="signature-analyzer.jar"
 
 # JavaFX 21 (verze celé aplikace, pom.xml) nemá na Maven Central sestavení pro linux-aarch64 —
@@ -134,7 +134,7 @@ Postup (z adresáře AnEP):
         --module-path lib/app/fx \
         --add-modules javafx.base,javafx.graphics,javafx.controls,javafx.fxml,javafx.web,javafx.media,javafx.swing \
         -cp "relink/anep-classes.jar:relink/dss/*:lib/app/signature-analyzer.jar" \
-        cz.digitalnikontinuita.anep.Main
+        cz.digitalnikontinuita.anep.Launcher
 
      Pořadí je podstatné: co je na cestě dřív, to vyhrává, takže vyměněné DSS
      zastíní kopii uvnitř fat JARu.

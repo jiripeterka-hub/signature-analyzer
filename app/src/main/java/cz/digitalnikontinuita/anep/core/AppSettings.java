@@ -67,6 +67,31 @@ public class AppSettings {
 
     private NetworkProxy.Config proxy              = NetworkProxy.DEFAULT;
 
+    // Velikost rozhraní (5. 11. 2026). Pamatuje se: je to vzhled, ne přísnost ověřování, a kdo
+    // špatně čte malé písmo, nemá si ji nastavovat při každém spuštění. Viz UiScale.
+    private static final String KEY_UI_SCALE       = "ui.scalePercent";
+
+    private int uiScalePercent                     = UiScale.SYSTEM;
+
+    public int getUiScalePercent()                 { return uiScalePercent; }
+    public void setUiScalePercent(int percent)     { this.uiScalePercent = UiScale.parse(Integer.toString(percent)); }
+
+    /**
+     * Přečte jen velikost rozhraní. Volá se z {@code main()} ještě před startem JavaFX, a proto ne
+     * přes {@link #load()}: ta při tom nastavuje i proxy a načítá zdroje razítek, což má přijít
+     * až se startem aplikace. Ať se se souborem stane cokoli, aplikace se musí spustit.
+     */
+    public static int readUiScalePercent() {
+        if (!Files.exists(SETTINGS_FILE)) return UiScale.SYSTEM;
+        Properties p = new Properties();
+        try (InputStream in = Files.newInputStream(SETTINGS_FILE)) {
+            p.load(in);
+        } catch (IOException | IllegalArgumentException e) {
+            return UiScale.SYSTEM;
+        }
+        return UiScale.parse(p.getProperty(KEY_UI_SCALE));
+    }
+
     public NetworkProxy.Config getProxy()          { return proxy; }
 
     /** Uloží volbu a hned ji uplatní: spojení, která běží, si ji přečtou při další žádosti. */
@@ -265,6 +290,7 @@ public class AppSettings {
         }
         s.selectedTsaIndex = integer(p, KEY_TSA_SELECTED, -1);
         if (s.selectedTsaIndex >= s.tsaProfiles.size()) s.selectedTsaIndex = -1;
+        s.uiScalePercent = UiScale.parse(p.getProperty(KEY_UI_SCALE));
 
         NetworkProxy.Mode mode = NetworkProxy.Mode.SYSTEM;
         try {
@@ -332,6 +358,7 @@ public class AppSettings {
                     t.getSigningKey() != null ? t.getSigningKey().persist() : "");
         }
         p.setProperty(KEY_TSA_SELECTED,      Integer.toString(selectedTsaIndex));
+        p.setProperty(KEY_UI_SCALE,          Integer.toString(uiScalePercent));
         p.setProperty(KEY_PROXY_MODE,        proxy.mode().name());
         p.setProperty(KEY_PROXY_HOST,        proxy.host());
         p.setProperty(KEY_PROXY_PORT,        Integer.toString(proxy.port()));

@@ -211,7 +211,7 @@
         <artifactId>javafx-maven-plugin</artifactId>
         <version>0.0.8</version>
         <configuration>
-          <mainClass>cz.digitalnikontinuita.anep.Main</mainClass>
+          <mainClass>cz.digitalnikontinuita.anep.Launcher</mainClass>
           <options>
             <!-- JavaFX loads native libs via System::load; JDK 21+ requires this flag.
                  javafx.graphics is not yet a known module at JVM launch, so ALL-UNNAMED
@@ -258,7 +258,7 @@
               </filters>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>cz.digitalnikontinuita.anep.Main</mainClass>
+                  <mainClass>cz.digitalnikontinuita.anep.Launcher</mainClass>
                   <!-- Verze do manifestu, aby ji okno „O aplikaci" mohlo přečíst
                        z běžícího programu místo toho, aby si ji nesla v kódu.
                        Číslo v kódu se dřív nebo později rozejde s tím, co je

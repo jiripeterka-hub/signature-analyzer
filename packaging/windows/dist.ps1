@@ -79,7 +79,7 @@ function Invoke-CodeSign([string]$Path, [string]$Description) {
 }
 
 $AppName   = "AnEP"
-$MainClass = "cz.digitalnikontinuita.anep.Main"
+$MainClass = "cz.digitalnikontinuita.anep.Launcher"
 $AppJar    = "signature-analyzer.jar"   # thin jar: only app classes
 # Resolve absolute paths so Maven -DoutputDirectory doesn't resolve relative
 # to the module basedir (app/) instead of the repo root.
@@ -357,7 +357,7 @@ Postup:
         --module-path app\fx ^
         --add-modules javafx.base,javafx.graphics,javafx.controls,javafx.fxml,javafx.web,javafx.media,javafx.swing ^
         -cp "relink\anep-classes.jar;relink\dss\*;app\signature-analyzer.jar" ^
-        cz.digitalnikontinuita.anep.Main
+        cz.digitalnikontinuita.anep.Launcher
 
      Poradi je podstatne: co je na ceste driv, to vyhrava, takze vymenene DSS
      zastini kopii uvnitr fat JARu.

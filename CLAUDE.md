@@ -27,7 +27,7 @@ Uživatel je odborník na elektronické podpisy; s aplikací řeší i právní 
 
 - **Nepřekládat pod běžící aplikací.** JVM si třídy dotahuje průběžně; přepsané `target/classes`
   končí `NoSuchMethodError`. Před `mvn compile` / `mvn test` ověřit:
-  `Get-CimInstance Win32_Process -Filter "Name like 'java%'" | ? { $_.CommandLine -match 'anep.Main|javafx:run' }`.
+  `Get-CimInstance Win32_Process -Filter "Name like 'java%'" | ? { $_.CommandLine -match 'anep.Launcher|anep.Main|javafx:run' }`.
   Když běží, říct to uživateli; sondy lze pustit nad kopií tříd mimo `target/classes`
   (`javac -d app/target/cls-new …`, složka pod `app/target/` je v `.gitignore`).
 - `mvn -o test` nechat doběhnout jako samostatný příkaz a výsledek číst ze

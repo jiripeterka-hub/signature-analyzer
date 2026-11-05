@@ -2,6 +2,7 @@ package cz.digitalnikontinuita.anep.ui;
 
 import cz.digitalnikontinuita.anep.core.AppSettings;
 import cz.digitalnikontinuita.anep.core.NetworkProxy;
+import cz.digitalnikontinuita.anep.core.UiScale;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -9,6 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
@@ -426,6 +428,39 @@ public class SettingsDialog {
                 "Volba se nepamatuje: po každém spuštění je vypnutá. Změna se projeví až při " +
                 "následujícím ověření.");
 
+        // Velikost rozhraní (5. 11. 2026, pokyn uživatele). Na základní stránce: hledá ji ten, kdo
+        // špatně čte, a neměl by kvůli tomu procházet drobným písmem pokročilého nastavení.
+        ComboBox<Integer> cbUiScale = new ComboBox<>();
+        cbUiScale.getItems().setAll(UiScale.CHOICES);
+        cbUiScale.setValue(settings.getUiScalePercent());
+        cbUiScale.setConverter(new javafx.util.StringConverter<>() {
+            @Override public String toString(Integer v) {
+                return v == null || v == UiScale.SYSTEM ? "Podle systému" : v + " %";
+            }
+            @Override public Integer fromString(String s) {
+                return UiScale.SYSTEM;  // Pole se nedá přepisovat, slouží jen k výběru.
+            }
+        });
+        Label labelUiScale = new Label("Velikost rozhraní");
+        labelUiScale.setStyle("-fx-font-size:13px;-fx-font-weight:bold;");
+        HBox uiScaleControl = new HBox(8, labelUiScale, cbUiScale);
+        uiScaleControl.setAlignment(Pos.CENTER_LEFT);
+
+        String uiScaleHint = (
+                "Zvětší nebo zmenší celé rozhraní aplikace: písmo, ovládací prvky i okna. Ve " +
+                "výchozím stavu se aplikace řídí měřítkem nastaveným v systému. Je-li na vašem " +
+                "monitoru rozhraní špatně čitelné, zvolte větší hodnotu. Okno, které by se " +
+                "při velkém měřítku nevešlo na obrazovku, se zmenší.\n\n" +
+                "Volba se pamatuje a na výsledek ověření nemá vliv. Změna se projeví až po novém " +
+                "spuštění aplikace.");
+
+        // Porovnává se s tím, s čím aplikace běží, ne s uloženou hodnotou: i po uložení a novém
+        // otevření dialogu zůstává pravda, že změna ještě neplatí.
+        Label noteUiScale = new Label("Změna se projeví po novém spuštění aplikace.");
+        noteUiScale.setStyle("-fx-font-size:11px;-fx-text-fill:#b45309;");
+        noteUiScale.visibleProperty().bind(cbUiScale.valueProperty().isNotEqualTo(UiScale.atStart()));
+        noteUiScale.managedProperty().bind(noteUiScale.visibleProperty());
+
         Button btnToAdvanced = new Button("Pokročilé nastavení...");
         btnToAdvanced.setStyle("-fx-font-size:11px;");
 
@@ -460,6 +495,10 @@ public class SettingsDialog {
                 new Separator(),
                 infoRow(cbExpert, makeInfoButton(stage,
                         cbExpert.getText(), expertHint)),
+                new Separator(),
+                infoRow(uiScaleControl, makeInfoButton(stage,
+                        labelUiScale.getText(), uiScaleHint)),
+                noteUiScale,
                 new Separator(),
                 btnToAdvanced,
                 new Separator(),
@@ -553,6 +592,7 @@ public class SettingsDialog {
             settings.setAcceptPdfNotEtsi(cbPdfNotEtsi.isSelected());
             settings.setTimestampStandardsMode(cbTsStandards.isSelected());
             settings.setExpertMode(cbExpert.isSelected());
+            settings.setUiScalePercent(cbUiScale.getValue());
             settings.setUseCustomValidationTime(cbCustomTime.isSelected());
             if (cbCustomTime.isSelected()) {
                 LocalDate date = datePicker.getValue() != null
