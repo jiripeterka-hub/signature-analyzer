@@ -778,6 +778,12 @@ public class ExtendedView {
                     String.join(", ", sig.getSignedFiles())));
         }
 
+        // Mezi řádky, které čte každý: je to výhrada k závěru a jde i do protokolu.
+        String expiredAnchor = AdvisorView.expiredAnchorText(sig);
+        if (expiredAnchor != null) {
+            card.getChildren().add(row("Kotva důvěry:", expiredAnchor));
+        }
+
         // Odsud dál je karta složená z pojmenovaných bloků, všechny zavřené. Řádky nad tímto
         // místem — čeho se nález týká, jak dopadl a v jakém je formátu — čte každý; všechno
         // ostatní je odpověď na otázku, kterou u konkrétního dokumentu klade jen někdo, a nadpisy

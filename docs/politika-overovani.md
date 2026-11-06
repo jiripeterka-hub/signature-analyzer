@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika ověřování podpisu**
 
-==Verze 1.17== · stav ke dni ==5. 11. 2026== · ==AnEP 1.3.0==, knihovna DSS 6.5.1
+==Verze 1.18== · stav ke dni ==6. 11. 2026== · ==AnEP 1.3.0==, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -28,9 +28,9 @@ Dokument je stavěný jako politika ověřování podpisu ve smyslu ETSI TS 119 
 | Položka | Hodnota |
 |---|---|
 | Název | Politika ověřování elektronických podpisů AnEP |
-| Verze | ==1.17== ze dne ==5. 11. 2026== |
+| Verze | ==1.18== ze dne ==6. 11. 2026== |
 | Platí pro | ==AnEP 1.3.0 (repozitář signature-analyzer, značka v1.3.0)== |
-| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.17== |
+| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.18== |
 | Ověřovací jádro | knihovna DSS (Digital Signature Service) 6.5.1 Evropské komise |
 | Postup ověřování | ETSI EN 319 102-1 V1.4.0 (2024-03) |
 | Struktura dokumentu | ETSI TS 119 172-1 (politika ověřování podpisu) |
@@ -93,7 +93,7 @@ Výchozím zdrojem důvěry je seznam důvěryhodných seznamů Evropské komise
 
 ### 5.2 Vlastní úložiště certifikátů
 
-Uživatel může do vlastního úložiště vložit certifikáty, kterým má aplikace důvěřovat navíc — typicky kořen interní nebo komerční certifikační autority. Úložiště se čte při každém ověření znovu, změna platí okamžitě. Podpis, jehož řetěz vede k takové kotvě, výsledek označí jako ověřený vůči vlastní kotvě.
+Uživatel může do vlastního úložiště vložit certifikáty, kterým má aplikace důvěřovat navíc — typicky kořen interní nebo komerční certifikační autority. Úložiště se čte při každém ověření znovu, změna platí okamžitě. Podpis, jehož řetěz vede k takové kotvě, výsledek označí jako ověřený vůči vlastní kotvě. ==Kotva z vlastního úložiště nemá časové omezení: doba platnosti jejího certifikátu se neposuzuje a důvěra v ni trvá, dokud je v úložišti. Nerozhoduje ani to, zda podpis vznikl až po konci této doby. Certifikáty pod kotvou v řetězu se posuzují běžným způsobem, takže koncový certifikát po skončení platnosti bez důkazu existence kotva nezachrání. Je-li kotvou sám podpisový certifikát, neposuzuje se ani jeho doba platnosti, ani revokace. Je-li podpis prokázán až k okamžiku po konci platnosti kotvy, nebo je kotvou sám podpisový certifikát po konci platnosti, výsledek to uvede v poznámce; závěr ověření se tím nemění.==
 
 Certifikáty tuzemských komerčních autorit má AnEP přibalené jako **doplňkový materiál** pro sestavení řetězu, ne jako kotvy: důvěru k nim zakládá teprve vložení do vlastního úložiště.
 
@@ -427,3 +427,4 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 | ==1.15== | ==3. 11. 2026== | ==oddíl 7.1: u dokumentu předaného z obalu, kterému razítko obalu samo nestačilo, se seznam z vlastního úložiště CRL vybírá k okamžiku razítka obalu, ne k času ověření; platí pro AnEP 1.1.1== |
 | ==1.16== | ==3. 11. 2026== | ==doplněno, co aplikace dělá už od verze 1.1.0 a politika dosud neuváděla: oddíl 3.2 obal jako vstup; oddíl 12.3 podání vůči orgánu veřejné moci (§ 6 a 9 zákona č. 297/2016 Sb.) a druh prvku s porušenou integritou; nový oddíl 12.9 elektronické autorizační razítko; oddíl 7.1 on-line zdroje přes proxy podle nastavení. Ověřování samo se nemění; platí pro AnEP 1.2.0== |
 | ==1.17== | ==5. 11. 2026== | ==beze změny obsahu; AnEP 1.3.0 mění velikost rozhraní, spojení přes proxy (na to, který údaj se získá a jak se posoudí, to nemá vliv) a uvádí číslo verze v protokolech; platí pro AnEP 1.3.0== |
+| ==1.18== | ==6. 11. 2026== | ==oddíl 5.2: kotva z vlastního úložiště nemá časové omezení; výsledek uvede v poznámce, je-li podpis prokázán až k okamžiku po konci platnosti kotvy nebo je kotvou sám podpisový certifikát po konci platnosti; poznámka platí od verze AnEP následující po 1.3.0== |

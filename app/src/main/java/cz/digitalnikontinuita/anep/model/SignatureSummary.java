@@ -1113,6 +1113,24 @@ public class SignatureSummary {
     public List<String> getSignedFiles()                  { return signedFiles; }
     public void setSignedFiles(List<String> files)        { this.signedFiles = List.copyOf(files); }
 
+    /**
+     * Kotva z vlastního úložiště, která je vůči závěru po konci své řádné platnosti.
+     *
+     * <p>Sonda 6. 11. 2026: DSS kotvě dobu platnosti neposuzuje, takže vložený certifikát drží
+     * důvěru i po ní, a to i pro podpis vzniklý až po jejím konci. Výsledek se tím nemění
+     * (rozhodnutí uživatele), jen se o tom čtenář dozví.
+     *
+     * @param signingCertificate kotvou je sám podpisový certifikát, takže odpadá i revokace
+     * @param timestampTime      čas razítka, o které se kotva opírá; {@code null} u řetězu prvku
+     */
+    public record ExpiredCustomAnchor(String name, Instant notAfter, boolean signingCertificate,
+                                      Instant timestampTime) {}
+
+    private ExpiredCustomAnchor expiredCustomAnchor;
+
+    public ExpiredCustomAnchor getExpiredCustomAnchor()   { return expiredCustomAnchor; }
+    public void setExpiredCustomAnchor(ExpiredCustomAnchor v) { this.expiredCustomAnchor = v; }
+
     /** True when at least one evidence record actually proves this signature's earlier existence. */
     public boolean hasProvingEvidenceRecord() {
         return evidenceRecords.stream().anyMatch(EvidenceRecordEntry::providesProof);

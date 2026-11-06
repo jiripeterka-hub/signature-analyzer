@@ -50,7 +50,9 @@ public class TrustedCertificatesDialog {
                 "Certifikáty v tomto seznamu se při ověřování považují za důvěryhodné navíc " +
                 "k důvěryhodným seznamům EU (EUTL) — např. interní firemní CA nebo jiná " +
                 "autorita, která není součástí EUTL. Změny se projeví ihned, bez nutnosti " +
-                "restartu aplikace.");
+                "restartu aplikace. Certifikát se považuje za důvěryhodný, dokud je v tomto " +
+                "seznamu, a to i po konci své platnosti. Certifikáty pod ním v řetězu se " +
+                "posuzují běžným způsobem.");
         hint.setWrapText(true);
         hint.setStyle("-fx-text-fill:#666666;-fx-font-size:11px;");
 
@@ -61,12 +63,30 @@ public class TrustedCertificatesDialog {
                 super.updateItem(entry, empty);
                 if (empty || entry == null) {
                     setText(null);
+                    paint();
                     return;
                 }
                 String name = CustomTrustStore.displayName(entry.certificate());
                 java.util.Date notAfter = entry.certificate().getCertificate().getNotAfter();
-                setText(name + "   (platnost do "
+                setText(name + (notAfter.before(new java.util.Date())
+                                ? "   (platnost skončila "
+                                : "   (platnost do ")
                         + cz.digitalnikontinuita.anep.core.TimeFormat.full(notAfter) + ")");
+                paint();
+            }
+
+            @Override
+            public void updateSelected(boolean selected) {
+                super.updateSelected(selected);
+                paint();
+            }
+
+            /** Oranžová by na vybraném řádku splynula s pruhem výběru, tam zůstává jeho barva. */
+            private void paint() {
+                CustomTrustStore.Entry entry = getItem();
+                boolean expired = !isEmpty() && entry != null && entry.certificate().getCertificate()
+                        .getNotAfter().before(new java.util.Date());
+                setStyle(expired && !isSelected() ? "-fx-text-fill:#b45309;" : "");
             }
         });
         VBox.setVgrow(list, Priority.ALWAYS);

@@ -650,6 +650,15 @@ public class ResultView {
                         : sig.getDetectedSituations().contains(2) ? revokedBeforeDecisiveWarning(sig)
                         : null;
         if (warnText != null && noProofAndCertExpired(sig, verificationTime)) warnText = null;
+        // Kotva důvěry po konci platnosti: delší výklad na přehledu, který má odpovědět jedním
+        // pohledem, patří do okna (6. 11. 2026, pokyn uživatele). Přidává se až za podmínkou nad
+        // tímto řádkem, protože ta by mlčky zhasla právě podpis, jehož kotvou je sám expirovaný
+        // certifikát, a to je případ, kde na poznámce záleží nejvíc.
+        String expiredAnchor = "TOTAL_PASSED".equals(indication)
+                ? AdvisorView.expiredAnchorText(sig) : null;
+        if (expiredAnchor != null) {
+            warnText = warnText != null ? warnText + "\n\n" + expiredAnchor : expiredAnchor;
+        }
         HBox stavRow;
         if (warnText != null) {
             Button warnBtn = makeWarningButton(warnText);
@@ -738,6 +747,16 @@ public class ResultView {
         // what it covers and how well belongs in Rozšířený přehled.
         if (!sig.getEvidenceRecords().isEmpty()) {
             card.getChildren().add(row("Evidenční záznam:", evidenceRecordSummary(sig)));
+        }
+
+        // Na obrazovce ten text nese tlačítko Upozornění, ale z tlačítka by se do protokolu dostalo
+        // jen jeho jméno a výhrada k závěru by z něj zmizela. Skrytý řádek PrintUtil vysází, tak
+        // jako obsah sbalených bloků.
+        if (expiredAnchor != null) {
+            HBox forProtocol = row("Kotva důvěry:", expiredAnchor);
+            forProtocol.setVisible(false);
+            forProtocol.setManaged(false);
+            card.getChildren().add(forProtocol);
         }
 
         if (!isTs && AdvisorView.hasAppearanceToReport(sig)) {

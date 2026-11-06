@@ -60,9 +60,10 @@ class SelfSignedRevocationTextTest {
                         + " kotvou důvěry.")
                 .build();
         assertTrue(text(anchor).contains("kotvou důvěry"), text(anchor));
+        assertTrue(text(anchor).contains("rozhoduje důvěryhodný seznam"), text(anchor));
 
-        // A vlastnoručně podepsaný certifikát vložený do vlastního úložiště je na tom stejně:
-        // kotvou důvěry je, takže situace 12 nenastane.
+        // A vlastnoručně podepsaný certifikát vložený do vlastního úložiště kotvou důvěry je,
+        // takže situace 12 nenastane. O jeho postavení ale nerozhoduje seznam, nýbrž úložiště.
         SignatureSummary pinned = SigFixture.sig()
                 .certSelfSigned()
                 .customAnchor()
@@ -70,5 +71,8 @@ class SelfSignedRevocationTextTest {
                         + " vlastním úložišti důvěryhodných certifikátů).")
                 .build();
         assertTrue(text(pinned).contains("kotvou důvěry"), text(pinned));
+        assertTrue(text(pinned).contains("rozhoduje to, že je ve vlastním úložišti certifikátů,"),
+                text(pinned));
+        assertFalse(text(pinned).contains("důvěryhodný seznam"), text(pinned));
     }
 }

@@ -3,6 +3,20 @@
 Změny ve verzích aplikace AnEP (Analyzátor elektronických podpisů). Slouží jako podklad
 pro soupis změn ke každé nové vydané verzi.
 
+## Připravovaná verze
+
+### Výklad výsledku
+
+- **Upozornění na kotvu důvěry po konci platnosti.** Certifikát ve vlastním úložišti platí jako
+  kotva důvěry i po konci své platnosti, dokud je v úložišti; na tom se nic nemění. Nově na to
+  Analýza a protokol upozorní, pokud je podpis prokázán až k okamžiku po tomto konci nebo je kotvou
+  sám podpisový certifikát: v Analýze v rozbaleném bloku Poznámky k výsledku, v Rozšířeném přehledu
+  řádkem Kotva důvěry a v Zjednodušeném přehledu tlačítkem Upozornění. Seznam vlastních důvěryhodných
+  certifikátů označí ty, jejichž platnost skončila.
+- **Oprava věty o revokaci.** U podpisového certifikátu, který je sám kotvou důvěry z vlastního
+  úložiště, Analýza tvrdila, že o jeho postavení rozhoduje důvěryhodný seznam. Nově uvádí, že
+  rozhoduje to, že je ve vlastním úložišti.
+
 ## Verze 1.3.0 (změny oproti 1.2.0)
 
 ### Protokoly

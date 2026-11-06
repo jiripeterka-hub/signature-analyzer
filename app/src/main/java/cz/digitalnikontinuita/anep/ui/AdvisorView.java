@@ -2549,6 +2549,8 @@ public class AdvisorView {
             body.getChildren().add(note);
         }
 
+        String expiredAnchor = expiredAnchorText(sig);
+        if (expiredAnchor != null) body.getChildren().add(solutionParagraph(expiredAnchor));
         addSigningTimeRow(body, sig);
         addIgnoredTimestampRow(body, sig);
 
@@ -2560,9 +2562,41 @@ public class AdvisorView {
         addDssRemarksBlock(body, sig);
 
         if (!body.getChildren().isEmpty()) {
-            card.getChildren().add(collapsibleBlock(NOTES_BLOCK_TITLE, body, false));
+            // Výjimka z pravidla o sbaleném bloku výš (6. 11. 2026, pokyn uživatele): kotva po
+            // konci platnosti je výhrada, kterou sbalený blok zamlčí, a nastává jen zřídka, takže
+            // otevřený blok tu něco znamená.
+            card.getChildren().add(collapsibleBlock(NOTES_BLOCK_TITLE, body, expiredAnchor != null));
         }
         return card;
+    }
+
+    /**
+     * Poznámka ke kotvě důvěry z vlastního úložiště po konci řádné platnosti, nebo {@code null}.
+     * Kdy se ukazuje, viz {@code ReportMapper.expiredCustomAnchor}. Znění schválil uživatel
+     * 6. 11. 2026. Přebírají je i oba přehledy, protože z nich vzniká protokol a výsledek na té
+     * kotvě stojí.
+     */
+    static String expiredAnchorText(SignatureSummary sig) {
+        SignatureSummary.ExpiredCustomAnchor anchor = sig.getExpiredCustomAnchor();
+        if (anchor == null) return null;
+        String until = TimeUtil.format(anchor.notAfter());
+        String tail = "Zda tomuto certifikátu důvěřovat i po konci jeho platnosti, je na vašem"
+                + " posouzení. Pokud ne, vyjměte ho z okna " + TRUST_STORE_WINDOW
+                + " a ověřte znovu. Jiný ověřovatel může takovou kotvu posoudit jinak.";
+        if (anchor.signingCertificate()) {
+            return "Kotvou důvěry je tu sám " + elementCert(sig, Case.NOMINATIV) + " „"
+                    + anchor.name() + "“ z vlastního úložiště certifikátů. Proto se u něj neposuzuje"
+                    + " doba platnosti, která skončila " + until + ", ani to, zda nebyl zneplatněn."
+                    + " Závěr stojí jen na tom, že je tento certifikát v úložišti. " + tail;
+        }
+        String when = anchor.timestampTime() != null
+                ? ", o kterou se opírá časové razítko z " + TimeUtil.format(anchor.timestampTime())
+                  + ", byla v okamžiku vydání razítka"
+                : " byla v rozhodném okamžiku";
+        return "Kotva důvěry „" + anchor.name() + "“ z vlastního úložiště certifikátů" + when
+                + " po konci své řádné platnosti, která skončila " + until + ". Aplikace se o ni"
+                + " přesto opírá, protože u kotvy důvěry se doba platnosti neposuzuje: důvěra v ni"
+                + " stojí na tom, že byla do úložiště vložena, a trvá, dokud v něm je. " + tail;
     }
 
     /**
@@ -4888,14 +4922,18 @@ public class AdvisorView {
             // Rozhoduje situace 12, tedy že v podpisovém řetězu není jediný důvěryhodný
             // certifikát — týž test, jakým to měří Podrobný výčet
             // (ReportMapper.describeTrustAnchorLeaf se ptá na !c.isTrusted()). Vlastnoručně
-            // podepsaný certifikát vložený do úložiště kotvou důvěry je a věta o seznamu u něj
-            // platí dál.
+            // podepsaný certifikát vložený do úložiště kotvou důvěry je, ale žádný seznam o něm
+            // nerozhoduje: rozhoduje to, že je v úložišti (6. 11. 2026, pokyn uživatele, viděno
+            // na umělém podpisu s kotvou po konci platnosti).
             sb.append(sig.isCertSelfSigned() && found.contains(12)
                     ? "U " + elementCert(sig, Case.GENITIV) + " se stav revokace nezjišťoval:"
                       + " je podepsaný sám sebou a pro takový certifikát žádné revokační"
                       + " informace nevznikají — nemá je kdo vydávat."
                     : "U " + elementCert(sig, Case.GENITIV) + " se stav revokace nezjišťoval:"
-                      + " je sám kotvou důvěry a o jeho postavení rozhoduje důvěryhodný seznam,"
+                      + " je sám kotvou důvěry a o jeho postavení rozhoduje "
+                      + (sig.isTrustedViaCustomStore()
+                              ? "to, že je ve vlastním úložišti certifikátů,"
+                              : "důvěryhodný seznam,")
                       + " nikoli CRL nebo OCSP.");
         } else {
             sb.append("O ").append(elementCert(sig, Case.LOKAL))

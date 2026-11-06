@@ -601,6 +601,11 @@ public class ReportMapper {
                         ? named.envelopeName() + " → " + named.via() : named.envelopeName());
             }
             summaries.get(summaries.size() - 1).setSignedFiles(signedContainerFiles(sw));
+            // Jen u kladného závěru: u jiného se o kotvu žádný závěr neopřel.
+            if ("TOTAL_PASSED".equals(summaries.get(summaries.size() - 1).getIndication())) {
+                summaries.get(summaries.size() - 1).setExpiredCustomAnchor(expiredCustomAnchor(
+                        id, dd, simpleReport, CustomTrustStore.listCertificates(), bestSigTime));
+            }
         }
 
         DiagnosticData dd = baseDd;
@@ -1485,8 +1490,64 @@ public class ReportMapper {
      */
     private static String chainRestsOnCustomStore(List<CertificateWrapper> chain,
                                                   List<CustomTrustStore.Entry> customCerts) {
+        CertificateWrapper anchor = customAnchorOf(chain, customCerts);
+        return anchor != null ? anchor.getReadableCertificateName() : null;
+    }
+
+    /**
+     * Kotva z vlastního úložiště po konci řádné platnosti, je-li o čem čtenáře zpravit, jinak null.
+     *
+     * <p><b>Proč se neptá prostě „je kotva expirovaná“.</b> Vydávající autorita v úložišti bývá po
+     * platnosti běžně (6. 11. 2026 sedm z devatenácti certifikátů uživatele) a u podpisu doloženého
+     * razítkem z doby její platnosti na tom nic zvláštního není. Poznámka u každého takového podpisu
+     * by přestala něco znamenat, proto se porovnává s okamžikem, ke kterému je závěr doložen. Bez
+     * důkazu existence je to čas ověření: dřívější vznik podpisu pak doložený není.
+     *
+     * <p>Je-li kotvou sám podpisový certifikát, rozhoduje čas ověření vždy. Starší razítko tu nic
+     * nezachraňuje: u certifikátu neproběhlo ani posouzení revokace, a závěr tak stojí jen na tom,
+     * že je certifikát v úložišti. U razítka se bere čas jeho vydání.
+     */
+    static SignatureSummary.ExpiredCustomAnchor expiredCustomAnchor(
+            String id, DiagnosticData dd, SimpleReport simpleReport,
+            List<CustomTrustStore.Entry> customCerts, Instant bestSigTime) {
+        SignatureWrapper sw = dd.getSignatureById(id);
+        if (sw == null || customCerts.isEmpty() || simpleReport.getValidationTime() == null) {
+            return null;
+        }
+        Instant validationTime = simpleReport.getValidationTime().toInstant();
+        CertificateWrapper anchor = customAnchorOf(sw.getCertificateChain(), customCerts);
+        if (anchor != null && anchor.getNotAfter() != null) {
+            Instant notAfter = anchor.getNotAfter().toInstant();
+            CertificateWrapper signing = sw.getSigningCertificate();
+            boolean self = signing != null && anchor.getId().equals(signing.getId());
+            Instant moment = self || bestSigTime == null ? validationTime : bestSigTime;
+            if (moment.isAfter(notAfter)) {
+                return new SignatureSummary.ExpiredCustomAnchor(
+                        anchor.getReadableCertificateName(), notAfter, self, null);
+            }
+        }
+        for (TimestampWrapper ts : sw.getTimestampList()) {
+            if (simpleReport.getIndication(ts.getId()) != Indication.PASSED) continue;
+            CertificateWrapper tsAnchor = customAnchorOf(ts.getCertificateChain(), customCerts);
+            if (tsAnchor == null || tsAnchor.getNotAfter() == null
+                    || ts.getProductionTime() == null) {
+                continue;
+            }
+            Instant notAfter = tsAnchor.getNotAfter().toInstant();
+            Instant produced = ts.getProductionTime().toInstant();
+            if (produced.isAfter(notAfter)) {
+                return new SignatureSummary.ExpiredCustomAnchor(
+                        tsAnchor.getReadableCertificateName(), notAfter, false, produced);
+            }
+        }
+        return null;
+    }
+
+    /** Certifikát z vlastního úložiště, který kotví tento řetěz, když ho nekotví nic z EUTL. */
+    private static CertificateWrapper customAnchorOf(List<CertificateWrapper> chain,
+                                                     List<CustomTrustStore.Entry> customCerts) {
         java.util.Date now = new java.util.Date();
-        String matchedName = null;
+        CertificateWrapper matched = null;
         boolean eutlAlsoReachesTrust = false;
         for (CertificateWrapper cw : chain) {
             if (!cw.isTrusted()) continue;
@@ -1505,13 +1566,13 @@ public class ReportMapper {
                     && (cw.getTrustSunsetDate() == null || cw.getTrustSunsetDate().after(now))) {
                 eutlAlsoReachesTrust = true;
             }
-            if (matchedName != null) continue;
+            if (matched != null) continue;
             byte[] der = cw.getBinaries();
             if (der == null) continue;
             for (CustomTrustStore.Entry entry : customCerts) {
                 try {
                     if (java.util.Arrays.equals(der, entry.certificate().getCertificate().getEncoded())) {
-                        matchedName = cw.getReadableCertificateName();
+                        matched = cw;
                         break;
                     }
                 } catch (Exception ignored) {
@@ -1519,7 +1580,7 @@ public class ReportMapper {
                 }
             }
         }
-        return eutlAlsoReachesTrust ? null : matchedName;
+        return eutlAlsoReachesTrust ? null : matched;
     }
 
     private boolean usesSha1(SignatureWrapper sw, DiagnosticData dd) {
