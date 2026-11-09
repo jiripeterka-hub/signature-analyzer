@@ -717,7 +717,7 @@ public class TrustConfig {
             return false;
         }
         try {
-            CommonsDataLoader loader = createDataLoader();
+            CommonsDataLoader loader = createDataLoader(false);
             byte[] lotlBytes = loader.get(EU_LOTL_URL);
             if (lotlBytes == null || lotlBytes.length == 0) return false;
 
@@ -998,15 +998,43 @@ public class TrustConfig {
      * causing legitimate CAs absent from ~/.jdk-cacerts to be rejected.
      */
     static CommonsDataLoader createDataLoader() {
+        return createDataLoader(true);
+    }
+
+    /**
+     * @param rememberUnreachable přeskakovat servery, které v tomto běhu neodpověděly — viz
+     *        {@link NetworkWatch}. {@code false} jen pro stahování důvěryhodných seznamů.
+     */
+    static CommonsDataLoader createDataLoader(boolean rememberUnreachable) {
         CommonsDataLoader loader = new CommonsDataLoader() {
             @Override
             protected synchronized org.apache.hc.client5.http.impl.classic.HttpClientBuilder
                     getHttpClientBuilder(String url) {
                 return viaProxy(super.getHttpClientBuilder(url));
             }
+
+            @Override
+            protected eu.europa.esig.dss.model.http.ResponseEnvelope executeHttpRequest(
+                    org.apache.hc.client5.http.impl.classic.CloseableHttpClient client,
+                    org.apache.hc.client5.http.classic.methods.HttpUriRequest request,
+                    boolean includeResponseDetails, boolean includeResponseBody)
+                    throws java.io.IOException {
+                return NetworkWatch.watch(uriOf(request), null, rememberUnreachable,
+                        () -> super.executeHttpRequest(client, request,
+                                includeResponseDetails, includeResponseBody));
+            }
         };
         applyCustomCaTrustStrategy(loader);
         return loader;
+    }
+
+    /** Adresa žádosti, nebo {@code null}, když ji nejde přečíst (pak se nesleduje). */
+    private static java.net.URI uriOf(org.apache.hc.client5.http.classic.methods.HttpUriRequest r) {
+        try {
+            return r.getUri();
+        } catch (java.net.URISyntaxException e) {
+            return null;
+        }
     }
 
     /**
@@ -1044,6 +1072,18 @@ public class TrustConfig {
                     protected synchronized org.apache.hc.client5.http.impl.classic.HttpClientBuilder
                             getHttpClientBuilder(String url) {
                         return viaProxy(super.getHttpClientBuilder(url));
+                    }
+
+                    // Paměť nedostupných serverů a stavový řádek — viz NetworkWatch.
+                    @Override
+                    protected eu.europa.esig.dss.model.http.ResponseEnvelope executeHttpRequest(
+                            org.apache.hc.client5.http.impl.classic.CloseableHttpClient client,
+                            org.apache.hc.client5.http.classic.methods.HttpUriRequest request,
+                            boolean includeResponseDetails, boolean includeResponseBody)
+                            throws java.io.IOException {
+                        return NetworkWatch.watch(uriOf(request), "OCSP",
+                                () -> super.executeHttpRequest(client, request,
+                                        includeResponseDetails, includeResponseBody));
                     }
                 };
         applyCustomCaTrustStrategy(loader);
@@ -1265,7 +1305,7 @@ public class TrustConfig {
 
         // networkLoader: used only for actual online refreshes (background or manual).
         FileCacheDataLoader networkLoader = new FileCacheDataLoader();
-        networkLoader.setDataLoader(createDataLoader());
+        networkLoader.setDataLoader(createDataLoader(false));
         networkLoader.setFileCacheDirectory(cacheDir);
         networkLoader.setCacheExpirationTime(0L);
         this.networkLoader = networkLoader;

@@ -17,6 +17,40 @@ pro soupis změn ke každé nové vydané verzi.
   úložiště, Analýza tvrdila, že o jeho postavení rozhoduje důvěryhodný seznam. Nově uvádí, že
   rozhoduje to, že je ve vlastním úložišti.
 
+- **Nesprávná dvojice dokument + externí podpis.** Když k externímu podpisu nesouhlasí otisk
+  předloženého dokumentu, karta Analýzy dosud uváděla jen, že došlo ke změně podepsaného obsahu.
+  Nově uvede důvod „nesprávná dvojice soubor + podpis“: buď se dokument
+  po podpisu změnil, nebo k sobě dokument a podpis nepatří, a radí zadat správnou dvojici.
+  Totéž říká i výklad druhu podpisu (řádek V terminologii práva a bublina v přehledech): místo
+  věty, že se dokument po podpisu změnil, uvádí obě možnosti — změněný dokument i nesprávnou
+  dvojici. Stejně jako u porušené integrity se vedle důvodu neuvádějí další důvody (například o revokačních
+  informacích), které by u podpisu nad nesprávným dokumentem neměly smysl.
+
+### Ověřování
+
+- **Nedostupné servery se během běhu nezkoušejí znovu.** Když server pro revokační informace
+  (OCSP, CRL) nebo certifikáty vydavatelů neodpovídá, čeká se na něj, než to systém vzdá —
+  u některých serverů přes 20 s na každý pokus, a to při každém ověření znovu. Nově si aplikace
+  server, na který se marně čekalo, zapamatuje do svého ukončení a při dalších ověřeních ho
+  přeskočí; revokační informace od něj pak hodnotí jako nedostupné, stejně jako dosud. Časové
+  limity se nemění. Obnova důvěryhodných seznamů zkouší servery vždy znovu a změna proxy
+  v Nastavení paměť smaže.
+- **Stavový řádek ukazuje, na co se čeká.** Trvá-li odpověď některého serveru déle než 3 s,
+  stavový řádek během ověřování uvede jeho jméno, druh žádosti a dobu čekání.
+
+### Ovládání
+
+- **Seznam naposledy ověřovaných souborů nezatuhne.** Když byl některý soubor ze seznamu
+  (pravé tlačítko na ↺) na nedostupném síťovém disku, aplikace při otevření seznamu na dlouho
+  přestala odpovídat. Dostupnost souborů se nově zjišťuje na pozadí: seznam se ukáže hned
+  a nedostupné položky zešednou, jakmile se to zjistí. Při dalším otevření seznamu jsou položky
+  hned ukázány tak, jak naposledy dopadly, a dostupnost se na pozadí zjišťuje znovu — položka,
+  jejíž disk se mezitím připojil, opět zčerná. Totéž zjišťování na pozadí platí pro tlačítko ↺
+  po spuštění aplikace.
+- **Na pořadí vstupů nezáleží ani po ověření.** Když se po provedeném ověření vložil napřed
+  externí soubor a teprve po něm dokument, externí soubor se zapomněl a ověřil se dokument sám.
+  Nově se externí soubor zachová v jakémkoli pořadí, stejně jako po spuštění aplikace.
+
 ## Verze 1.3.0 (změny oproti 1.2.0)
 
 ### Protokoly

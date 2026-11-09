@@ -2165,13 +2165,17 @@ public class ReportMapper {
             java.net.URI uri = new java.net.URI(urlStr);
             // Proxy výslovně: URLConnection by jinak vzal výchozí výběr JDK, a ne volbu
             // z Nastavení (NetworkProxy, 3. 11. 2026).
-            java.net.URLConnection conn = uri.toURL().openConnection(NetworkProxy.proxyFor(uri));
-            conn.setConnectTimeout(8_000);
-            conn.setReadTimeout(12_000);
-            conn.setRequestProperty("User-Agent", "AnEP/1.0 CRL-Check");
-            try (java.io.InputStream is = conn.getInputStream()) {
-                return is.readAllBytes();
-            }
+            // Pod dohledem NetworkWatch (9. 11. 2026): server, který v tomto běhu neodpověděl, se
+            // přeskočí, a čekání na něj se ukáže ve stavovém řádku.
+            return NetworkWatch.watch(uri, "CRL", () -> {
+                java.net.URLConnection conn = uri.toURL().openConnection(NetworkProxy.proxyFor(uri));
+                conn.setConnectTimeout(8_000);
+                conn.setReadTimeout(12_000);
+                conn.setRequestProperty("User-Agent", "AnEP/1.0 CRL-Check");
+                try (java.io.InputStream is = conn.getInputStream()) {
+                    return is.readAllBytes();
+                }
+            });
         } catch (Exception e) {
             return null;
         }
@@ -8261,6 +8265,14 @@ public class ReportMapper {
             // titulu: dokud se neověří samotný podpis, jsou úvahy o revokaci, formátu či
             // algoritmu bezpředmětné. Vznikl rozdělením situace 1, takže i seznam je týž.
             java.util.Map.entry(28, java.util.List.of(1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,25,26,34,35)),
+            // Důvod 8 (nesprávná dvojice soubor + podpis) je důvod 7 u externího podpisu —
+            // nesouhlasí otisk, jen s pravděpodobnějším výkladem — a potlačuje tedy totéž. Do
+            // 9. 11. 2026 tu nebyl: dokud karta Analýzy místo něj vypisovala pevný text o změně
+            // obsahu, nebylo to vidět; jakmile se ukázal, stály vedle něj důvody 2 a 12 o
+            // revokačních údajích, které u podpisu nad cizím dokumentem nemají smysl (nález
+            // uživatele nad prázdným PDF a cizím CAdES B-LTA .p7s). Z téhož důvodu není osmička
+            // v seznamech důvodů 16 a 18: vzájemné potlačení by umlčelo obě strany.
+            java.util.Map.entry(8,  java.util.List.of(1,2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,25,26,34,35)),
             // Reason 23 (poškozené časové razítko) suppresses reason 21 (razítka neslouží jako
             // PoE): both describe the same timestamp, but 23 names the actual defect and says
             // truthfully that nothing can repair it, whereas 21 would advise adding a TSA
@@ -8283,7 +8295,7 @@ public class ReportMapper {
             // reasons except reason 7 — a critically broken algorithm is the primary finding
             // regardless of any other structural or validation problems.
             // Reason 16 is itself excluded from reason 18's list so that 16 always wins over 18.
-            java.util.Map.entry(16, java.util.List.of(1,2,3,4,5,6,8,9,10,11,12,13,14,15,17,18,19,20,21,22,25,26,34)),
+            java.util.Map.entry(16, java.util.List.of(1,2,3,4,5,6,9,10,11,12,13,14,15,17,18,19,20,21,22,25,26,34)),
             // Důvod 35 (otisk, který standardy nepřipouštějí, např. SHA3-224) umlčuje revokační
             // rady z téhož titulu jako důvody 4, 20 a 21: podpis zastaví otisk, ať se s revokací
             // udělá cokoli, a rada povolit ústupek by čtenáře poslala k zaškrtávátku, po kterém
@@ -8299,7 +8311,7 @@ public class ReportMapper {
             // Reason 16 (kriticky zastaralý algoritmus) is excluded: 16 dominates over 18.
             // Reason 20 (signed after cert expiry) stays: if we have a certified BST proving
             // the signing was after notAfter, that fact is independent of the missing attribute.
-            java.util.Map.entry(18, java.util.List.of(1,2,3,4,5,6,8,9,10,11,12,13,14,15,17,19,21,25)),
+            java.util.Map.entry(18, java.util.List.of(1,2,3,4,5,6,9,10,11,12,13,14,15,17,19,21,25)),
             // Reason 22 (revokační info prokazující revokaci, nevyužitelné dle standardů) suppresses
             // reason 2 (OCSP po expiraci): R22 is the stronger and more specific finding — R2 would
             // duplicate the timing explanation already conveyed by R22.

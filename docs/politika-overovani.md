@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika ověřování podpisu**
 
-==Verze 1.18== · stav ke dni ==6. 11. 2026== · ==AnEP 1.3.0==, knihovna DSS 6.5.1
+==Verze 1.19== · stav ke dni ==9. 11. 2026== · ==AnEP 1.3.0==, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -28,9 +28,9 @@ Dokument je stavěný jako politika ověřování podpisu ve smyslu ETSI TS 119 
 | Položka | Hodnota |
 |---|---|
 | Název | Politika ověřování elektronických podpisů AnEP |
-| Verze | ==1.18== ze dne ==6. 11. 2026== |
+| Verze | ==1.19== ze dne ==9. 11. 2026== |
 | Platí pro | ==AnEP 1.3.0 (repozitář signature-analyzer, značka v1.3.0)== |
-| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.18== |
+| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.19== |
 | Ověřovací jádro | knihovna DSS (Digital Signature Service) 6.5.1 Evropské komise |
 | Postup ověřování | ETSI EN 319 102-1 V1.4.0 (2024-03) |
 | Struktura dokumentu | ETSI TS 119 172-1 (politika ověřování podpisu) |
@@ -150,7 +150,7 @@ Vyprší-li nebo je-li zneplatněn certifikát autority až poté, co vydala pod
 ### 7.1 Zdroje a jejich pořadí
 
 1. Revokační údaje vložené v podpisu nebo v dokumentu (slovník DSS/VRI u PDF, atributy CAdES a XAdES).
-2. On-line: nejprve OCSP, potom CRL z distribučního bodu certifikátu. ==Spojení jdou přímo, nebo přes proxy podle nastavení aplikace (podle systému, zadaná, žádná); na to, který údaj se získá a jak se posoudí, to vliv nemá.==
+2. On-line: nejprve OCSP, potom CRL z distribučního bodu certifikátu. ==Spojení jdou přímo, nebo přes proxy podle nastavení aplikace (podle systému, zadaná, žádná); na to, který údaj se získá a jak se posoudí, to vliv nemá.== ==Server, který na žádost neodpověděl ani po delším čekání, se do ukončení aplikace znovu nezkouší a údaj od něj se při dalších ověřeních posoudí jako nedostupný; časové limity spojení se tím nemění. Obnova důvěryhodných seznamů a změna proxy v nastavení tuto paměť neuplatňují, resp. ji mažou.==
 3. Vlastní úložiště CRL, je-li v něm nějaký seznam — jako poslední záchrana, když on-line zdroje k danému certifikátu nic použitelného nevrátí. Z uložených seznamů se vybere ten, který stav certifikátu v době jeho platnosti dokládá nejlépe. ==U dokumentu předaného k ověření z obalu (oddíl 8.4), kterému razítko obalu samo nestačilo, se ověření zopakuje a seznam z úložiště se vybírá k okamžiku razítka obalu; jinak by se u dokumentu bez vlastního razítka vybíral k času ověření a seznam z doby platnosti certifikátu by nemohl posloužit.==
 
 ### 7.2 Údaje vydané po expiraci certifikátu
@@ -428,3 +428,4 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 | ==1.16== | ==3. 11. 2026== | ==doplněno, co aplikace dělá už od verze 1.1.0 a politika dosud neuváděla: oddíl 3.2 obal jako vstup; oddíl 12.3 podání vůči orgánu veřejné moci (§ 6 a 9 zákona č. 297/2016 Sb.) a druh prvku s porušenou integritou; nový oddíl 12.9 elektronické autorizační razítko; oddíl 7.1 on-line zdroje přes proxy podle nastavení. Ověřování samo se nemění; platí pro AnEP 1.2.0== |
 | ==1.17== | ==5. 11. 2026== | ==beze změny obsahu; AnEP 1.3.0 mění velikost rozhraní, spojení přes proxy (na to, který údaj se získá a jak se posoudí, to nemá vliv) a uvádí číslo verze v protokolech; platí pro AnEP 1.3.0== |
 | ==1.18== | ==6. 11. 2026== | ==oddíl 5.2: kotva z vlastního úložiště nemá časové omezení; výsledek uvede v poznámce, je-li podpis prokázán až k okamžiku po konci platnosti kotvy nebo je kotvou sám podpisový certifikát po konci platnosti; poznámka platí od verze AnEP následující po 1.3.0== |
+| ==1.19== | ==9. 11. 2026== | ==oddíl 7.1: server revokačních údajů nebo certifikátů vydavatelů, který neodpověděl ani po delším čekání, se do ukončení aplikace znovu nezkouší; platí od verze AnEP následující po 1.3.0== |

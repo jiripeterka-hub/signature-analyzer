@@ -111,7 +111,12 @@ public final class NetworkProxy extends ProxySelector {
 
     public static Config config() { return config; }
 
-    public static void configure(Config c) { config = c == null ? DEFAULT : c; }
+    public static void configure(Config c) {
+        Config next = c == null ? DEFAULT : c;
+        // Jiná trasa může dosáhnout i serverů, které předtím neodpověděly (NetworkWatch).
+        if (!next.equals(config)) NetworkWatch.forgetUnreachable();
+        config = next;
+    }
 
     /**
      * Udělá z této třídy výchozí výběr proxy v JDK. Volá se z {@code Main.main} hned po nastavení

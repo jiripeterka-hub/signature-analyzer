@@ -542,7 +542,7 @@ public class ResultView {
 
         String legalType = simplifyLegalType(rawLegalType);
 
-        String infoTip = ExtendedView.legalTypeTooltip(legalType);
+        String infoTip = ExtendedView.legalTypeTooltip(legalType, ExtendedView.wrongPair(sig));
         String legalTypeText = ExtendedView.nominativeLegalType(legalType);
         String legalTypeDisplay = sig.isCertification()
                 ? "(certifikační) " + legalTypeText : legalTypeText;

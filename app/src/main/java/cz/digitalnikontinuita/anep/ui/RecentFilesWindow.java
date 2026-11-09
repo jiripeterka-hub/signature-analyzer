@@ -2,6 +2,7 @@ package cz.digitalnikontinuita.anep.ui;
 
 import cz.digitalnikontinuita.anep.core.RecentFiles;
 
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -20,6 +21,9 @@ import javafx.stage.StageStyle;
 import javafx.stage.Window;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -37,6 +41,13 @@ final class RecentFilesWindow {
 
     private static double lastWidth = 560;
     private static double lastHeight = 340;
+
+    /** Poslední zjištěná dostupnost položky; do konce běhu, viz {@link #show}. */
+    private static final Map<RecentFiles.Entry, Boolean> AVAILABLE = new ConcurrentHashMap<>();
+    /** Položky, jejichž kontrola na pozadí ještě neskončila. */
+    private static final Set<RecentFiles.Entry> PENDING = ConcurrentHashMap.newKeySet();
+    /** Seznam v právě otevřeném okně ({@code null}, když žádné není); jen z vlákna JavaFX. */
+    private static ListView<RecentFiles.Entry> openList;
 
     private RecentFilesWindow() { }
 
@@ -58,16 +69,46 @@ final class RecentFilesWindow {
             stage.close();
             onChosen.accept(e);
         };
-        list.setCellFactory(v -> new EntryCell(pick));
+        // Dostupnost souborů se zjišťuje na pozadí, každá položka ve vlastním vlákně. Dřív se
+        // File.isFile() volalo při vykreslení řádku na vlákně JavaFX, a u cesty na nedostupný
+        // síťový disk visí každé volání desítky sekund — aplikace zatuhla (nález uživatele
+        // 9. 11. 2026). Zvolit se nedá jen položka, o které je známo, že chybí.
+        //
+        // Poslední zjištění se pamatuje do konce běhu (AVAILABLE): při dalším otevření okna se
+        // položka hned ukáže tak, jak naposledy dopadla — nedostupná zašedle — a na pozadí se
+        // zkouší znovu, kdyby se disk mezitím připojil. Bez toho se při každém otevření všechno
+        // ukázalo jako dostupné a zešedlo až po desítkách sekund (týž den). Kontrola, která ještě
+        // visí z dřívějška, se nezakládá podruhé; její výsledek dorazí do okna, které je otevřené.
+        // Položka bez zjištění vypadá a chová se jako dostupná.
+        list.setCellFactory(v -> new EntryCell(pick, AVAILABLE));
         Label empty = new Label("Zatím nebyl ověřen žádný soubor.");
         empty.setStyle("-fx-text-fill: #666666; -fx-font-size: 12px;");
         list.setPlaceholder(empty);
         list.getItems().setAll(RecentFiles.load());
         VBox.setVgrow(list, Priority.ALWAYS);
+        openList = list;
+        for (RecentFiles.Entry entry : List.copyOf(list.getItems())) {
+            if (!PENDING.add(entry)) continue;
+            Thread t = new Thread(() -> {
+                boolean ok;
+                try {
+                    ok = entry.exists();
+                } finally {
+                    PENDING.remove(entry);
+                }
+                Platform.runLater(() -> {
+                    AVAILABLE.put(entry, ok);
+                    if (openList != null) openList.refresh();
+                });
+            }, "anep-recent-exists");
+            t.setDaemon(true);
+            t.start();
+        }
 
         list.setOnKeyPressed(ev -> {
             RecentFiles.Entry e = list.getSelectionModel().getSelectedItem();
-            if (ev.getCode() == KeyCode.ENTER && e != null && e.exists()) pick.accept(e);
+            if (ev.getCode() == KeyCode.ENTER && e != null
+                    && AVAILABLE.getOrDefault(e, true)) pick.accept(e);
         });
 
         Button clear = new Button("Vymazat seznam");
@@ -105,6 +146,7 @@ final class RecentFilesWindow {
             if (!now) stage.close();
         });
         stage.setOnHidden(ev -> {
+            if (openList == list) openList = null;
             lastWidth = stage.getWidth();
             lastHeight = stage.getHeight();
         });
@@ -125,15 +167,21 @@ final class RecentFilesWindow {
         }
     }
 
-    /** Řádek: jména souborů, pod nimi menším písmem složka. Chybějící soubor zašedle. */
+    /**
+     * Řádek: jména souborů, pod nimi menším písmem složka. Chybějící soubor zašedle.
+     * Dostupnost bere z mapy plněné na pozadí; souborového systému se sám nedotýká.
+     */
     private static final class EntryCell extends ListCell<RecentFiles.Entry> {
-        EntryCell(Consumer<RecentFiles.Entry> pick) {
+        private final Map<RecentFiles.Entry, Boolean> available;
+
+        EntryCell(Consumer<RecentFiles.Entry> pick, Map<RecentFiles.Entry, Boolean> available) {
+            this.available = available;
             // Na řádku, ne na seznamu: kliknutí do prázdné části pod položkami by jinak vybralo
             // tu, která je zrovna označená.
             setOnMouseClicked(ev -> {
                 RecentFiles.Entry e = getItem();
                 if (ev.getButton() == javafx.scene.input.MouseButton.PRIMARY
-                        && !isEmpty() && e != null && e.exists()) {
+                        && !isEmpty() && e != null && available.getOrDefault(e, true)) {
                     pick.accept(e);
                 }
             });
@@ -148,7 +196,7 @@ final class RecentFilesWindow {
                 setDisable(false);
                 return;
             }
-            boolean exists = e.exists();
+            boolean exists = available.getOrDefault(e, true);
             Label name = new Label(e.document().getName()
                     + (e.external() != null ? "  +  " + e.external().getName() : ""));
             name.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;"

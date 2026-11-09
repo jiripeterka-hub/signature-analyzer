@@ -2994,7 +2994,14 @@ public class AdvisorView {
         // Zbyla jen situace 1. Situace 2 sem chodila, dokud přepis verdiktu dělal z revokace
         // „neplatný"; od jeho zrušení končí takový podpis na kartě s neznámou platností, kde ji
         // nese důvod 9 — a výklad REASON_S2_* si bere přes getReasonDetail().
-        String invalidityReason = situations.contains(1) ? REASON_S1 : null;
+        //
+        // Výjimka: situace 14 (nesouhlasí otisk obsahu podaného zvlášť k externímu podpisu). Tam
+        // ReportMapper místo důvodu 7 indikuje důvod 8 — nejspíš jde o nesprávnou dvojici
+        // dokument + podpis, ne o změněný dokument — a ten se musí dostat ke slovu přes výčet
+        // důvodů níže. Pevný text S1 ho přebíjel a karta tvrdila jen „došlo ke změně obsahu"
+        // (nález uživatele 9. 11. 2026 nad prázdným PDF a cizím CAdES B-LTA .p7s).
+        String invalidityReason = situations.contains(1) && !situations.contains(14)
+                ? REASON_S1 : null;
         if (invalidityReason != null) {
             body.getChildren().add(new Separator());
             body.getChildren().add(infoRow("Důvod neplatnosti:", invalidityReason));
@@ -7220,7 +7227,8 @@ public class AdvisorView {
         block.getChildren().add(labelledRichRow(ExtendedView.legalTypeLabel(simplified),
                 "**" + display + "**" + (fmt != null ? " (" + fmt + ")" : "")));
 
-        String explanation = ExtendedView.legalTypeTooltipMarkup(simplified);
+        String explanation = ExtendedView.legalTypeTooltipMarkup(simplified,
+                ExtendedView.wrongPair(sig));
         if (explanation != null) {
             block.getChildren().add(labelledRichRow("V terminologii práva:", explanation));
         }

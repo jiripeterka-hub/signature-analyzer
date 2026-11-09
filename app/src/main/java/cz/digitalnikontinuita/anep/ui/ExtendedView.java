@@ -663,7 +663,7 @@ public class ExtendedView {
 
         // 1. Jde o — simplified type s tooltipem jako ve Zjednodušeném přehledu
         String simplified = simplifyLegalType(rawLegalType);
-        String tooltipText = legalTypeTooltip(simplified);
+        String tooltipText = legalTypeTooltip(simplified, wrongPair(sig));
         String simplifiedText = nominativeLegalType(simplified);
         String simplifiedDisplay = sig.isCertification()
                 ? "(certifikační) " + simplifiedText : simplifiedText;
@@ -2712,7 +2712,21 @@ public class ExtendedView {
      * obě vypadala správně, každé zvlášť.
      */
     static String legalTypeTooltip(String simplified) {
-        return stripMarkup(legalTypeTooltipMarkup(simplified));
+        return legalTypeTooltip(simplified, false);
+    }
+
+    /** Totéž, s výkladem pro externí podpis k nesprávnému dokumentu — viz {@link #wrongPair}. */
+    static String legalTypeTooltip(String simplified, boolean wrongPair) {
+        return stripMarkup(legalTypeTooltipMarkup(simplified, wrongPair));
+    }
+
+    /**
+     * Nesouhlasí otisk obsahu podaného zvlášť k externímu podpisu (situace 14, důvod 8)? Pak
+     * věta o porušené integritě nesmí tvrdit jen „dokument se po podpisu změnil“ — stejně dobře
+     * k sobě dokument a podpis nemusí patřit (pokyn uživatele 9. 11. 2026).
+     */
+    static boolean wrongPair(cz.digitalnikontinuita.anep.model.SignatureSummary sig) {
+        return sig != null && sig.getDetectedSituations().contains(14);
     }
 
     /** URL of § 6 odst. 2 zákona č. 297/2016 Sb. na Zákonech pro lidi. */
@@ -2727,9 +2741,14 @@ public class ExtendedView {
      * musí být klikací; bublina v přehledech a protokol berou očistěnou podobu výše.
      */
     static String legalTypeTooltipMarkup(String simplified) {
+        return legalTypeTooltipMarkup(simplified, false);
+    }
+
+    static String legalTypeTooltipMarkup(String simplified, boolean wrongPair) {
         if (simplified == null) return null;
         if (simplified.startsWith("neplatný ") || simplified.startsWith("neplatnou ")) {
-            return brokenIntegrityTooltipMarkup(simplified.substring(simplified.indexOf(' ') + 1));
+            return brokenIntegrityTooltipMarkup(
+                    simplified.substring(simplified.indexOf(' ') + 1), wrongPair);
         }
         return switch (simplified) {
             case "uznávaný elektronický podpis" ->
@@ -2768,7 +2787,7 @@ public class ExtendedView {
      * podobě neváží účinky. Znění té věty dal uživatel 25. 10. 2026 — „k podpisu na dokumentu
      * v této podobě“, ne „k dokumentu“: účinky vůči původnímu obsahu se tím nepopírají.
      */
-    private static String brokenIntegrityTooltipMarkup(String validType) {
+    private static String brokenIntegrityTooltipMarkup(String validType, boolean wrongPair) {
         boolean seal = isSealLegalType(validType);
         String eidas = " dle nařízení (EU) č. 910/2014 (eIDAS)";
         String recognised = seal
@@ -2799,8 +2818,17 @@ public class ExtendedView {
         }
         String element = seal ? "pečeť" : "podpis";
         String toElement = seal ? "K pečeti" : "K podpisu";
-        return type + " Dokument se ale po " + (seal ? "zapečetění" : "podpisu")
-                + " změnil, takže " + element + " jeho současný obsah nekryje. "
+        // U externího podpisu s nesouhlasným otiskem (wrongPair) jsou dvě možnosti a věta je
+        // jmenuje obě — stejně jako důvod 8 níž na kartě (9. 11. 2026).
+        String cause = wrongPair
+                ? " Předložený dokument se ale neshoduje s tím, k němuž " + (seal ? "pečeť" : "podpis")
+                  + " vznikl" + (seal ? "a" : "") + ": buď se dokument po "
+                  + (seal ? "zapečetění" : "podpisu") + " změnil, nebo k sobě dokument a externí "
+                  + element + " nepatří (nesprávná dvojice). " + (seal ? "Pečeť" : "Podpis")
+                  + " tedy předložený dokument nekryje. "
+                : " Dokument se ale po " + (seal ? "zapečetění" : "podpisu")
+                  + " změnil, takže " + element + " jeho současný obsah nekryje. ";
+        return type + cause
                 + toElement + " na dokumentu v této podobě se proto neváží účinky " + effects;
     }
 

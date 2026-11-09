@@ -335,7 +335,7 @@ public class MainView {
     private File lastSigFile;
     private File lastOrigFile;
     /**
-     * Běželo od posledního zadání dokumentu ověření?
+     * Běželo od posledního zadání dokumentu či externího souboru ověření?
      *
      * <p>Rozlišuje dvě věci, které {@link #acceptSigFile} jinak nerozezná: <b>doplnění</b>
      * dvojice (dokument k už zadanému externímu podpisu) a <b>nový případ</b> (dokument
@@ -407,12 +407,26 @@ public class MainView {
             // Po startu aplikace ještě nic zadáno nebylo: vezme se nejnovější položka seznamu
             // naposledy ověřovaných souborů, pokud její soubory pořád existují. V průběhu běhu
             // platí dál to, co bylo naposledy zadáno, i když se to ještě neověřilo.
+            //
+            // Existence se zjišťuje na pozadí: u cesty na nedostupný síťový disk File.isFile()
+            // visí desítky sekund a na vlákně JavaFX by aplikace zatuhla (9. 11. 2026). Kdyby
+            // mezitím uživatel zadal něco sám, výsledek se zahodí.
             if (sig == null) {
                 var recent = cz.digitalnikontinuita.anep.core.RecentFiles.load();
-                if (!recent.isEmpty() && recent.get(0).exists()) {
-                    sig = recent.get(0).document();
-                    orig = recent.get(0).external();
+                if (!recent.isEmpty()) {
+                    var first = recent.get(0);
+                    Thread t = new Thread(() -> {
+                        if (!first.exists()) return;
+                        javafx.application.Platform.runLater(() -> {
+                            if (lastSigFile != null) return;
+                            onSigFile.accept(first.document());
+                            if (first.external() != null) acceptOrigFile(first.external());
+                        });
+                    }, "anep-recent-exists");
+                    t.setDaemon(true);
+                    t.start();
                 }
+                return;
             }
             if (sig != null) onSigFile.accept(sig);
             if (orig != null) acceptOrigFile(orig);
@@ -901,7 +915,9 @@ public class MainView {
      * slot mazal vždycky a výjimka pro evidenční záznam řešila tentýž problém, jen pro jeden
      * druh souboru.)
      *
-     * <p><b>Zapomene</b>, jakmile jednou ověření proběhlo ({@link #verificationRan}). Dokument
+     * <p><b>Zapomene</b>, jakmile jednou ověření proběhlo ({@link #verificationRan}) a od té
+     * doby nebyl vložen externí soubor — ten nový případ zahájil sám, viz
+     * {@code acceptOrigFile} (9. 11. 2026). Dokument
      * vložený po ověření je nový případ a externí podpis od toho předchozího u něj neznamená
      * nic — nález uživatele z 20. 9. 2026: „vložím nepodepsaný soubor a k němu externí podpis,
      * ověřím, a pak vložím nový soubor; ten externí tam stále zůstává a musí se mazat.“
@@ -1008,6 +1024,13 @@ public class MainView {
     }
 
     private void acceptOrigFile(File f) {
+        // Externí soubor vložený po ověření zahajuje nový případ stejně jako dokument: jinak by
+        // dokument přidaný za ním tenhle slot smazal ({@link #acceptSigFile}) a na pořadí by po
+        // prvním ověření záleželo — externí napřed se ztratil a ověřil se dokument sám (nález
+        // uživatele 9. 11. 2026; dokumentace slibuje, že na pořadí nezáleží). Dokument z
+        // předchozího ověření zůstává v hlavním poli: ověřit týž dokument s jiným externím
+        // souborem je stejně dobrý záměr jako přidat k externímu nový dokument.
+        verificationRan = false;
         origFile = f;
         lastOrigFile = f;
         // Bez téhle věty by se o možnosti vyprázdnit slot nikdo nedozvěděl: tlačítko vypadá
@@ -1330,6 +1353,34 @@ public class MainView {
                 return validateFiles(sf, of, pdfPassword, attachmentCount, legalisationLink);
             }
         };
+
+        // Čeká-li ověřování na server déle než obvykle, stavový řádek řekne na který. Bez toho
+        // vypadalo ověření podpisu s razítky od TSA difesa.it, jejíž servery neodpovídají, přes
+        // půl minuty jako zaseknuté (nález uživatele 9. 11. 2026). Hranice viz
+        // NetworkWatch.SHOW_WAIT_MS; po skončení úlohy se kontrola zastaví dřív, než výsledek
+        // přepíše řádek po svém.
+        final String verifyingText = "Ověřuji " + label + " …";
+        final boolean[] showingWait = {false};
+        javafx.animation.Timeline waitTicker = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(500), ev -> {
+                    var wait = cz.digitalnikontinuita.anep.core.NetworkWatch
+                            .longestWait(cz.digitalnikontinuita.anep.core.NetworkWatch.SHOW_WAIT_MS);
+                    if (wait.isPresent()) {
+                        var w = wait.get();
+                        setStatus(verifyingText + " čekám na odpověď serveru " + w.host()
+                                + (w.kind() != null ? " (" + w.kind() + ")" : "")
+                                + ", " + w.elapsedMs() / 1000 + " s");
+                        showingWait[0] = true;
+                    } else if (showingWait[0]) {
+                        setStatus(verifyingText);
+                        showingWait[0] = false;
+                    }
+                }));
+        waitTicker.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        task.runningProperty().addListener((o, was, now) -> {
+            if (!now) waitTicker.stop();
+        });
+        waitTicker.play();
 
         task.setOnSucceeded(e -> {
             progress.setVisible(false);
