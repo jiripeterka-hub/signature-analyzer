@@ -799,7 +799,9 @@ def kapitola_9(doc):
                   'že v okamžiku zafixování všechny podklady existovaly.')
     odstavec(doc, 'Do balíčku se dá přidat i další soubor: smlouva se svými přílohami, zpráva '
                   's tím, co k ní bylo připojeno. Zarazítkovat je zvlášť by každý zafixovalo '
-                  'v jiném okamžiku a neřeklo by to nic o tom, že patří k sobě. ==Byl-li dokument '
+                  'v jiném okamžiku a neřeklo by to nic o tom, že patří k sobě. ==Soubory se přidávají '
+                  'v okně, které se po stisku tlačítka otevře; u ověřeného dokumentu je aplikace '
+                  'neověřuje a v popisu balíčku to uvede.== ==Byl-li dokument '
                   'předán z obalu, balíček nese beze změny i ten obal (u vnořených obalů všechny).==')
     obrazek(doc, 'Okno forenzního balíčku se seznamem souborů, které do něj půjdou.',
             'dialog Forenzní balíček', vyska=7.5)

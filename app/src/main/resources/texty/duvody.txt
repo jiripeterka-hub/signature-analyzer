@@ -602,6 +602,23 @@ problem =
   platné časové razítko. Aplikace k tomu doloženému okamžiku ověření zopakovala a ani tak
   neuspělo — překážka tedy leží jinde než v době vzniku; popisuje ji blok „Průběh ověřování".
 
+# Totéž u důvodu 22. Katalogové znění říká, že nic nedokládá, zda podpis vznikl před revokací,
+# nebo po ní, a že volba k platnosti nevede. U prvku krytého pozdějším prvkem s razítkem to
+# neplatí: změřeno 10. 11. 2026 na podpisu JAdES B-B s protipodpisem úrovně LT — razítko
+# protipodpisu je starší než revokace a se zaškrtnutou volbou vyšel podpis jako platný.
+[22/kryto]
+problem =
+  Aplikace získala on-line revokační informace (OCSP nebo CRL), které prokazují, že podpisový
+  certifikát byl revokován. Tato data byla ale vydána až po skončení řádné doby platnosti
+  (notAfter) certifikátu a technické standardy jejich použití zakazují. Výsledek ověření proto
+  zůstává neznámý.
+pomoc =
+  Zaškrtnutím volby "Využij i revokační informace, vydané po expiraci certifikátu" se informace do
+  ověření vpustí. Dřívější existenci tohoto podpisu (či pečeti) přitom dokládá jiný autentizační
+  prvek téhož dokumentu, který jej kryje a nese platné časové razítko. Je-li to razítko starší
+  než revokace, může pak podpis vyjít jako platný; je-li až z doby po ní, zůstane jeho platnost
+  neznámá a žádné nastavení to nespraví.
+
 # Prvek předaný k ověření z obalu (kontejner, zpráva, obalující podpis), jehož platné razítko
 # ho kryje — jen to nestačilo. Katalogové znění by tu tvrdilo, že dřívější existenci nedokládá
 # nic; razítko obalu ji dokládá. Co přesně a odkud, stojí v poznámce k výsledku.

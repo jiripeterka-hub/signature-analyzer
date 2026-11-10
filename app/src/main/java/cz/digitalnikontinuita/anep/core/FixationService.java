@@ -144,6 +144,22 @@ public class FixationService {
     public FixationResult fix(File source, File secondary, ValidationResult result,
                               TsaProfile profile, DigestAlgorithm algorithm,
                               EnvelopeProof.Source envelope) {
+        return fix(source, secondary, result, profile, algorithm, envelope, List.of());
+    }
+
+    /**
+     * @param attachments další soubory, které uživatel k ověřenému dokumentu přiložil — smlouva
+     *                    se svými přílohami, zpráva s tím, co k ní přišlo. Jdou do složky
+     *                    {@code prilohy/} beze změny a pod svým jménem, stejně jako soubory
+     *                    v {@link #fixFiles}. Aplikace je neověřuje a popis i soupis to říkají
+     *                    výslovně: balíček jinak nese ověřovací materiál k dokumentu a čtenář
+     *                    by mohl mít za to, že se týká i příloh. Doplněno 10. 11. 2026 — manuál
+     *                    přidávání souborů sliboval pro každý forenzní balíček, ale umělo ho jen
+     *                    okno u souborů, které aplikace neověřuje.
+     */
+    public FixationResult fix(File source, File secondary, ValidationResult result,
+                              TsaProfile profile, DigestAlgorithm algorithm,
+                              EnvelopeProof.Source envelope, List<File> attachments) {
         CommonCertificateVerifier verifier = verifierRef.get();
         if (verifier == null) {
             throw new FixationException("Ověřovatel certifikátů není dosud inicializován");
@@ -206,6 +222,25 @@ public class FixationService {
                 envelopeNames.add(s.envelopeName());
             }
 
+            // 1d. Soubory, které uživatel přiložil. Jméno zůstává, jak bylo předloženo (viz
+            //     containerFileName), a původní umístění jde do soupisu — dvě přílohy téhož
+            //     jména z různých složek by jinak nešlo rozlišit.
+            List<String> attachmentNames = new ArrayList<>();
+            java.util.Set<String> usedAttachmentNames = new java.util.HashSet<>();
+            if (attachments != null) {
+                for (File f : attachments) {
+                    byte[] bytes = Files.readAllBytes(f.toPath());
+                    String name = "prilohy/"
+                            + uniqueEntryName(containerFileName(f.getName()), usedAttachmentNames);
+                    contents.add(new InMemoryDocument(bytes, name,
+                            eu.europa.esig.dss.enumerations.MimeType.fromFileName(f.getName())));
+                    inventory.add(new Item(name, "přiložený soubor", sha256(bytes),
+                            "přiložil uživatel, beze změny; aplikace jej neověřovala; původní"
+                            + " umístění " + f.getAbsolutePath(), null, null));
+                    attachmentNames.add(name);
+                }
+            }
+
             // 2. Revocation material, one file each, named by what it covers.
             int revCount = 0;
             for (RevocationWrapper rev : dd.getAllRevocationData()) {
@@ -252,7 +287,8 @@ public class FixationService {
             // 5. The inventory and the description, added last so they can list everything above.
             String popis = buildDescription(source.getName(), secondaryName == null ? null
                     : secondary.getName(), result.isExternalSignature(), now, revCount, certCount,
-                    envelopeNames, envelope != null && envelope.detached());
+                    envelopeNames, envelope != null && envelope.detached())
+                    + attachmentsNote(attachmentNames);
             contents.add(new InMemoryDocument(popis.getBytes(StandardCharsets.UTF_8),
                     "POPIS.txt", eu.europa.esig.dss.enumerations.MimeTypeEnum.TEXT));
             String soupis = buildInventory(source.getName(), now, inventory);
@@ -616,6 +652,27 @@ public class FixationService {
                                 "revokačních informací"),
                         pocet(certCount, "certifikát", "certifikáty", "certifikátů"),
                         druhy);
+    }
+
+    /**
+     * Oddíl popisu o přiložených souborech; prázdný, když žádné nejsou. Stojí na konci popisu
+     * jako samostatný oddíl, ne ve větě o obsahu: ta mluví o materiálu získaném při ověření,
+     * a přílohy jsou právě to, co ověřeno nebylo.
+     */
+    static String attachmentsNote(List<String> names) {
+        if (names == null || names.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder("\nPŘILOŽENÉ SOUBORY\n");
+        sb.append("K dokumentu uživatel přiložil ")
+          .append(pocet(names.size(), "další soubor", "další soubory", "dalších souborů"))
+          .append(". V balíčku ")
+          .append(names.size() == 1 ? "je" : "jsou").append(" beze změny:\n\n");
+        for (String n : names) sb.append("  ").append(n).append('\n');
+        sb.append("\nTyto soubory aplikace neověřovala a nic o nich nezjišťovala. Revokační")
+          .append(" informace,\ncertifikáty a protokoly v balíčku se týkají jen dokumentu")
+          .append(" uvedeného výše. O přiložených\nsouborech razítko dokládá jen to, že v této")
+          .append(" podobě existovaly v okamžiku jeho vydání,\ntedy spolu s dokumentem. Původní")
+          .append(" umístění každého z nich najdete v soupisu.\n");
+        return sb.toString();
     }
 
     private static String buildInventory(String fileName, Date now, List<Item> items) {

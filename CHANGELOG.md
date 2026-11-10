@@ -17,6 +17,12 @@ pro soupis změn ke každé nové vydané verzi.
   úložiště, Analýza tvrdila, že o jeho postavení rozhoduje důvěryhodný seznam. Nově uvádí, že
   rozhoduje to, že je ve vlastním úložišti.
 
+- **Rada u revokačních informací vydaných po expiraci certifikátu.** U podpisu, jehož dřívější
+  existenci dokládá jiný prvek téhož dokumentu s platným časovým razítkem (protipodpis nebo
+  pozdější podpis), Analýza dosud tvrdila, že volba „Využij i revokační informace, vydané po
+  expiraci certifikátu“ k platnosti nevede. Nově uvádí, že je-li to razítko starší než revokace,
+  může podpis s touto volbou vyjít jako platný.
+
 - **Nesprávná dvojice dokument + externí podpis.** Když k externímu podpisu nesouhlasí otisk
   předloženého dokumentu, karta Analýzy dosud uváděla jen, že došlo ke změně podepsaného obsahu.
   Nově uvede důvod „nesprávná dvojice soubor + podpis“: buď se dokument
@@ -50,6 +56,13 @@ pro soupis změn ke každé nové vydané verzi.
 - **Na pořadí vstupů nezáleží ani po ověření.** Když se po provedeném ověření vložil napřed
   externí soubor a teprve po něm dokument, externí soubor se zapomněl a ověřil se dokument sám.
   Nově se externí soubor zachová v jakémkoli pořadí, stejně jako po spuštění aplikace.
+- **Další soubory i ve forenzním balíčku z ověřeného dokumentu.** Přiložit k balíčku další
+  soubory (přílohy smlouvy, průvodní zprávu) šlo dosud jen u souborů, které aplikace neověřuje.
+  Nově se po stisku tlačítka Vytvořit forenzní balíček na záložce Digitální kontinuita
+  otevře okno, kde lze soubory přidat tlačítkem nebo přetažením; bez příloh stačí potvrdit.
+  Přiložené soubory jdou do balíčku beze změny do složky `prilohy/`, soupis uvádí jejich otisk
+  a původní umístění a popis balíčku výslovně říká, že je aplikace neověřovala a že se ověřovací
+  materiál v balíčku týká jen dokumentu.
 
 ## Verze 1.3.0 (změny oproti 1.2.0)
 

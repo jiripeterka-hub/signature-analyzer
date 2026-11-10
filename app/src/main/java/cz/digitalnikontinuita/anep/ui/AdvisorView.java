@@ -8544,6 +8544,13 @@ public class AdvisorView {
             String named = evidenceRecordProblem(sig);
             if (named != null) return named;
         }
+        if (rn == 22 && sig.getCoveringProofDetail() != null) {
+            // Katalogová věta říká „k rozhodnému okamžiku již revokován". U prvku, jehož
+            // existenci dokládá krycí prvek, to neplatí obecně: rozhodný okamžik může ležet
+            // před revokací. Viz reasonSolution().
+            String covered = ReasonTexts.get("22/kryto", "problem");
+            if (covered != null) return covered;
+        }
         if (rn == 9 && sig.getBestSignatureTime() == null) {
             String named = ReasonTexts.get("9/bez-dukazu", "problem");
             if (named != null) return named;
@@ -8717,6 +8724,15 @@ public class AdvisorView {
                     sig.getDetectedReasons().contains(21)
                             ? "dodatek-s-duvodem-21" : "dodatek-bez-duvodu-21");
             if (note != null) return re.solution() + ". " + note;
+        }
+        if (rn == 22 && sig.getCoveringProofDetail() != null) {
+            // Katalogová rada tvrdí, že volba k platnosti nevede, protože nic nedokládá, zda
+            // podpis vznikl před revokací. Nález uživatele 10. 11. 2026 na podpisu JAdES B-B
+            // s protipodpisem úrovně LT: razítko protipodpisu (18. 2. 2026) je starší než
+            // revokace (28. 4. 2026) a se zaškrtnutou volbou vyšel podpis TOTAL_PASSED.
+            // Datum krycího razítka souhrn prvku nenese, proto je znění podmíněné.
+            String covered = ReasonTexts.get("22/kryto", "pomoc");
+            if (covered != null) return covered;
         }
         if (rn == 21) {
             String named = timestampFailureSolution(sig);
@@ -10113,12 +10129,23 @@ public class AdvisorView {
         TsaProfile profile = settings.getSelectedTsa();
         if (profile == null) return;
 
+        File inputFile = sourceFile;
+        File secondary = secondaryFile;
+
+        // Napřed okno, v němž jde k dokumentu přiložit další soubory (10. 11. 2026); zrušení
+        // okna ruší i balíček. Dokument a druhý předložený soubor mezi přílohy přidat nejdou,
+        // balíček je nese i tak.
+        List<File> already = new java.util.ArrayList<>();
+        already.add(inputFile);
+        if (secondary != null) already.add(secondary);
+        List<File> attachments = ForensicPackageDialog.askAttachments(
+                fixButton.getScene().getWindow(), inputFile, already);
+        if (attachments == null) return;
+
         fixButton.setDisable(true);
         fixProgress.setVisible(true);
         fixProgress.setManaged(true);
 
-        File inputFile = sourceFile;
-        File secondary = secondaryFile;
         var envelope = sourceEnvelope;
         FixationService svc = fixationService;
         ValidationResult result = lastValidationResult;
@@ -10127,7 +10154,7 @@ public class AdvisorView {
         Task<FixationService.FixationResult> task = new Task<>() {
             @Override
             protected FixationService.FixationResult call() {
-                return svc.fix(inputFile, secondary, result, profile, alg, envelope);
+                return svc.fix(inputFile, secondary, result, profile, alg, envelope, attachments);
             }
         };
 
@@ -10188,6 +10215,10 @@ public class AdvisorView {
                                  ? " (" + envelope.envelopeName() + ")" : "")
                            + ", z něhož byl předán k ověření, "
                          : "obaly, z nichž byl předán k ověření (" + res.envelopes() + "), ")
+                    + (attachments.isEmpty() ? ""
+                       : attachments.size() + (attachments.size() == 1 ? " přiložený soubor, "
+                         : attachments.size() <= 4 ? " přiložené soubory, "
+                         : " přiložených souborů, "))
                     + res.revocations() + "x revokační informace a "
                     + res.certificates() + "x certifikát, protokoly ověření, popis a soupis"
                     + " s uvedením původu.\n\n"

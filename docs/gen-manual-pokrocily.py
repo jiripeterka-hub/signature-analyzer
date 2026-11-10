@@ -978,7 +978,11 @@ def kapitola_11(doc):
                   'že v okamžiku zafixování všechny podklady existovaly.')
     odstavec(doc, 'Do balíčku se dá přidat i další soubor: smlouva se svými přílohami, zpráva '
                   's tím, co k ní bylo připojeno. Zarazítkovat je zvlášť by každý zafixovalo '
-                  'v jiném okamžiku a neřeklo by nic o tom, že patří k sobě. ==Byl-li dokument '
+                  'v jiném okamžiku a neřeklo by nic o tom, že patří k sobě. ==Soubory se přidávají '
+                  'v okně, které se po stisku tlačítka otevře — tlačítkem Přidat soubory nebo '
+                  'přetažením do seznamu. U ověřeného dokumentu jdou do složky `prilohy/`; '
+                  'aplikace je neověřuje a popis balíčku říká, že se ověřovací materiál týká '
+                  'jen dokumentu.== ==Byl-li dokument '
                   'předán z obalu (kapitola 15.10), balíček nese beze změny i ten obal — u '
                   'vnořených obalů všechny, u externího podpisu ten podpis — a zmíní ho v popisu.==')
     odstavec(doc, 'Ověřitelnost samotného dokumentu to neprodlouží. Přesto je vhodné balíček '

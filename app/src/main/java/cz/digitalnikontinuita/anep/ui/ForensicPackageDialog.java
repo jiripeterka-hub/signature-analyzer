@@ -150,27 +150,7 @@ public final class ForensicPackageDialog {
         // so a second window that only accepted them through a file chooser would be a step back.
         // Refused while the package is being built: the list is already snapshotted by then and a
         // file added now would look included when it is not.
-        list.setOnDragOver(e -> {
-            if (!busy.get() && e.getDragboard().hasFiles()) {
-                e.acceptTransferModes(TransferMode.COPY);
-                list.setStyle(LIST_DROP_HOVER);
-            }
-            e.consume();
-        });
-        list.setOnDragExited(e -> {
-            list.setStyle("");
-            e.consume();
-        });
-        list.setOnDragDropped(e -> {
-            boolean accepted = false;
-            if (!busy.get() && e.getDragboard().hasFiles()) {
-                addFiles(list, e.getDragboard().getFiles());
-                accepted = true;
-            }
-            list.setStyle("");
-            e.setDropCompleted(accepted);
-            e.consume();
-        });
+        acceptDrops(list, busy::get, List.of());
 
         ProgressIndicator progress = new ProgressIndicator();
         progress.setPrefSize(18, 18);
@@ -219,6 +199,136 @@ public final class ForensicPackageDialog {
         root.getChildren().addAll(headline, explain, list, listButtons, noTsa, actions);
         stage.setScene(new Scene(root));
         stage.showAndWait();
+    }
+
+    /**
+     * Okno před vytvořením balíčku z ověřeného dokumentu: nabídne přiložit další soubory.
+     *
+     * <p>Doplněno 10. 11. 2026. Tlačítko „Vytvořit forenzní balíček“ na záložce Digitální
+     * kontinuita dřív balíček vytvořilo rovnou, takže přidat přílohy šlo jen u souborů, které
+     * aplikace neověřuje — ačkoli důvod, proč je přidávat (zafixovat je v témže okamžiku jako
+     * dokument), platí pro ověřený dokument stejně a manuál to tak sliboval.
+     *
+     * <p>Seznam drží jen přílohy, ne dokument sám: ten do balíčku jde vždy a jinou cestou
+     * (s ověřovacím materiálem), takže nesmí jít odebrat ani přidat podruhé.
+     *
+     * @param alreadyIn soubory, které balíček ponese i bez příloh — dokument a případný druhý
+     *                  předložený soubor; do seznamu se nepřidají
+     * @return přílohy (i prázdný seznam), nebo {@code null}, když uživatel okno zrušil
+     */
+    public static List<File> askAttachments(Window owner, File document, List<File> alreadyIn) {
+        Stage stage = new Stage();
+        stage.setTitle("Forenzní balíček");
+        stage.initOwner(owner);
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setResizable(true);
+
+        VBox root = new VBox(12);
+        root.setPadding(new Insets(18));
+        root.setPrefWidth(620);
+        root.setPrefHeight(420);
+
+        Label headline = new Label("Forenzní balíček z dokumentu \"" + document.getName() + "\"");
+        headline.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111111;");
+        wrapping(headline);
+
+        Label explain = new Label(
+                "Do balíčku půjde dokument beze změny a s ním vše, co se při ověření podařilo"
+                + " získat. Patří-li k němu další soubory — přílohy smlouvy, průvodní zpráva —,"
+                + " můžete je přidat tlačítkem níže, nebo je přetáhněte do seznamu. Razítko"
+                + " balíčku pak doloží, že existovaly ve stejném okamžiku jako dokument."
+                + " Aplikace je neověřuje a v popisu balíčku to uvede.");
+        explain.setStyle("-fx-text-fill: #444444;");
+        wrapping(explain);
+
+        ListView<File> list = new ListView<>();
+        list.setId("attachments");
+        list.setPlaceholder(new Label("Žádné další soubory — balíček ponese jen dokument"));
+        list.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        list.setCellFactory(lv -> new ListCell<>() {
+            @Override protected void updateItem(File f, boolean empty) {
+                super.updateItem(f, empty);
+                if (empty || f == null) { setText(null); return; }
+                setText(f.getName() + "   (" + ContainerInspector.formatSize(f.length()) + ")");
+            }
+        });
+        VBox.setVgrow(list, Priority.ALWAYS);
+        acceptDrops(list, () -> false, alreadyIn);
+
+        Button addBtn = new Button("Přidat soubory…");
+        addBtn.setOnAction(e -> {
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("Přidat soubory do balíčku");
+            if (document.getParentFile() != null && document.getParentFile().isDirectory()) {
+                chooser.setInitialDirectory(document.getParentFile());
+            }
+            addFiles(list, chooser.showOpenMultipleDialog(stage), alreadyIn);
+        });
+
+        Button removeBtn = new Button("Odebrat");
+        removeBtn.setOnAction(e ->
+                list.getItems().removeAll(new ArrayList<>(list.getSelectionModel().getSelectedItems())));
+        removeBtn.disableProperty().bind(list.getSelectionModel().selectedItemProperty().isNull());
+
+        // Výsledek v poli, protože ho nastavuje obsluha tlačítka; null zůstane při zavření
+        // křížkem i tlačítkem Zrušit, a volající pak balíček nevytvoří.
+        List<File>[] chosen = new List[1];
+
+        Button createBtn = new Button("Vytvořit balíček");
+        createBtn.setDefaultButton(true);
+        createBtn.setStyle(
+                "-fx-font-weight: bold; -fx-text-fill: white;"
+                + " -fx-background-color: linear-gradient(to bottom, #455a64, #263238);"
+                + " -fx-border-color: #263238; -fx-border-radius: 5; -fx-background-radius: 5;"
+                + " -fx-padding: 6 18 6 18; -fx-cursor: hand;");
+        createBtn.setOnAction(e -> {
+            chosen[0] = new ArrayList<>(list.getItems());
+            stage.close();
+        });
+        Button cancelBtn = new Button("Zrušit");
+        cancelBtn.setCancelButton(true);
+        cancelBtn.setOnAction(e -> stage.close());
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        HBox actions = new HBox(8, spacer, cancelBtn, createBtn);
+        actions.setAlignment(Pos.CENTER_LEFT);
+
+        root.getChildren().addAll(headline, explain, list, new HBox(8, addBtn, removeBtn), actions);
+        stage.setScene(new Scene(root));
+        stage.showAndWait();
+        return chosen[0];
+    }
+
+    /**
+     * Přetažení souborů do seznamu, společné oběma oknům.
+     *
+     * @param refuse   kdy přetažení nepřijmout (balíček se právě tvoří)
+     * @param excluded soubory, které se do seznamu nepřidají
+     */
+    private static void acceptDrops(ListView<File> list, java.util.function.BooleanSupplier refuse,
+                                    List<File> excluded) {
+        list.setOnDragOver(e -> {
+            if (!refuse.getAsBoolean() && e.getDragboard().hasFiles()) {
+                e.acceptTransferModes(TransferMode.COPY);
+                list.setStyle(LIST_DROP_HOVER);
+            }
+            e.consume();
+        });
+        list.setOnDragExited(e -> {
+            list.setStyle("");
+            e.consume();
+        });
+        list.setOnDragDropped(e -> {
+            boolean accepted = false;
+            if (!refuse.getAsBoolean() && e.getDragboard().hasFiles()) {
+                addFiles(list, e.getDragboard().getFiles(), excluded);
+                accepted = true;
+            }
+            list.setStyle("");
+            e.setDropCompleted(accepted);
+            e.consume();
+        });
     }
 
     private static void create(Stage stage, List<File> files, TsaProfile profile,
@@ -344,9 +454,18 @@ public final class ForensicPackageDialog {
      * happens to sit in the folder.
      */
     private static void addFiles(ListView<File> list, List<File> files) {
+        addFiles(list, files, List.of());
+    }
+
+    /**
+     * @param excluded soubory, které balíček nese i tak (ověřený dokument, jeho externí podpis);
+     *                 přidat je mezi přílohy by je do balíčku vložilo podruhé
+     */
+    static void addFiles(ListView<File> list, List<File> files, List<File> excluded) {
         if (files == null) return;
         for (File f : files) {
             if (f == null || !f.isFile()) continue;
+            if (excluded.stream().anyMatch(x -> x != null && sameFile(x, f))) continue;
             if (list.getItems().stream().noneMatch(x -> sameFile(x, f))) list.getItems().add(f);
         }
     }
