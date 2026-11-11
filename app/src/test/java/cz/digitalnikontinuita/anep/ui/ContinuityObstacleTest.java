@@ -76,6 +76,38 @@ class ContinuityObstacleTest {
     }
 
     @Test
+    @DisplayName("Mimo PDF se CzechPOINT nejmenuje, odhad pro ostatní ale zůstává")
+    void outsidePdfCzechPointIsNamedAsUnable() {
+        // Údaj uživatele 11. 11. 2026: CzechPOINT ověřuje jen dokumenty PDF s interními podpisy;
+        // co umějí podatelny, aplikace neví — horizont se proto nezavírá.
+        var external = SigFixture.sig()
+                .format("CAdES-BASELINE-T")
+                .certNotAfter(SigFixture.FUTURE)
+                .bestSignatureTime(SigFixture.PAST)
+                .situations(31, 32, 33, 34)
+                .build();
+        var internal = SigFixture.sig()
+                .format("PAdES-BASELINE-T")
+                .certNotAfter(SigFixture.FUTURE)
+                .bestSignatureTime(SigFixture.PAST)
+                .situations(31, 32, 33, 34)
+                .build();
+
+        org.junit.jupiter.api.Assertions.assertFalse(ContinuityHorizon.czechPointReads(external));
+        String note = ContinuityHorizon.czechPointScopeNote(external);
+        assertNotNull(note);
+        assertTrue(note.contains("pouze dokumenty PDF s interními podpisy"), note);
+        assertTrue(note.contains("záleží na jejich schopnostech"), note);
+        org.junit.jupiter.api.Assertions.assertEquals(
+                ContinuityHorizon.tolerant(internal, "TOTAL_PASSED").kind(),
+                ContinuityHorizon.tolerant(external, "TOTAL_PASSED").kind(),
+                "tvar podpisu horizont pro podatelny a další nemění");
+
+        assertTrue(ContinuityHorizon.czechPointReads(internal));
+        assertNull(ContinuityHorizon.czechPointScopeNote(internal));
+    }
+
+    @Test
     @DisplayName("Situace 41 přidá, že podpis se stane neověřitelným a spravit to nepůjde")
     void situation41AddsTheLossOfRevocationEvidence() {
         var withoutMaterial = AdvisorView.continuityObstacle(

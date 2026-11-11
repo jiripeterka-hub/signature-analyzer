@@ -731,6 +731,38 @@ public final class ContinuityHorizon {
     }
 
     /**
+     * Umí CzechPOINT tenhle prvek vůbec přečíst? Ověřuje jen dokumenty PDF s interními podpisy —
+     * ne externí či obalující podpisy ani kontejnery ASiC (údaj uživatele z 11. 11. 2026).
+     *
+     * <p>Na rozdíl od {@link #unsupportedFormat} to horizont nezavírá: podatelny a další
+     * validátory na tom mohou být stejně, ale také nemusí, a odhad pro ně platí dál. Mění se
+     * jen to, koho texty jmenují — viz {@link #czechPointScopeNote}.
+     *
+     * <p>Formát stačí u podpisů v PDF, včetně těch, které DSS nezpracovalo („adbe.…“, „ETSI.…“).
+     * U razítka ne, proto {@link SignatureSummary#isInsidePdf()}.
+     */
+    public static boolean czechPointReads(SignatureSummary sig) {
+        String f = sig.getFormat();
+        return sig.isInsidePdf() || AdvisorView.isPdfSignature(f)
+                || (f != null && (f.startsWith("adbe.") || f.startsWith("ETSI.")));
+    }
+
+    /**
+     * Věta pro prvek, který CzechPOINT nepřečte; {@code null}, když ho přečte.
+     *
+     * <p>O CzechPOINTu konkrétně, o ostatních neurčitě (pokyn uživatele 11. 11. 2026): co umějí
+     * podatelny a další validátory, aplikace neví. Jedno znění pro všechna místa, aby se
+     * nerozešla.
+     */
+    public static String czechPointScopeNote(SignatureSummary sig) {
+        if (czechPointReads(sig)) return null;
+        return "CzechPOINT ověřuje pouze dokumenty PDF s interními podpisy, takže "
+                + AdvisorView.gendered(sig, "tento podpis", "tuto pečeť", "toto časové razítko")
+                + " neověří. Podatelny a další validátory mohou umět i jiné podpisy než interní"
+                + " na dokumentech PDF, ale také nemusí — záleží na jejich schopnostech.";
+    }
+
+    /**
      * Patří funkce do rodiny SHA3 (Keccak)? Podle celého názvu, ne podle začátku: dotaz
      * {@code startsWith("SHA3")} chytal i SHA384 z rodiny SHA-2, protože DSS ji jmenuje
      * „SHA384“ bez pomlčky — a karta pak o podpisu SHA-384 tvrdila, že ho CzechPOINT

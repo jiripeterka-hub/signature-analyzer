@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika ověřování podpisu**
 
-==Verze 1.19== · stav ke dni ==9. 11. 2026== · ==AnEP 1.3.0==, knihovna DSS 6.5.1
+==Verze 1.20== · stav ke dni ==11. 11. 2026== · ==AnEP 1.3.0==, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -28,9 +28,9 @@ Dokument je stavěný jako politika ověřování podpisu ve smyslu ETSI TS 119 
 | Položka | Hodnota |
 |---|---|
 | Název | Politika ověřování elektronických podpisů AnEP |
-| Verze | ==1.19== ze dne ==9. 11. 2026== |
+| Verze | ==1.20== ze dne ==11. 11. 2026== |
 | Platí pro | ==AnEP 1.3.0 (repozitář signature-analyzer, značka v1.3.0)== |
-| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.19== |
+| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.20== |
 | Ověřovací jádro | knihovna DSS (Digital Signature Service) 6.5.1 Evropské komise |
 | Postup ověřování | ETSI EN 319 102-1 V1.4.0 (2024-03) |
 | Struktura dokumentu | ETSI TS 119 172-1 (politika ověřování podpisu) |
@@ -429,3 +429,4 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 | ==1.17== | ==5. 11. 2026== | ==beze změny obsahu; AnEP 1.3.0 mění velikost rozhraní, spojení přes proxy (na to, který údaj se získá a jak se posoudí, to nemá vliv) a uvádí číslo verze v protokolech; platí pro AnEP 1.3.0== |
 | ==1.18== | ==6. 11. 2026== | ==oddíl 5.2: kotva z vlastního úložiště nemá časové omezení; výsledek uvede v poznámce, je-li podpis prokázán až k okamžiku po konci platnosti kotvy nebo je kotvou sám podpisový certifikát po konci platnosti; poznámka platí od verze AnEP následující po 1.3.0== |
 | ==1.19== | ==9. 11. 2026== | ==oddíl 7.1: server revokačních údajů nebo certifikátů vydavatelů, který neodpověděl ani po delším čekání, se do ukončení aplikace znovu nezkouší; platí od verze AnEP následující po 1.3.0== |
+| ==1.20== | ==11. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.20 politiky uchovávání== |

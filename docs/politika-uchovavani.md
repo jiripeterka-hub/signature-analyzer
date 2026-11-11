@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika uchovávání ověřitelnosti**
 
-==Verze 1.19 · stav ke dni 9. 11. 2026== · ==AnEP 1.3.0==, knihovna DSS 6.5.1
+==Verze 1.20 · stav ke dni 11. 11. 2026== · ==AnEP 1.3.0==, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -35,9 +35,9 @@ Rozdělení je věcné: politika ověřování popisuje **dnešní** ověření,
 | Položka | Hodnota |
 |---|---|
 | Název | Politika uchovávání elektronických podpisů AnEP |
-| Verze | ==1.13 ze dne 1. 11. 2026== |
+| Verze | ==1.20 ze dne 11. 11. 2026== |
 | Platí pro | ==AnEP 1.3.0 (repozitář signature-analyzer, značka v1.3.0)== |
-| Navazuje na | Politika ověřování elektronických podpisů AnEP, verze ==1.19== |
+| Navazuje na | Politika ověřování elektronických podpisů AnEP, verze ==1.20== |
 | Struktura dokumentu | ETSI TS 119 511 V1.1.1 (2019-06) |
 | Pojmy a schéma uchování | ETSI TS 119 512 V1.2.1 (2023-05), schéma F.4 „pds+wos+aug“ |
 | Cílová úroveň podpisů | B-LTA podle ETSI EN 319 142-1 (PAdES), EN 319 122-1 (CAdES), EN 319 132-1 (XAdES), TS 119 182-1 (JAdES), ==TS 119 152-1 (CB-AdES)== a EN 319 162-1 (ASiC) |
@@ -117,7 +117,7 @@ Otázka, dokdy je dokument ověřitelný, nemá jednu odpověď — závisí na 
 
 - **AnEP** — tak, jak se právě ověřovalo, včetně zapnutých ústupků, vlastních úložišť a případného zadaného okamžiku.
 - **Podle standardů** — validátor bez jakýchkoli odchylek; kde to dnes už nejde, řekne se, dokdy to šlo.
-- **CzechPOINT, podatelny a další validátory** s vlastní zásobou revokačních informací, které mohou být tolerantnější k některým požadavkům standardů, ale posuzovat časová razítka přísněji. O nich aplikace mluví vždy jen v možnosti: nezná jejich verzi, nastavení ani obsah jejich zásob.
+- **CzechPOINT, podatelny a další validátory** s vlastní zásobou revokačních informací, které mohou být tolerantnější k některým požadavkům standardů, ale posuzovat časová razítka přísněji. O nich aplikace mluví vždy jen v možnosti: nezná jejich verzi, nastavení ani obsah jejich zásob. ==CzechPOINT ověřuje pouze dokumenty PDF s interními podpisy; u externích a obalujících podpisů, kontejnerů ASiC a samostatných časových razítek jej proto aplikace nejmenuje a uvádí, že takový prvek neověří. Zda si s nimi poradí podatelny a další validátory, záleží na jejich schopnostech; odhad pro ně platí jen s touto výhradou.==
 
 ### 5.2 Co datum určuje
 
@@ -334,3 +334,4 @@ Z TS 119 512 AnEP odpovídá schématu F.4 se dvěma odchylkami uvedenými v 3.2
 | ==1.17== | ==5. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.17 politiky ověřování; platí pro AnEP 1.3.0== |
 | ==1.18== | ==6. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.18 politiky ověřování== |
 | ==1.19== | ==9. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.19 politiky ověřování== |
+| ==1.20== | ==11. 11. 2026== | ==oddíl 5.1: CzechPOINT ověřuje pouze dokumenty PDF s interními podpisy; u jiných prvků jej aplikace nejmenuje a o podatelnách a dalších validátorech uvádí, že záleží na jejich schopnostech; platí od verze AnEP následující po 1.3.0== |

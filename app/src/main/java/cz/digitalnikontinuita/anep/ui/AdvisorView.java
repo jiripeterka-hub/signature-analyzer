@@ -3228,9 +3228,15 @@ public class AdvisorView {
         }
         // Společný závěr, ne konec jedné z vět: obou cest se týká týž okruh nástrojů a dvakrát
         // vypsávaný by čtenář četl jako dva různé seznamy.
-        block.getChildren().add(unlabelledRow(
-                "Jde například o CzechPOINTy, službu SecuSign, program Signer, řadu podatelen"
-                + " OVM a další."));
+        // Mimo PDF bez CzechPOINTu a s výhradou k ostatním (pokyn uživatele 11. 11. 2026):
+        // CzechPOINT ověřuje jen dokumenty PDF s interními podpisy, a blok by čtenáře posílal
+        // tam, kde neuspěje.
+        String scope = ContinuityHorizon.czechPointScopeNote(sig);
+        block.getChildren().add(unlabelledRow(scope == null
+                ? "Jde například o CzechPOINTy, službu SecuSign, program Signer, řadu podatelen"
+                  + " OVM a další."
+                : "Jde například o službu SecuSign, program Signer, řadu podatelen OVM a další. "
+                  + scope));
 
         card.getChildren().add(collapsibleBlock("Kde je šance na úspěšné ověření", block, false));
         card.getChildren().add(blockSeparator());
@@ -3305,7 +3311,8 @@ public class AdvisorView {
 
         block.getChildren().add(unlabelledRow(
                 "Řada nástrojů a služeb pro ověřování elektronických podpisů (tzv. validátorů),"
-                + " jako např. CzechPOINTy, služba SecuSign, program Signer, podatelny OVM"
+                + " jako např. " + (ContinuityHorizon.czechPointReads(sig) ? "CzechPOINTy, " : "")
+                + "služba SecuSign, program Signer, podatelny OVM"
                 + " a další, ale hodnotí platnost časových razítek striktně podle platnosti"
                 + " certifikátů, na kterých jsou razítka založena — a jakmile tato platnost"
                 + " skončí, časové razítko již nehodnotí jako platné."));
@@ -3321,6 +3328,10 @@ public class AdvisorView {
                           "samotné razítko nevyhodnotily jako platné")
                 + " — ale " + gendered(sig, "jeho", "její", "jeho")
                 + " platnost by zůstala neznámá."));
+
+        // Mimo PDF: CzechPOINT prvek nepřečte vůbec, viz ContinuityHorizon.czechPointReads.
+        String scope = ContinuityHorizon.czechPointScopeNote(sig);
+        if (scope != null) block.getChildren().add(unlabelledRow(scope));
 
         card.getChildren().add(collapsibleBlock("Kde ověření nebude úspěšné", block, false));
         card.getChildren().add(blockSeparator());
@@ -3564,8 +3575,13 @@ public class AdvisorView {
         // jedna rodina dokumentů, ne všechno, co tím predikátem projde.
         sb.append(" Tuzemské validátory bývají v tomhle shovívavější: razítko od služby, která"
                 + " kvalifikovaný status (dříve akreditaci) kdysi měla, uznávají, a zastaralost"
-                + " SHA-1 jim zpravidla nevadí. U dokumentů téhle podoby to vychází — ověřeno"
-                + " na Úschovně Czech POINT —, i když záruka to není. Stojí za to to zkusit.");
+                + " SHA-1 jim zpravidla nevadí."
+                // Ověřeno je to na dokumentech PDF; mimo ně se na Úschovnu odkázat nedá,
+                // CzechPOINT jiné podpisy než interní na PDF neověřuje (11. 11. 2026).
+                + (ContinuityHorizon.czechPointReads(sig)
+                    ? " U dokumentů téhle podoby to vychází — ověřeno na Úschovně Czech POINT —,"
+                      + " i když záruka to není. Stojí za to to zkusit."
+                    : " Záruka to není, ale stojí za to to zkusit."));
         return sb.toString();
     }
 
@@ -9258,8 +9274,11 @@ public class AdvisorView {
                 + " Nové razítko navíc doloží, že dokument v této podobě existoval ještě před"
                 + " případným sunsetem, takže platnost obstojí i poté, co sunset nastane."
                 + " Ale pro takový validátor, který se u časových razítek (nad rámec standardů)"
-                + " řídí pouze řádnou dobou platnosti jejich certifikátů (což jsou např. CzechPOINTy"
-                + " a řada podatelen OVM), nebude posloupnost časových razítek souvislá, a "
+                + " řídí pouze řádnou dobou platnosti jejich certifikátů (což "
+                // Mimo PDF bez CzechPOINTu, viz ContinuityHorizon.czechPointReads.
+                + (affected.stream().allMatch(ContinuityHorizon::czechPointReads)
+                    ? "jsou např. CzechPOINTy a řada podatelen OVM" : "je např. řada podatelen OVM")
+                + "), nebude posloupnost časových razítek souvislá, a "
                 + itAccusative + " tak " + notJudged + ".";
 
         ButtonType preserve = new ButtonType(ContinuityMode.PROLONG.verb,

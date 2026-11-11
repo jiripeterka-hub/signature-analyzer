@@ -865,7 +865,9 @@ final class ContinuityElementBlocks {
                                     "tuto pečeť ověří jako platnou",
                                     "toto časové razítko ověří jako platné")
                             + ". Podrobněji o tom situace 53 v Analýze; o okruhu"
-                            + " CzechPOINTu a podatelen mluví blok níže."));
+                            + (ContinuityHorizon.czechPointReads(sig)
+                                    ? " CzechPOINTu a podatelen" : " podatelen a dalších validátorů")
+                            + " mluví blok níže."));
                 } else {
                     body.getChildren().add(AdvisorView.continuityText(
                             "Neplatnost " + gen + " je prokázána. Na rozdíl od neznámého stavu"
@@ -1280,8 +1282,9 @@ final class ContinuityElementBlocks {
                 // na dvou soustavných odchylkách, ne na znalosti konkrétního nástroje; poznámka
                 // pod blokem to říká taky, ale hlavní věta ho nesmí slibovat jistotou.
                 body.getChildren().add(AdvisorView.continuityLinked(
-                        "Validátory s vlastní zásobou revokačních informací, jako CzechPOINT,"
-                        + " podatelny OVM, služba SecuSign či program Signer, nejsou závislé na"
+                        "Validátory s vlastní zásobou revokačních informací, jako "
+                        + (ContinuityHorizon.czechPointReads(sig) ? "CzechPOINT, " : "")
+                        + "podatelny OVM, služba SecuSign či program Signer, nejsou závislé na"
                         + " dostupnosti revokačních informací on-line, od jejich vydavatelů"
                         + " ([viz výklad na začátku záložky](OPTIONS)), a jsou tolerantnější"
                         + " i vůči některým požadavkům technických standardů. Platnost " + gen
@@ -1311,6 +1314,14 @@ final class ContinuityElementBlocks {
                     "Neplatnost " + gen + " je prokázána a k témuž závěru by dospěly i tyto"
                     + " nástroje. Shovívavost k revokačním informacím ani k formátu na tom nic"
                     + " nemění."));
+        }
+
+        // Prvek mimo PDF: CzechPOINT ho nepřečte, o ostatních se neví (11. 11. 2026). U SHA3
+        // a CB-AdES už věta výše říká, že ho neověří CzechPOINT ani podatelny.
+        String scope = ContinuityHorizon.czechPointScopeNote(sig);
+        if (scope != null && !(h.kind() == Kind.LOST && (ContinuityHorizon.unsupportedDigest(sig)
+                || ContinuityHorizon.unsupportedFormat(sig)))) {
+            body.getChildren().add(AdvisorView.continuityText(scope));
         }
 
         // U CB-AdES není co odhadovat: s formátem tyhle nástroje neumějí pracovat (údaj uživatele
@@ -1422,8 +1433,12 @@ final class ContinuityElementBlocks {
                         "podpis", "pečeť", "prvek") + " sám žádné časové razítko nenese."
                         + " Dokument ale razítko nese — na jiném prvku, který tenhle kryje."
                         + " Zda z něj tyto nástroje odvodí důkaz existence i pro něj, se předem"
-                        + " říct nedá; u jednoho takového dokumentu to CzechPOINT udělal"
-                        + " a platnost uznal.";
+                        + " říct nedá"
+                        // Pozorování je z dokumentu PDF; u prvku, který CzechPOINT nepřečte,
+                        // by věta slibovala něco, co se stát nemůže.
+                        + (ContinuityHorizon.czechPointReads(sig)
+                            ? "; u jednoho takového dokumentu to CzechPOINT udělal a platnost uznal."
+                            : ".");
             }
             return AdvisorView.capitalize(AdvisorView.elementCert(sig, AdvisorView.Case.NOMINATIV))
                     + " už expiroval a v dokumentu není časové razítko, které by"
@@ -1447,14 +1462,17 @@ final class ContinuityElementBlocks {
         if (h.kind() == Kind.LOST && ContinuityHorizon.unsupportedFormat(sig)) {
             return "CzechPOINT a podatelny platnost neověří";
         }
+        // Mimo PDF bez CzechPOINTu: ten takový prvek nepřečte, viz czechPointReads.
+        boolean cp = ContinuityHorizon.czechPointReads(sig);
+        String who = cp ? "CzechPOINT, podatelny a další validátory"
+                        : "podatelny a další validátory";
         return switch (h.kind()) {
-            case UNTIL -> "Jak dlouho dokáží ověřit platnost CzechPOINT, podatelny a další"
-                    + " validátory?  Do " + TimeFormat.full(h.when());
-            case OPEN -> "Jak dlouho dokáží ověřit platnost CzechPOINT, podatelny a další"
-                    + " validátory?";
-            case LOST -> "CzechPOINT, podatelny a další validátory platnost dnes již ověřit"
-                    + " nedokáží";
-            case INVALID -> "Neplatnost je prokázána; potvrdí ji i CzechPOINT a podatelny";
+            case UNTIL -> "Jak dlouho dokáží ověřit platnost " + who + "?  Do "
+                    + TimeFormat.full(h.when());
+            case OPEN -> "Jak dlouho dokáží ověřit platnost " + who + "?";
+            case LOST -> AdvisorView.capitalize(who) + " platnost dnes již ověřit nedokáží";
+            case INVALID -> cp ? "Neplatnost je prokázána; potvrdí ji i CzechPOINT a podatelny"
+                               : "Neplatnost je prokázána; potvrdí ji i další validátory";
         };
     }
 
@@ -2740,7 +2758,8 @@ final class ContinuityElementBlocks {
     private static void addReachExplained(VBox body, SignatureSummary sig, Gates gates,
                                           java.util.function.Consumer<ContinuityView.Outlook> open) {
         addReachResult(body, sig, gates, open);
-        addReachExtras(body, gates, sig.isTrustedViaCustomStore(), chainAlreadyBroken(sig));
+        addReachExtras(body, gates, sig.isTrustedViaCustomStore(), chainAlreadyBroken(sig),
+                ContinuityHorizon.czechPointReads(sig));
     }
 
     /** První odstavec dvojice: jaký bude výsledek u tohohle prvku a kdo ho ověří. */
@@ -2793,6 +2812,12 @@ final class ContinuityElementBlocks {
                         ? which + " by mělo být možné ověřit ve validátorech podle standardů,"
                           + " které formát CB-AdES podporují — ne však v CzechPOINTu ani"
                           + " v podatelnách, které s ním pracovat neumějí"
+                        // Mimo PDF: „ve všech obvyklých" by zahrnulo i CzechPOINT, který
+                        // ověřuje jen dokumenty PDF s interními podpisy (11. 11. 2026).
+                        : !ContinuityHorizon.czechPointReads(sig)
+                        ? which + " by mělo být možné ověřit ve validátorech, které umějí i jiné"
+                          + " podpisy než interní na dokumentech PDF — ne tedy v CzechPOINTu;"
+                          + " u podatelen a dalších záleží na jejich schopnostech"
                         : which + " by mělo být možné ověřit ve všech obvyklých validátorech")
                     + "; viz [varianta „uchování“ a „prodloužení“](PRESERVE_PROLONG)"
                     + " ve výkladu na začátku záložky.", open));
@@ -2838,7 +2863,7 @@ final class ContinuityElementBlocks {
      *                  že mezeru v něm striktní nástroj najde bez ohledu na nové razítko
      */
     private static void addReachExtras(VBox body, Gates gates, boolean ownAnchor,
-                                       boolean gapAlready) {
+                                       boolean gapAlready, boolean czechPoint) {
         if (!gates.prolong()) return;
         // „Spíše ne", ne „nikoli". Osmnáct dokumentů předložených Úschovně Czech POINT
         // 2. 9. 2026 potvrdilo předpověď (14 shod ze 16 vypovídajících), ale ne mechanismus:
@@ -2847,8 +2872,9 @@ final class ContinuityElementBlocks {
         // o odhad, ne o jistotu"; kategorické „nikoli" by tu jedinou opatrnost zahodilo.
         body.getChildren().add(AdvisorView.continuityText(
                 "Spíše ne už v nástrojích, které časová razítka hodnotí „striktně“, podle"
-                + " řádné doby platnosti jejich certifikátů — jako CzechPOINT či podatelny"
-                + " OVM."
+                + " řádné doby platnosti jejich certifikátů — jako "
+                // czechPoint: viz ContinuityHorizon.czechPointReads (11. 11. 2026).
+                + (czechPoint ? "CzechPOINT či podatelny OVM." : "řada podatelen OVM.")
                 + (gapAlready
                     ? " V řadě, kterou tyto nástroje posuzují, je mezera už dnes a nové razítko"
                       + " ji nezacelí — vznikne až za ní."
@@ -3374,7 +3400,9 @@ final class ContinuityElementBlocks {
                 boolean gapAlready = elements.stream()
                         .filter(Element::actionReaches)
                         .anyMatch(e -> chainAlreadyBroken(e.sig()));
-                addReachExtras(body, gates, ownAnchor, gapAlready);
+                // Dokument je PDF, nebo není; prvky se v tom neliší.
+                addReachExtras(body, gates, ownAnchor, gapAlready,
+                        ContinuityHorizon.czechPointReads(sig));
             }
             // Datum, které odstavec nad výčtem schválně nenese: při dvou takových prvcích
             // by tam musela vyhrát jedna ze dvou hodnot. Tvrzení „lhůtu stanovit nelze“ se

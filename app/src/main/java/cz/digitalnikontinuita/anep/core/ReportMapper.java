@@ -957,6 +957,14 @@ public class ReportMapper {
         for (SignatureSummary s : summaries) {
             s.setTrustList(trustListOf(s.getSignatureId(), dd));
         }
+        // Leží prvek uvnitř PDF? Viz SignatureSummary.isInsidePdf(). Podpis, který DSS
+        // nezpracovalo, v diagnostických datech není; ten se pozná podle formátu jinde.
+        for (SignatureSummary s : summaries) {
+            SignatureWrapper inSig = dd.getSignatureById(s.getSignatureId());
+            TimestampWrapper inTs = inSig == null ? dd.getTimestampById(s.getSignatureId()) : null;
+            s.setInsidePdf((inSig != null && inSig.getPDFRevision() != null)
+                    || (inTs != null && inTs.getPDFRevision() != null));
+        }
 
         int afterAll = baseReport.getSignatureIdList().size() * 2;
         summaries.sort(Comparator

@@ -77,10 +77,22 @@ final class ActionRecord {
      */
     record ElementState(String id, ElementKind kind, String name, String verdict,
                         Horizon anep, Horizon tolerant, boolean reached, String obstacle,
-                        List<String> concessions, Instant certNotAfter, Instant made) {
+                        List<String> concessions, Instant certNotAfter, Instant made,
+                        boolean czechPoint) {
 
         ElementState {
             concessions = concessions != null ? List.copyOf(concessions) : List.of();
+        }
+
+        /**
+         * Prvek uvnitř PDF, který CzechPOINT přečte — viz
+         * {@link ContinuityHorizon#czechPointReads}. Řádek s odhadem pak smí CzechPOINT jmenovat.
+         */
+        ElementState(String id, ElementKind kind, String name, String verdict,
+                     Horizon anep, Horizon tolerant, boolean reached, String obstacle,
+                     List<String> concessions, Instant certNotAfter, Instant made) {
+            this(id, kind, name, verdict, anep, tolerant, reached, obstacle, concessions,
+                    certNotAfter, made, true);
         }
 
         static ElementState of(ContinuityElementBlocks.Element el) {
@@ -91,7 +103,8 @@ final class ActionRecord {
             return new ElementState(sig.getSignatureId(), kind, sig.getSignerDisplayName(),
                     el.verdict(), el.anep(), el.tolerant(), el.actionReaches(), el.obstacle(),
                     el.dev() != null ? el.dev().namedLenient() : List.of(),
-                    sig.getCertNotAfter(), sig.getSigningTime());
+                    sig.getCertNotAfter(), sig.getSigningTime(),
+                    ContinuityHorizon.czechPointReads(sig));
         }
 
         String noun() {
@@ -789,8 +802,15 @@ final class ActionRecord {
 
         VBox elements = body();
         for (Pair p : pairs()) addPair(elements, p);
-        elements.getChildren().add(note("Odhad pro CzechPOINT, podatelny a další validátory je"
-                + " odvozený z jejich chování; jejich verzi ani nastavení AnEP nezná."));
+        boolean allInPdf = pairs().stream()
+                .map(p -> p.after() != null ? p.after() : p.before())
+                .allMatch(s -> s == null || s.czechPoint());
+        elements.getChildren().add(note(allInPdf
+                ? "Odhad pro CzechPOINT, podatelny a další validátory je"
+                  + " odvozený z jejich chování; jejich verzi ani nastavení AnEP nezná."
+                : "Odhad pro podatelny a další validátory je odvozený z jejich chování; jejich"
+                  + " verzi ani nastavení AnEP nezná. Platí jen pro ty, které umějí i jiné podpisy"
+                  + " než interní na dokumentech PDF — CzechPOINT ověřuje pouze ty."));
         box.getChildren().add(block("Prvky před úkonem a po něm", elements, false));
 
         VBox match = body();
@@ -963,7 +983,10 @@ final class ActionRecord {
         if (b != null || a != null) {
             String tb = b != null ? tolerantWords(b.tolerant()) : null;
             String ta = a != null ? tolerantWords(a.tolerant()) : null;
-            box.getChildren().add(row("CzechPOINT a podatelny:",
+            // Mimo PDF bez CzechPOINTu: ověřuje jen dokumenty PDF s interními podpisy
+            // (11. 11. 2026). Co umějí ostatní, říká poznámka pod výčtem prvků.
+            boolean cp = (a != null ? a : b).czechPoint();
+            box.getChildren().add(row(cp ? "CzechPOINT a podatelny:" : "Podatelny a další:",
                     tb == null ? ta : ta == null ? tb : tb.equals(ta) ? ta
                             : "před úkonem " + tb + ", po úkonu " + ta));
         }

@@ -136,6 +136,7 @@
     </ul>
   </li>
   <li>o prvních dvou mluví aplikace v jistotě, o třetím okruhu <strong>vždy jen v možnosti</strong> — nezná jejich verzi, nastavení ani obsah jejich zásob</li>
+  <li><mark>CzechPOINT ověřuje pouze dokumenty PDF s interními podpisy: u externích a obalujících podpisů, kontejnerů ASiC a samostatných časových razítek jej aplikace nejmenuje a uvádí, že takový prvek neověří; o podatelnách a dalších validátorech říká, že záleží na jejich schopnostech</mark></li>
   <li>datum určuje ten článek, který povolí nejdřív: <strong>důkaz existence</strong> (PoE), <strong>dostupnost revokačních informací</strong>, <strong>uznatelnost vloženého údaje</strong> (po expiraci jeho vydavatele) a <strong>uznání razítka</strong> (do vyřazení služby ze seznamů, jinak do konce certifikátu TSA)</li>
   <li><mark>stojí-li závěr na důkazu existence z obalu, záložka upozorní, že uchovávat je třeba celý obal: vyjmutý dokument tento důkaz nemá</mark></li>
   <li>u každého prvku stojí čtyři odpovědi — dokdy ověří AnEP, dokdy validátor podle standardů, dokdy CzechPOINT a podatelny, a co a do kdy je třeba udělat</li>
@@ -153,7 +154,7 @@
     </ul>
   </li>
   <li>tlačítko je vždy jen jedno (varianty se vylučují a nabídne se nejsilnější, na kterou úkon dosáhne) a <strong>úkon je opakovatelný</strong></li>
-  <li><strong>Vytvořit forenzní balíček</strong> — pro dokumenty, které zachovat nelze, i pro soubory, jejichž formát aplikace vůbec nepřečte: zabalí nedotčený originál do kontejneru ASiC-E spolu se vším ověřovacím materiálem, který se podařilo sehnat, a se soupisem toho, odkud co pochází, a opatří to časovým razítkem. Přidat se dají i další soubory, aby bylo doloženo, že patří k sobě. <mark>Byl-li dokument předán z obalu, balíček nese beze změny i ten obal (u vnořených obalů všechny).</mark></li>
+  <li><strong>Vytvořit forenzní balíček</strong> — pro dokumenty, které zachovat nelze, i pro soubory, jejichž formát aplikace vůbec nepřečte: zabalí nedotčený originál do kontejneru ASiC-E spolu se vším ověřovacím materiálem, který se podařilo sehnat, a se soupisem toho, odkud co pochází, a opatří to časovým razítkem. Přidat se dají i další soubory, aby bylo doloženo, že patří k sobě<mark> — v okně, které se před vytvořením balíčku otevře; aplikace je neověřuje a v popisu balíčku to uvede</mark>. <mark>Byl-li dokument předán z obalu, balíček nese beze změny i ten obal (u vnořených obalů všechny).</mark></li>
   <li>nové razítko kryje celý soubor, takže <strong>úkon je jeden pro celý dokument</strong> a jeho účinek se vypíše po prvcích: kterému podpisu pomůže, kterému ne a proč; prvku, na který nedosáhne, přitom neuškodí</li>
   <li>výsledný soubor si nese v názvu <strong>značku úkonu a datum</strong>, do kdy vydrží (např. <code>smlouva_Uchovano_do_06_03_2029.pdf</code>); značka je bez diakritiky a bez mezer a značky se nevrství</li>
   <li>úkon se nabídne <strong>jen tam, kde je možný a zároveň poctivý</strong> — u dokumentu, jehož certifikát byl odvolán dřív, než se dá prokázat existence podpisu, se místo tlačítka řekne, proč to nepomůže; aplikace také upozorní, když vybraný zdroj razítek ověřitelnost prakticky neposune</li>

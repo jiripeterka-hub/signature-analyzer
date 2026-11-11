@@ -1114,6 +1114,17 @@ public class SignatureSummary {
     public void setSignedFiles(List<String> files)        { this.signedFiles = List.copyOf(files); }
 
     /**
+     * Prvek leží uvnitř dokumentu PDF — interní podpis, pečeť či dokumentové razítko
+     * (11. 11. 2026). Formát to u razítka neřekne: samostatný token i razítko v PDF mají obojí
+     * „TimeStampToken“. Ptá se na to {@code ContinuityHorizon.czechPointReads}, protože
+     * CzechPOINT ověřuje jen dokumenty PDF s interními podpisy (údaj uživatele).
+     */
+    private boolean insidePdf;
+
+    public boolean isInsidePdf()                          { return insidePdf; }
+    public void setInsidePdf(boolean v)                   { this.insidePdf = v; }
+
+    /**
      * Kotva z vlastního úložiště, která je vůči závěru po konci své řádné platnosti.
      *
      * <p>Sonda 6. 11. 2026: DSS kotvě dobu platnosti neposuzuje, takže vložený certifikát drží

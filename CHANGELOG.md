@@ -31,6 +31,12 @@ pro soupis změn ke každé nové vydané verzi.
   věty, že se dokument po podpisu změnil, uvádí obě možnosti — změněný dokument i nesprávnou
   dvojici. Stejně jako u porušené integrity se vedle důvodu neuvádějí další důvody (například o revokačních
   informacích), které by u podpisu nad nesprávným dokumentem neměly smysl.
+- **Ověření jinde podle tvaru podpisu.** CzechPOINT ověřuje pouze dokumenty PDF s interními
+  podpisy. U externích a obalujících podpisů, kontejnerů ASiC a samostatných časových razítek
+  proto Analýza, záložka Digitální kontinuita ani záznam o úkonu CzechPOINT mezi nástroji, které
+  by platnost mohly ověřit, nově nejmenují a výslovně uvádějí, že takový prvek neověří.
+  O podatelnách a dalších validátorech se u těchto prvků říká jen to, že záleží na jejich
+  schopnostech. U interních podpisů v PDF se nic nemění.
 
 ### Ověřování
 
