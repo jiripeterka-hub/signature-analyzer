@@ -155,6 +155,7 @@ public final class PdfAttachmentInspector {
                 case CMS  -> "ano — objekt CMS / PKCS #7";
                 case XML  -> "ano — dokument XML";
                 case JSON -> "ano — dokument JSON";
+                case COSE -> "ano — podpis CB-AdES (COSE)";
                 default   -> "ano";
             });
         }

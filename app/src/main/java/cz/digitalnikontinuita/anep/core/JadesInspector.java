@@ -509,8 +509,12 @@ public final class JadesInspector {
         }
     }
 
-    /** @return the certificate's common name, or {@code null} when it could not be read */
-    private static String addCertificate(Node parent, byte[] der, String path, int index, String role) {
+    /**
+     * @return the certificate's common name, or {@code null} when it could not be read.
+     *         Sdílí ho i {@link CbadesInspector} (11. 11. 2026), aby certifikát vypadal stejně,
+     *         ať leží v JSON, nebo v CBOR.
+     */
+    static String addCertificate(Node parent, byte[] der, String path, int index, String role) {
         try {
             X509CertificateHolder holder = new X509CertificateHolder(der);
             String cn = ContainerInspector.commonName(String.valueOf(holder.getSubject()));
@@ -542,20 +546,7 @@ public final class JadesInspector {
             i++;
             byte[] der = entry instanceof Map<?, ?> m ? decodeBase64(str(m, "val")) : null;
             if (der == null) continue;
-            String name = "crl-" + i + ".crl";
-            Node node = parent.add(new Node(name, path + "/" + name, false, "seznam CRL"));
-            node.data(der);
-            node.put("Role", "seznam CRL vložený do podpisu");
-            try {
-                X509CRLHolder holder = new X509CRLHolder(der);
-                node.put("Vydavatel", String.valueOf(holder.getIssuer()));
-                node.put("Vydáno", ContainerInspector.formatDate(holder.getThisUpdate()));
-                if (holder.getNextUpdate() != null) {
-                    node.put("Příští vydání", ContainerInspector.formatDate(holder.getNextUpdate()));
-                }
-            } catch (Exception ignored) {
-                // Metadata are a nicety; the bytes are still extractable.
-            }
+            addCrl(parent, der, path, i);
         }
         i = 0;
         for (Object entry : orEmpty(list(container, "ocspVals"))) {
@@ -563,6 +554,24 @@ public final class JadesInspector {
             byte[] der = entry instanceof Map<?, ?> m ? decodeBase64(str(m, "val")) : null;
             if (der == null) continue;
             addOcsp(parent, der, path, i);
+        }
+    }
+
+    /** Seznam CRL vložený do podpisu; sdílí ho i {@link CbadesInspector}. */
+    static void addCrl(Node parent, byte[] der, String path, int index) {
+        String name = "crl-" + index + ".crl";
+        Node node = parent.add(new Node(name, path + "/" + name, false, "seznam CRL"));
+        node.data(der);
+        node.put("Role", "seznam CRL vložený do podpisu");
+        try {
+            X509CRLHolder holder = new X509CRLHolder(der);
+            node.put("Vydavatel", String.valueOf(holder.getIssuer()));
+            node.put("Vydáno", ContainerInspector.formatDate(holder.getThisUpdate()));
+            if (holder.getNextUpdate() != null) {
+                node.put("Příští vydání", ContainerInspector.formatDate(holder.getNextUpdate()));
+            }
+        } catch (Exception ignored) {
+            // Metadata are a nicety; the bytes are still extractable.
         }
     }
 
@@ -574,7 +583,7 @@ public final class JadesInspector {
      * the way out, so a response saved here is byte for byte the response saved anywhere else in
      * the application.
      */
-    private static void addOcsp(Node parent, byte[] der, String path, int index) {
+    static void addOcsp(Node parent, byte[] der, String path, int index) {
         byte[] whole = der;
         boolean wrapped = false;
         BasicOCSPResp basic = readOcsp(der);
@@ -737,6 +746,15 @@ public final class JadesInspector {
     private static String describeKid(String kid) {
         byte[] der = decodeBase64(kid);
         if (der == null) return kid;
+        String described = describeIssuerSerial(der);
+        return described == null ? kid : described;
+    }
+
+    /**
+     * Vydavatel a sériové číslo z DER {@code IssuerSerial}, nebo {@code null}. Týž tvar nese
+     * {@code kid} v CB-AdES, jen bez base64 ({@link CbadesInspector}).
+     */
+    static String describeIssuerSerial(byte[] der) {
         try {
             IssuerSerial issuerSerial = IssuerSerial.getInstance(ASN1Primitive.fromByteArray(der));
             GeneralNames names = issuerSerial.getIssuer();
@@ -745,7 +763,7 @@ public final class JadesInspector {
             String serial = ContainerInspector.hexNumber(issuerSerial.getSerial().getValue());
             return (issuer == null ? "" : "vydavatel " + issuer + ", ") + "sériové číslo " + serial;
         } catch (Exception e) {
-            return kid;
+            return null;
         }
     }
 
@@ -773,7 +791,7 @@ public final class JadesInspector {
         return cty.contains("/") ? cty : "application/" + cty;
     }
 
-    private static String extensionFor(String cty) {
+    static String extensionFor(String cty) {
         if (cty == null) return null;
         String mime = mimeType(cty).toLowerCase(Locale.ROOT);
         return switch (mime) {
@@ -810,8 +828,9 @@ public final class JadesInspector {
         return value instanceof Number n ? new Date(n.longValue() * 1000L) : null;
     }
 
-    private static String kindName(byte[] payload) {
+    static String kindName(byte[] payload) {
         return switch (ContainerInspector.detectKind(payload)) {
+            case COSE -> "podpis CB-AdES (COSE)";
             case PDF  -> "dokument PDF";
             case ZIP  -> "archiv ZIP (např. ASiC nebo dokument ODF/OOXML)";
             case XML  -> "dokument XML";

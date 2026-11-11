@@ -62,6 +62,10 @@ public final class StructureInspector {
         // InspectorSmoke 13. 10. 2026) a hlásil se jako PDF.
         ContainerInspector.Kind kind = ContainerInspector.detectKind(head);
         if (kind == ContainerInspector.Kind.CMS || kind == ContainerInspector.Kind.ZFO) return Format.CADES;
+        // Obalující CB-AdES nese PDF hned za hlavičkou COSE, takže by ho hledání „%PDF-“ níže
+        // ohlásilo jako PDF (11. 11. 2026, vzorek CB-AdES B-T s vloženým PDF). Rozbor revizí
+        // pro COSE Inspektor nemá; obsah ukáže prohlížeč kontejneru.
+        if (kind == ContainerInspector.Kind.COSE) return null;
         if (head.length >= 4 && head[0] == 'P' && head[1] == 'K' && head[2] == 3 && head[3] == 4) {
             return hasCadesParts(file) ? Format.ASIC : null;
         }

@@ -938,6 +938,7 @@ public class ContainerView {
             case ZIP -> "⧉ kontejner";
             case CMS -> ContainerInspector.isIsdsMessage(data) ? "⧉ datová zpráva ISDS" : "⧉ obálka CMS";
             case CODE -> "⧉ program";
+            case COSE -> "⧉ podpis CB-AdES";
             default  -> null;
         };
     }

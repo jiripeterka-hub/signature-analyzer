@@ -77,6 +77,17 @@ pro soupis změn ke každé nové vydané verzi.
   a původní umístění a popis balíčku výslovně říká, že je aplikace neověřovala a že se ověřovací
   materiál v balíčku týká jen dokumentu.
 
+### Prohlížeč kontejnerů
+
+- **Prohlížeč obsahu i pro podpisy CB-AdES.** U podpisu ve formátu CB-AdES (soubor .cose) se
+  dosud nenabízela ikona pro prohlížení obsahu. Nově se nabízí a prohlížeč ukáže podepsaný
+  dokument (u obalujícího podpisu jej lze uložit nebo ověřit samostatně), chráněnou hlavičku
+  s algoritmem, deklarovaným časem podpisu a identifikací certifikátu, certifikát podepisujícího,
+  u externího podpisu název a otisk podepsaného souboru a nepodepsané vlastnosti — časová razítka,
+  certifikáty a odpovědi OCSP — každou jako samostatný prvek.
+- U obalujícího podpisu CB-AdES s vloženým PDF se už nenabízí Inspektor PDF, který by rozebíral
+  vložený dokument místo předloženého souboru.
+
 ## Verze 1.3.0 (změny oproti 1.2.0)
 
 ### Protokoly

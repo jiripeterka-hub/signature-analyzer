@@ -88,6 +88,12 @@ public final class ContainerInspector {
         XML,
         /** A JSON object — JAdES. */
         JSON,
+        /**
+         * Podpis COSE (RFC 9052) v binárním formátu CBOR — CB-AdES (ETSI TS 119 152-1); viz
+         * {@link CbadesInspector}. Od 11. 11. 2026: do té doby se soubor .cose nepoznal jako nic,
+         * a aplikace k němu proto nenabízela prohlížeč obsahu, ačkoli ho od 31. 10. 2026 ověřuje.
+         */
+        COSE,
         /** A PDF. Not browsed here: the application shows PDFs in the platform viewer. */
         PDF,
         /**
@@ -247,6 +253,7 @@ public final class ContainerInspector {
         if (startsWith(bytes, "%PDF")) return Kind.PDF;
         if (bytes[0] == 'P' && bytes[1] == 'K'
                 && (bytes[2] == 3 || bytes[2] == 5 || bytes[2] == 7)) return Kind.ZIP;
+        if (CbadesInspector.looksLikeCose(bytes)) return Kind.COSE;
         if ((bytes[0] & 0xFF) == 0x30) return looksLikeCms(bytes) ? Kind.CMS : Kind.OTHER;
         if (startsWith(bytes, "-----BEGIN")) {
             return startsWith(bytes, "-----BEGIN CERT") ? Kind.OTHER : Kind.CMS;
@@ -305,7 +312,8 @@ public final class ContainerInspector {
     /** True when {@link #inspect} would produce something the user can browse. */
     public static boolean isContainerKind(Kind kind) {
         return kind == Kind.ZIP || kind == Kind.CMS || kind == Kind.ZFO
-                || kind == Kind.XML || kind == Kind.JSON || kind == Kind.CODE;
+                || kind == Kind.XML || kind == Kind.JSON || kind == Kind.COSE
+                || kind == Kind.CODE;
     }
 
     /** The three things a data box hands out as a ZFO. */
@@ -460,6 +468,7 @@ public final class ContainerInspector {
                 case CMS  -> inspectCms(bytes, fileName);
                 case XML  -> inspectXml(bytes, fileName);
                 case JSON -> inspectJson(bytes, fileName);
+                case COSE -> CbadesInspector.inspect(bytes, fileName);
                 case CODE -> AuthenticodeInspector.inspect(bytes, fileName);
                 default   -> new Result(kind, typeLabelFor(kind), new Node(fileName, "", true, null),
                         new LinkedHashMap<>(), List.of(), null);
@@ -479,6 +488,7 @@ public final class ContainerInspector {
             case ZFO  -> "datová zpráva ISDS (ZFO)";
             case XML  -> "dokument XML";
             case JSON -> "dokument JSON";
+            case COSE -> "podpis CB-AdES (COSE)";
             case PDF  -> "dokument PDF";
             case CODE -> "program (spustitelný soubor či instalační balíček Windows)";
             case OTHER -> "neznámý formát";
@@ -1515,6 +1525,7 @@ public final class ContainerInspector {
             case ZIP  -> ".zip";
             case XML  -> ".xml";
             case JSON -> ".json";
+            case COSE -> ".cose";
             default   -> looksTextual(content) ? ".txt" : ".bin";
         };
     }
