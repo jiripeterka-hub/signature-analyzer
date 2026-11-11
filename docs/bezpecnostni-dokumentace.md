@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — podklad pro posouzení podle zákona o kybernetické bezpečnosti a aktu o kybernetické odolnosti**
 
-Verze 1.2 (návrh) · stav ke dni 5. 11. 2026 · AnEP 1.3.0, knihovna DSS 6.5.1
+Verze 1.2 (návrh) · stav ke dni 11. 11. 2026 · AnEP 1.4.0, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -42,11 +42,11 @@ Dokument přesto požadavky přílohy I a obsah přílohy VII sleduje dobrovoln�
 | Položka | Hodnota |
 |---|---|
 | Název | AnEP — Analyzátor elektronických podpisů |
-| Verze | 1.3.0 |
+| Verze | 1.4.0 |
 | Výrobce (autor) | Jiří Peterka, jiri@peterka.cz |
 | Stránka | https://bajecnysvet.cz/anep/ |
 | Licence | EUPL 1.2 (české a anglické znění přiloženo); licence přibalených knihoven v souboru NOTICE.txt a ve složce licenses |
-| Zdrojový kód | veřejný repozitář https://github.com/jiripeterka-hub/signature-analyzer (větev `master`); každé vydání má značku, verze 1.3.0 značku `v1.3.0` |
+| Zdrojový kód | veřejný repozitář https://github.com/jiripeterka-hub/signature-analyzer (větev `master`); každé vydání má značku, verze 1.4.0 značku `v1.4.0` |
 | Platforma | Windows 10 a 11, 64bitové; sestavení pro Linux |
 | Distribuce | instalátor MSI a přenosný archiv ZIP pro Windows, archiv pro Linux |
 | Podpis instalátoru | podpis kódu (Authenticode, SHA-256) certifikátem autora od Certum Code Signing 2021 CA, s časovým razítkem Certum; otisk SHA-256 certifikátu `13930456cefa0384b6376360866f06df3e355c5fa58a52c16acddbe909f0a73c`, platnost 1. 11. 2026 – 1. 11. 2027 |
@@ -61,7 +61,7 @@ Verzi nainstalované aplikace ukazuje okno O aplikaci. Pravost instalátoru lze 
 Pro povinnou osobu to znamená tři věci:
 
 - **Kód lze prověřit.** Vlastní bezpečnostní rozbor, revize kódu nebo test podle § 24 vyhlášky nemusí stát jen na tomto dokumentu; lze ho provést nad týmž kódem, z něhož vznikají vydané balíčky.
-- **Aplikaci si může sestavit každý sám.** Licence EUPL 1.2 dovoluje kód užívat, měnit i šířit. Organizace si tak může sestavit vlastní instanci z ověřeného stavu kódu (například ze značky `v1.3.0`) a nemusí spoléhat na instalátor stažený ze stránky autora. Potřebuje k tomu JDK 21 nebo novější a Maven 3.9 nebo novější, pro instalátor MSI ještě WiX Toolset v3; postup je v souboru `README.md` v repozitáři (`mvn -pl app -am package`, balíčky skriptem `packaging/windows/dist.ps1` nebo `packaging/linux/dist.sh`). Knihovny třetích stran se při sestavení stahují z repozitáře Maven Central.
+- **Aplikaci si může sestavit každý sám.** Licence EUPL 1.2 dovoluje kód užívat, měnit i šířit. Organizace si tak může sestavit vlastní instanci z ověřeného stavu kódu (například ze značky `v1.4.0`) a nemusí spoléhat na instalátor stažený ze stránky autora. Potřebuje k tomu JDK 21 nebo novější a Maven 3.9 nebo novější, pro instalátor MSI ještě WiX Toolset v3; postup je v souboru `README.md` v repozitáři (`mvn -pl app -am package`, balíčky skriptem `packaging/windows/dist.ps1` nebo `packaging/linux/dist.sh`). Knihovny třetích stran se při sestavení stahují z repozitáře Maven Central.
 - **Údržba nestojí jen na autorovi.** Kdyby autor přestal aplikaci udržovat, může opravy zranitelností nebo aktualizace knihoven provést organizace sama nebo jejím jménem někdo jiný (riziko R11).
 
 Vlastní sestavení má dvě odlišnosti, s nimiž je třeba počítat:

@@ -10,10 +10,10 @@ on:
     inputs:
       version:
         description: "Číselná verze (app-version)"
-        default: "1.3.0"
+        default: "1.4.0"
       release:
         description: "Jméno vydání v názvu archivu"
-        default: "1.3.0"
+        default: "1.4.0"
 
 jobs:
   build:

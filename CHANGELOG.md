@@ -3,7 +3,7 @@
 Změny ve verzích aplikace AnEP (Analyzátor elektronických podpisů). Slouží jako podklad
 pro soupis změn ke každé nové vydané verzi.
 
-## Připravovaná verze
+## Verze 1.4.0 (změny oproti 1.3.0)
 
 ### Výklad výsledku
 

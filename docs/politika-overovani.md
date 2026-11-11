@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika ověřování podpisu**
 
-==Verze 1.21== · stav ke dni ==11. 11. 2026== · ==AnEP 1.3.0==, knihovna DSS 6.5.1
+==Verze 1.22== · stav ke dni ==11. 11. 2026== · ==AnEP 1.4.0==, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -28,9 +28,9 @@ Dokument je stavěný jako politika ověřování podpisu ve smyslu ETSI TS 119 
 | Položka | Hodnota |
 |---|---|
 | Název | Politika ověřování elektronických podpisů AnEP |
-| Verze | ==1.21== ze dne ==11. 11. 2026== |
-| Platí pro | ==AnEP 1.3.0 (repozitář signature-analyzer, značka v1.3.0)== |
-| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.21== |
+| Verze | ==1.22== ze dne ==11. 11. 2026== |
+| Platí pro | ==AnEP 1.4.0 (repozitář signature-analyzer, značka v1.4.0)== |
+| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.22== |
 | Ověřovací jádro | knihovna DSS (Digital Signature Service) 6.5.1 Evropské komise |
 | Postup ověřování | ETSI EN 319 102-1 V1.4.0 (2024-03) |
 | Struktura dokumentu | ETSI TS 119 172-1 (politika ověřování podpisu) |
@@ -431,3 +431,4 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 | ==1.19== | ==9. 11. 2026== | ==oddíl 7.1: server revokačních údajů nebo certifikátů vydavatelů, který neodpověděl ani po delším čekání, se do ukončení aplikace znovu nezkouší; platí od verze AnEP následující po 1.3.0== |
 | ==1.20== | ==11. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.20 politiky uchovávání== |
 | ==1.21== | ==11. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.21 politiky uchovávání== |
+| ==1.22== | ==11. 11. 2026== | ==beze změny obsahu; změny ve verzích 1.18 až 1.21 platí od AnEP 1.4.0; platí pro AnEP 1.4.0== |

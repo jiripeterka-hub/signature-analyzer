@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — s kým, kdy a proč se aplikace spojuje po síti**
 
-Verze 1.1 (návrh) · stav ke dni 5. 11. 2026 · AnEP 1.3.0, knihovna DSS 6.5.1
+Verze 1.1 (návrh) · stav ke dni 11. 11. 2026 · AnEP 1.4.0, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -162,6 +162,7 @@ Automatické testy aplikace (`NetworkProxyTest`) spouštějí místní zkušebn�
 
 | Kdy | Verze | Změna |
 |---|---|---|
+| 11. 11. 2026 | 1.4.0 | **Nedostupný server se během běhu nezkouší znovu.** Server spojení K2 až K5, na který se při ověření marně čekalo (déle než 5 s, pak selhání spojení nebo vypršení času), aplikace do svého ukončení přeskakuje a revokační údaj od něj hodnotí jako nedostupný. Rychlé selhání ani chybová odpověď HTTP se nepamatují; obnova důvěryhodných seznamů (K1) zkouší servery vždy znovu a změna proxy paměť smaže. Časové limity se nemění. |
 | 5. 11. 2026 | 1.3.0 | **Zadaná proxy může být i SOCKS.** Nová volba protokolu u zadané proxy; omezení v oddílu 4.2. |
 | 5. 11. 2026 | 1.3.0 | **Spojení na HTTP proxy jde přímo.** Ve verzi 1.2.0 se vydávalo přes SOCKS, pokud ho systém uváděl, a volba „Bez proxy“ ho neobcházela. |
 | 3. 11. 2026 | 1.2.0 | **Proxy.** Všechna spojení se řídí volbou proxy (výchozí podle nastavení systému, nebo zadaná, nebo žádná); dosud knihovna DSS chodila vždy přímo. |
