@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika uchovávání ověřitelnosti**
 
-==Verze 1.20 · stav ke dni 11. 11. 2026== · ==AnEP 1.3.0==, knihovna DSS 6.5.1
+==Verze 1.21 · stav ke dni 11. 11. 2026== · ==AnEP 1.3.0==, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -35,9 +35,9 @@ Rozdělení je věcné: politika ověřování popisuje **dnešní** ověření,
 | Položka | Hodnota |
 |---|---|
 | Název | Politika uchovávání elektronických podpisů AnEP |
-| Verze | ==1.20 ze dne 11. 11. 2026== |
+| Verze | ==1.21 ze dne 11. 11. 2026== |
 | Platí pro | ==AnEP 1.3.0 (repozitář signature-analyzer, značka v1.3.0)== |
-| Navazuje na | Politika ověřování elektronických podpisů AnEP, verze ==1.20== |
+| Navazuje na | Politika ověřování elektronických podpisů AnEP, verze ==1.21== |
 | Struktura dokumentu | ETSI TS 119 511 V1.1.1 (2019-06) |
 | Pojmy a schéma uchování | ETSI TS 119 512 V1.2.1 (2023-05), schéma F.4 „pds+wos+aug“ |
 | Cílová úroveň podpisů | B-LTA podle ETSI EN 319 142-1 (PAdES), EN 319 122-1 (CAdES), EN 319 132-1 (XAdES), TS 119 182-1 (JAdES), ==TS 119 152-1 (CB-AdES)== a EN 319 162-1 (ASiC) |
@@ -127,6 +127,8 @@ Datum určuje článek, který povolí nejdřív:
 - **dostupnost revokačních informací** — dokdy je vydavatel zveřejňuje;
 - **uznatelnost vloženého revokačního údaje** — dokdy platí certifikát jeho vydavatele;
 - **uznání razítka** — kvalifikované razítko drží do vyřazení služby z důvěryhodných seznamů, jinak do konce platnosti certifikátu jeho autority.
+
+==V odhadu pro CzechPOINT se jako důkaz existence počítá i časové razítko pozdějšího podpisu, který daný podpis nebo pečeť v dokumentu PDF kryje: CzechPOINT důkaz existence z pozdějších podpisů a jejich razítek na dřívější podpisy a pečeti přenáší. Takové razítko odhad nikdy nezhorší a započítá se jen tehdy, vzniklo-li v době platnosti podpisového certifikátu a certifikát jeho autority dosud platí. Kde odhad stojí na něm, aplikace to u odhadu uvede; zda důkaz přenášejí i podatelny a další validátory, záleží na jejich schopnostech.==
 
 Kde rozhoduje vyřazení služby, které se předem neví, datum se neuvádí. Algoritmy podpisu a razítek se do data nezapočítávají: ověření na data za poslední aktualizací kryptografické sady reaguje jen varováním (politika ověřování, kapitola 10). Algoritmus nejnovějšího razítka ale ovlivňuje radu, kdy jednat (kapitola 7).
 
@@ -335,3 +337,4 @@ Z TS 119 512 AnEP odpovídá schématu F.4 se dvěma odchylkami uvedenými v 3.2
 | ==1.18== | ==6. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.18 politiky ověřování== |
 | ==1.19== | ==9. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.19 politiky ověřování== |
 | ==1.20== | ==11. 11. 2026== | ==oddíl 5.1: CzechPOINT ověřuje pouze dokumenty PDF s interními podpisy; u jiných prvků jej aplikace nejmenuje a o podatelnách a dalších validátorech uvádí, že záleží na jejich schopnostech; platí od verze AnEP následující po 1.3.0== |
+| ==1.21== | ==11. 11. 2026== | ==oddíl 5.2: v odhadu pro CzechPOINT se jako důkaz existence počítá i časové razítko pozdějšího podpisu, který podpis nebo pečeť v dokumentu PDF kryje; platí od verze AnEP následující po 1.3.0== |

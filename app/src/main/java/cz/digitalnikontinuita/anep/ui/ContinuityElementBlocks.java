@@ -1297,6 +1297,8 @@ final class ContinuityElementBlocks {
                               + " za platnosti certifikátu předchozího —"
                             : ContinuityHorizon.isTimestampElement(sig)
                             ? "časového razítka"
+                            : ContinuityHorizon.tolerantLeansOnCovering(sig, "TOTAL_PASSED")
+                            ? "certifikátu časového razítka pozdějšího podpisu"
                             : h.limit() == Limit.TIMESTAMP_CERT
                             // Ne „časového razítka": mez drží to razítko, jehož certifikát
                             // platí nejdéle, a nemusí to být to poslední v řadě.
@@ -1314,6 +1316,13 @@ final class ContinuityElementBlocks {
                     "Neplatnost " + gen + " je prokázána a k témuž závěru by dospěly i tyto"
                     + " nástroje. Shovívavost k revokačním informacím ani k formátu na tom nic"
                     + " nemění."));
+        }
+
+        // Odhad stojí na razítku pozdějšího podpisu: CzechPOINT důkaz přenáší, o ostatních se
+        // neví (11. 11. 2026). Verdikt tu není po ruce; UNTIL už říká, že záporný nebyl.
+        if (h.kind() == Kind.UNTIL
+                && ContinuityHorizon.tolerantLeansOnCovering(sig, "TOTAL_PASSED")) {
+            body.getChildren().add(AdvisorView.continuityText(ContinuityHorizon.coveringNote(sig)));
         }
 
         // Prvek mimo PDF: CzechPOINT ho nepřečte, o ostatních se neví (11. 11. 2026). U SHA3
@@ -1436,8 +1445,14 @@ final class ContinuityElementBlocks {
                         + " říct nedá"
                         // Pozorování je z dokumentu PDF; u prvku, který CzechPOINT nepřečte,
                         // by věta slibovala něco, co se stát nemůže.
+                        // U PDF se sem dojde jen tehdy, když ani kryjící razítko nepomohlo:
+                        // CzechPOINT důkaz přenáší (11. 11. 2026), takže kdyby stačilo, vyšel by
+                        // odhad s datem a tahle věta by se nepsala.
                         + (ContinuityHorizon.czechPointReads(sig)
-                            ? "; u jednoho takového dokumentu to CzechPOINT udělal a platnost uznal."
+                            ? ". CzechPOINT takový důkaz na dřívější podpisy přenáší, tady mu ale"
+                              + " nepomůže: certifikátu toho razítka už skončila řádná doba"
+                              + " platnosti, nebo razítko vzniklo až po expiraci podpisového"
+                              + " certifikátu."
                             : ".");
             }
             return AdvisorView.capitalize(AdvisorView.elementCert(sig, AdvisorView.Case.NOMINATIV))

@@ -116,6 +116,7 @@
    * **CzechPOINT, podatelny a další** — nástroje s vlastní zásobou revokačních informací, tolerantnější i vůči některým požadavkům technických standardů, ale s přísnějším posuzováním časových razítek
 * o prvních dvou mluví aplikace v jistotě, o třetím okruhu **vždy jen v možnosti** — nezná jejich verzi, nastavení ani obsah jejich zásob
 * <mark>CzechPOINT ověřuje pouze dokumenty PDF s interními podpisy: u externích a obalujících podpisů, kontejnerů ASiC a samostatných časových razítek jej aplikace nejmenuje a uvádí, že takový prvek neověří; o podatelnách a dalších validátorech říká, že záleží na jejich schopnostech</mark>
+* <mark>v odhadu pro CzechPOINT počítá jako důkaz existence i časové razítko pozdějšího podpisu, který podpis nebo pečeť v dokumentu PDF kryje — CzechPOINT důkaz existence z pozdějších podpisů na dřívější přenáší; kde odhad stojí na takovém razítku, aplikace to uvede</mark>
 * datum určuje ten článek, který povolí nejdřív: **důkaz existence** (PoE), **dostupnost revokačních informací**, **uznatelnost vloženého údaje** (po expiraci jeho vydavatele) a **uznání razítka** (do vyřazení služby ze seznamů, jinak do konce certifikátu TSA)
 * <mark>stojí-li závěr na důkazu existence z obalu, záložka upozorní, že uchovávat je třeba celý obal: vyjmutý dokument tento důkaz nemá</mark>
 * u každého prvku stojí čtyři odpovědi — dokdy ověří AnEP, dokdy validátor podle standardů, dokdy CzechPOINT a podatelny, a co a do kdy je třeba udělat

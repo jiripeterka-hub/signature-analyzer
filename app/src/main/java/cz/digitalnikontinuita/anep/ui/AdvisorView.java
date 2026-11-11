@@ -3228,6 +3228,12 @@ public class AdvisorView {
         }
         // Společný závěr, ne konec jedné z vět: obou cest se týká týž okruh nástrojů a dvakrát
         // vypsávaný by čtenář četl jako dva různé seznamy.
+        // Bez razítka pozdějšího podpisu by bylo pozdě: řekne se, na čem šance stojí a u koho.
+        java.time.Instant ownReach = validTimestampChainReach(sig);
+        java.time.Instant ownEnd = ownReach != null ? ownReach : sig.getCertNotAfter();
+        if (ownEnd == null || !ownEnd.isAfter(java.time.Instant.now())) {
+            block.getChildren().add(unlabelledRow(ContinuityHorizon.coveringNote(sig, "Šance")));
+        }
         // Mimo PDF bez CzechPOINTu a s výhradou k ostatním (pokyn uživatele 11. 11. 2026):
         // CzechPOINT ověřuje jen dokumenty PDF s interními podpisy, a blok by čtenáře posílal
         // tam, kde neuspěje.
@@ -3684,7 +3690,7 @@ public class AdvisorView {
      */
     private static boolean isTooLate(SignatureSummary sig) {
         java.time.Instant now = java.time.Instant.now();
-        java.time.Instant tsuEnd = validTimestampChainReach(sig);
+        java.time.Instant tsuEnd = coveredTimestampChainReach(sig);
         if (tsuEnd != null) return !tsuEnd.isAfter(now);
         java.time.Instant certUntil = sig.getCertNotAfter();
         return certUntil == null || !certUntil.isAfter(now);
@@ -5787,7 +5793,24 @@ public class AdvisorView {
     }
 
     private static java.time.Instant validTimestampChainReach(SignatureSummary sig) {
-        List<SignatureSummary.TimestampEntry> chain = sig.getAllTimestamps().stream()
+        return validTimestampChainReach(sig.getAllTimestamps());
+    }
+
+    /**
+     * Totéž i s razítky pozdějších podpisů, které prvek kryjí — pro {@link #isTooLate}.
+     * CzechPOINT z nich důkaz existence na dřívější podpisy přenáší (údaj uživatele
+     * 11. 11. 2026). Jen ta, která zde obstála: závora je změřená na platných razítkách a její
+     * šíře se tím nemění jinak než o tenhle přenos. A jen u prvku, který CzechPOINT přečte.
+     */
+    private static java.time.Instant coveredTimestampChainReach(SignatureSummary sig) {
+        List<SignatureSummary.TimestampEntry> all = new java.util.ArrayList<>(sig.getAllTimestamps());
+        if (ContinuityHorizon.czechPointReads(sig)) all.addAll(sig.getCoveringTimestamps());
+        return validTimestampChainReach(all);
+    }
+
+    private static java.time.Instant validTimestampChainReach(
+            List<SignatureSummary.TimestampEntry> timestamps) {
+        List<SignatureSummary.TimestampEntry> chain = timestamps.stream()
                 .filter(ts -> ts.time() != null && ts.passed())
                 .sorted(java.util.Comparator.comparing(SignatureSummary.TimestampEntry::time))
                 .toList();

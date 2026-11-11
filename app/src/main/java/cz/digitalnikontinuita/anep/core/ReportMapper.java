@@ -965,6 +965,28 @@ public class ReportMapper {
             s.setInsidePdf((inSig != null && inSig.getPDFRevision() != null)
                     || (inTs != null && inTs.getPDFRevision() != null));
         }
+        // Razítka pozdějších podpisů, které prvek kryjí — viz SignatureSummary
+        // .getCoveringTimestamps(). Táž vazba jako u coveringProof(), jen bez podmínky, že
+        // razítko obstálo zde: odhad pro CzechPOINT si ho posoudí po svém.
+        java.util.Map<String, SignatureSummary> byId = new java.util.HashMap<>();
+        for (SignatureSummary s : summaries) byId.put(s.getSignatureId(), s);
+        for (SignatureSummary s : summaries) {
+            SignatureWrapper self = dd.getSignatureById(s.getSignatureId());
+            if (self == null) continue;
+            List<SignatureSummary.TimestampEntry> covering = new ArrayList<>();
+            for (SignatureWrapper other : dd.getSignatures()) {
+                if (other.getId().equals(self.getId()) || !other.isSignatureIntact()) continue;
+                if (!coversElement(other, self)) continue;
+                SignatureSummary o = byId.get(other.getId());
+                if (o == null) continue;
+                for (SignatureSummary.TimestampEntry ts : o.getAllTimestamps()) {
+                    if (!s.getAllTimestamps().contains(ts) && !covering.contains(ts)) {
+                        covering.add(ts);
+                    }
+                }
+            }
+            if (!covering.isEmpty()) s.setCoveringTimestamps(covering);
+        }
 
         int afterAll = baseReport.getSignatureIdList().size() * 2;
         summaries.sort(Comparator

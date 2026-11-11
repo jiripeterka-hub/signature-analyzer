@@ -37,6 +37,13 @@ pro soupis změn ke každé nové vydané verzi.
   by platnost mohly ověřit, nově nejmenují a výslovně uvádějí, že takový prvek neověří.
   O podatelnách a dalších validátorech se u těchto prvků říká jen to, že záleží na jejich
   schopnostech. U interních podpisů v PDF se nic nemění.
+- **Důkaz existence z pozdějšího podpisu v odhadu pro CzechPOINT.** CzechPOINT přenáší důkaz
+  existence z pozdějších podpisů a jejich časových razítek na dřívější podpisy a pečeti téhož
+  dokumentu PDF. Odhad, do kdy CzechPOINT platnost ověří, s tím nově počítá: u podpisu bez
+  vlastního razítka, který kryje pozdější podpis s razítkem, se řídí tímto razítkem, a to
+  i tehdy, když už podpisový certifikát expiroval. Stejně se rozhoduje, zda Analýza nabídne blok
+  „Kde je šance na úspěšné ověření“. Kde odhad na takovém razítku stojí, aplikace to uvede
+  a dodá, že u podatelen a dalších validátorů záleží na jejich schopnostech.
 
 ### Ověřování
 

@@ -430,6 +430,52 @@ public final class ContinuityHorizon {
         if (hopeless(sig)) return new Horizon(Kind.LOST, null, Limit.NONE);
         if (sig.isTrustedViaCustomStore()) return new Horizon(Kind.LOST, null, Limit.NONE);
 
+        Horizon own = tolerantOver(sig, strictChain(sig));
+        return tolerantLeansOnCovering(sig, own) ? tolerantOver(sig, coveredChain(sig)) : own;
+    }
+
+    /**
+     * Stojí odhad na časovém razítku <b>pozdějšího podpisu</b>, který tenhle prvek kryje?
+     *
+     * <p>CzechPOINT důkaz existence z pozdějších podpisů a jejich razítek na dřívější podpisy
+     * a pečeti přenáší (údaj uživatele z 11. 11. 2026; do té doby tu bylo jediné pozorování
+     * z 12. 9. 2026 a odhad se o ně neopíral). Kryjící razítka se proto přidají do řady, jako by
+     * je prvek nesl sám — ale jen když tím odhad vyjde lépe než z vlastních: přidané razítko
+     * nikomu nic nebere, takže horší výsledek by byl chybou výpočtu, ne vlastností dokumentu.
+     *
+     * <p>Jen u prvku, který CzechPOINT přečte ({@link #czechPointReads}). O podatelnách a dalších
+     * se neví, zda přenos dělají; text to u takového odhadu říká ({@link #coveringNote}).
+     */
+    public static boolean tolerantLeansOnCovering(SignatureSummary sig, String verdict) {
+        return tolerant(sig, verdict).kind() == Kind.UNTIL
+                && tolerantLeansOnCovering(sig, tolerantOver(sig, strictChain(sig)));
+    }
+
+    private static boolean tolerantLeansOnCovering(SignatureSummary sig, Horizon own) {
+        if (!czechPointReads(sig) || isTimestampElement(sig)) return false;
+        if (sig.getCoveringTimestamps().isEmpty()) return false;
+        Horizon covered = tolerantOver(sig, coveredChain(sig));
+        if (covered.kind() != Kind.UNTIL) return false;
+        return own.kind() != Kind.UNTIL || covered.when().isAfter(own.when());
+    }
+
+    /** Věta k odhadu, který stojí na razítku kryjícího podpisu; viz výše. */
+    public static String coveringNote(SignatureSummary sig) {
+        return coveringNote(sig, "Odhad");
+    }
+
+    /** @param what co na razítku stojí — „Odhad“ v záložce kontinuity, „Šance“ v Analýze */
+    public static String coveringNote(SignatureSummary sig, String what) {
+        return what + " tu stojí na časovém razítku pozdějšího podpisu, který "
+                + AdvisorView.gendered(sig, "tento podpis", "tuto pečeť", "tento prvek")
+                + " kryje. CzechPOINT z něj důkaz existence na dřívější podpisy a pečeti"
+                + " přenáší; zda to dělají i podatelny a další validátory, záleží na jejich"
+                + " schopnostech.";
+    }
+
+    /** Odhad nad danou řadou razítek — vlastní, nebo rozšířenou o razítka kryjících podpisů. */
+    private static Horizon tolerantOver(SignatureSummary sig,
+                                        java.util.List<TimestampEntry> chain) {
         Instant now = Instant.now();
         // Kam sahá řada razítek, ne kam sahá to poslední. Mladší razítko s kratším certifikátem
         // starší nezkracuje — striktnímu validátoru stačí kterékoli razítko kryjící podpis,
@@ -437,7 +483,7 @@ public final class ContinuityHorizon {
         // {@link cz.digitalnikontinuita.anep.model.TimestampChain}); do té doby se tu bralo
         // {@code newestProof(...).notAfter()} a nad „podpis s razitkem-extended-pades-baseline
         // -lta.pdf“ z toho vyšlo „platnost dnes již ověřit nedokáží“, ačkoli CzechPOINT ověřil.
-        Instant reach = TimestampChain.reachFromStart(strictChain(sig));
+        Instant reach = TimestampChain.reachFromStart(chain);
         if (reach != null) {
             // Řada razítek s mezerou tenhle okruh nástrojů nepřenese. Razítko posuzují podle
             // řádné doby platnosti jeho certifikátu, takže článek, jehož předchůdci certifikát
@@ -453,7 +499,7 @@ public final class ContinuityHorizon {
             // Vadí to jen u expirovaného podpisového certifikátu: dokud platí, ověřují
             // k aktuálnímu okamžiku a žádný důkaz existence nepotřebují. A jen u podpisů —
             // samostatné razítko žádnou řadu netvoří a situaci 31 nedostává nikdy.
-            if (brokenChainStopsTolerant(sig)) {
+            if (brokenChainStopsTolerant(sig, chain)) {
                 return new Horizon(Kind.LOST, null, Limit.TIMESTAMP_CERT);
             }
             return reach.isAfter(now)
@@ -496,13 +542,17 @@ public final class ContinuityHorizon {
     }
 
     static boolean brokenChainStopsTolerant(SignatureSummary sig) {
+        return brokenChainStopsTolerant(sig, strictChain(sig));
+    }
+
+    private static boolean brokenChainStopsTolerant(SignatureSummary sig,
+                                                    java.util.List<TimestampEntry> chain) {
         if (isTimestampElement(sig)) return false;
         // Dokud podpisový certifikát platí, ověřuje tenhle okruh k aktuálnímu okamžiku a žádný
         // důkaz existence nepotřebuje — mezera v řadě mu pak nevadí.
         Instant certUntil = sig.getCertNotAfter();
         if (certUntil == null || certUntil.isAfter(Instant.now())) return false;
 
-        java.util.List<TimestampEntry> chain = strictChain(sig);
         if (chain.isEmpty()) return false;
 
         // První článek musí vzniknout ještě za platnosti podpisového certifikátu, a řada pak
@@ -550,8 +600,20 @@ public final class ContinuityHorizon {
      * {@code AdvisorView.isTooLate} se to nedotklo.
      */
     private static java.util.List<TimestampEntry> strictChain(SignatureSummary sig) {
+        return strictChain(sig.getAllTimestamps());
+    }
+
+    /** Vlastní razítka a razítka kryjících podpisů v jedné řadě; viz tolerantLeansOnCovering. */
+    private static java.util.List<TimestampEntry> coveredChain(SignatureSummary sig) {
+        java.util.List<TimestampEntry> all = new java.util.ArrayList<>(sig.getAllTimestamps());
+        all.addAll(sig.getCoveringTimestamps());
+        return strictChain(all);
+    }
+
+    private static java.util.List<TimestampEntry> strictChain(
+            java.util.List<TimestampEntry> timestamps) {
         java.util.List<TimestampEntry> chain = new java.util.ArrayList<>();
-        for (TimestampEntry ts : sig.getAllTimestamps()) {
+        for (TimestampEntry ts : timestamps) {
             if (ts.time() == null || !ts.intact()) continue;
             if ("content".equals(ts.tsKind())) continue;
             if (ts.tsKind() != null && ts.tsKind().startsWith("vri")) continue;

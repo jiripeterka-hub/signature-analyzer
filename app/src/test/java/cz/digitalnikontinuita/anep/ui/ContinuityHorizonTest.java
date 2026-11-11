@@ -209,6 +209,53 @@ class ContinuityHorizonTest {
     }
 
     @Test
+    @DisplayName("CzechPOINT přenáší důkaz existence z razítka pozdějšího podpisu")
+    void tolerantReadingTakesProofFromACoveringSignature() {
+        // Údaj uživatele 11. 11. 2026. Podpis bez vlastního razítka s certifikátem po expiraci;
+        // pozdější podpis ho kryje a nese razítko vzniklé ještě za platnosti toho certifikátu.
+        SignatureSummary sig = sig().certNotAfter(PAST).build();
+        assertEquals(Kind.LOST, ContinuityHorizon.tolerant(sig, "INDETERMINATE").kind());
+
+        // Razítko zde neobstálo — ten okruh se na zdejší verdikt neptá, jen na neporušenost.
+        sig.setCoveringTimestamps(List.of(
+                new TimestampEntry(STAMPED, false, "TSA", FUTURE, "sig", false, true)));
+        Horizon h = ContinuityHorizon.tolerant(sig, "INDETERMINATE");
+        assertEquals(Kind.UNTIL, h.kind());
+        assertEquals(FUTURE, h.when());
+        assertTrue(ContinuityHorizon.tolerantLeansOnCovering(sig, "INDETERMINATE"));
+    }
+
+    @Test
+    @DisplayName("Kryjící razítko vzniklé až po expiraci podpisového certifikátu nepomůže")
+    void aCoveringStampMadeAfterExpiryProvesNothing() {
+        SignatureSummary sig = sig().certNotAfter(PAST).build();
+        sig.setCoveringTimestamps(List.of(new TimestampEntry(
+                PAST.plus(1, java.time.temporal.ChronoUnit.DAYS), true, "TSA", FUTURE, "sig",
+                true, true)));
+        assertEquals(Kind.LOST, ContinuityHorizon.tolerant(sig, "INDETERMINATE").kind());
+        assertFalse(ContinuityHorizon.tolerantLeansOnCovering(sig, "INDETERMINATE"));
+    }
+
+    @Test
+    @DisplayName("Kryjící razítko odhad nikdy nezhorší a mimo PDF se nepočítá")
+    void aCoveringStampNeverMakesTheEstimateWorse() {
+        // Certifikát platí, kryjící razítko má certifikát už po expiraci: zůstává vlastní odhad.
+        SignatureSummary valid = sig().certNotAfter(FUTURE).build();
+        valid.setCoveringTimestamps(List.of(
+                new TimestampEntry(STAMPED, true, "TSA", PAST, "sig", true, true)));
+        Horizon h = ContinuityHorizon.tolerant(valid, "TOTAL_PASSED");
+        assertEquals(Kind.UNTIL, h.kind());
+        assertEquals(FUTURE, h.when());
+        assertFalse(ContinuityHorizon.tolerantLeansOnCovering(valid, "TOTAL_PASSED"));
+
+        // Protipodpis mimo PDF: CzechPOINT takový prvek nepřečte a o ostatních se neví.
+        SignatureSummary external = sig().format("XAdES-BASELINE-B").certNotAfter(PAST).build();
+        external.setCoveringTimestamps(List.of(
+                new TimestampEntry(STAMPED, true, "TSA", FUTURE, "sig", true, true)));
+        assertEquals(Kind.LOST, ContinuityHorizon.tolerant(external, "INDETERMINATE").kind());
+    }
+
+    @Test
     @DisplayName("Samostatné razítko se posuzuje samo, ne přes chybějící podpisový certifikát")
     void aLoneTimestampIsItsOwnProof() {
         SignatureSummary qualified = sig().format("TimeStampToken").qualified()

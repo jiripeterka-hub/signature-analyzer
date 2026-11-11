@@ -1121,6 +1121,23 @@ public class SignatureSummary {
      */
     private boolean insidePdf;
 
+    /**
+     * Časová razítka pozdějších podpisů, které tento prvek kryjí (v PDF rozsahem podepsaných
+     * bajtů, jinde jako protipodpis) — všechna, i ta, která zde neobstála (11. 11. 2026).
+     *
+     * <p>Mezi {@link #getAllTimestamps()} nepatří: fakta by o podpisu bez razítka tvrdila, že
+     * razítko má. Čte je jen odhad pro CzechPOINT, který z nich důkaz existence na dřívější
+     * podpisy přenáší (údaj uživatele) a razítko posuzuje po svém, ne zdejším verdiktem — viz
+     * {@code ContinuityHorizon.tolerant}. {@link #getCoveringProofTimestamp()} je z nich jen to
+     * jedno, o které se opřel zdejší závěr.
+     */
+    private List<TimestampEntry> coveringTimestamps = List.of();
+
+    public List<TimestampEntry> getCoveringTimestamps()   { return coveringTimestamps; }
+    public void setCoveringTimestamps(List<TimestampEntry> v) {
+        this.coveringTimestamps = List.copyOf(v);
+    }
+
     public boolean isInsidePdf()                          { return insidePdf; }
     public void setInsidePdf(boolean v)                   { this.insidePdf = v; }
 
