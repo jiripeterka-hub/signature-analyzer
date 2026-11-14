@@ -15,8 +15,13 @@ pro soupis změn ke každé nové vydané verzi.
   Nejde o varování: verdikt se nemění a blok výslovně říká, že takové doplnění je u formulářů
   podepsaných ještě nevyplněných obvyklé — jen to, co přibylo, podpis nekryje. Dosud o tom
   AnEP mlčel a v Analýze dokonce tvrdil, že se obsah dokumentu nezměnil, protože knihovna DSS
-  anotace přidané po podpisu ve vizuálním porovnání stránek nevidí. Omezil-li podepsaný změny
-  dokumentu (certifikační podpis, uzamčení dokumentu), blok netvrdí, že je doplnění přípustné.
+  anotace přidané po podpisu ve vizuálním porovnání stránek nevidí. Blok také řekne, zda
+  podepisující změny po podpisu omezil (certifikačním podpisem nebo zámkem dokumentu či polí)
+  a zda se doplnění do povoleného vešlo. Když se nevešlo — například certifikační podpis
+  dovoluje jen vyplňování formuláře a přibyla anotace —, má blok hnědožluté záhlaví „… nad
+  rámec toho, co podepisující povolil“ a Zjednodušený přehled na něj upozorní varovným řádkem.
+  Verdikt se ani tehdy nemění (podepsaná data porušena nejsou), jiné validátory ale mohou
+  podpis kvůli tomu označit za neplatný.
 - **Vyplnění mezi podpisy.** Byla-li pole formuláře vyplněna nebo anotace přidány mezi dvěma
   podpisy (či mezi podpisem a časovým razítkem), uvede to nově karta dřívějšího podpisu ve všech
   třech záložkách: co bylo doplněno, že je tento podpis nekryje a který pozdější podpis či

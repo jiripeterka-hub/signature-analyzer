@@ -2,6 +2,7 @@ package cz.digitalnikontinuita.anep.ui;
 
 import cz.digitalnikontinuita.anep.core.PostSignatureEdits;
 import cz.digitalnikontinuita.anep.core.RevisionTail;
+import cz.digitalnikontinuita.anep.model.SignatureSummary;
 import cz.digitalnikontinuita.anep.model.ValidationResult;
 
 import javafx.application.Platform;
@@ -311,6 +312,82 @@ class RevisionTailBlockTest {
                 new RevisionTail(RevisionTail.Element.PODPIS, 2_000, List.of(1),
                         false, true, false, true)));
         assertTrue(warn.warning());
+    }
+
+    /**
+     * Rozhodnutí uživatele 14. 11. 2026: blok má říct, zda doplnění dovolil i podepisující,
+     * a když ho zakázal, nemá to být klidné. Vzorem certifikovaný formulář (DocMDP P=2)
+     * s razítkovou anotací po podpisu — DSS dá jen připomínku a verdikt nechá platný.
+     */
+    @Test
+    @DisplayName("Nikdo nic neomezil: blok to výslovně řekne")
+    void unrestrictedSaysSo() {
+        RevisionTail tail = stampOnly();
+        String text = onFx(() -> text(RevisionTailBlock.build(result(tail, SigFixture.sig().build()))));
+        assertTrue(text.contains("Žádný z podpisů změny po podpisu neomezuje"), text);
+        assertFalse(RevisionTailBlock.noticeLine(result(tail, SigFixture.sig().build())).warning());
+    }
+
+    @Test
+    @DisplayName("Certifikace P=2 a vyplněné pole: dovoleno, a blok to řekne")
+    void certificationPermitsFilling() {
+        RevisionTail tail = edited(List.of(),
+                List.of(new PostSignatureEdits.FieldEdit("Pole 1", "Tx", false, 1)));
+        ValidationResult r = result(tail,
+                SigFixture.sig().certification("MINIMAL_CHANGES_PERMITTED").build());
+        assertEquals(RevisionTailBlock.Restriction.Kind.PERMITTED,
+                RevisionTailBlock.restriction(r).kind());
+        String text = onFx(() -> text(RevisionTailBlock.build(r)));
+        assertTrue(text.contains("Certifikační podpis změny po podpisu omezuje, ale tohle doplnění"
+                + " dovoluje"), text);
+        assertFalse(RevisionTailBlock.noticeLine(r).warning());
+    }
+
+    @Test
+    @DisplayName("Certifikace P=2 a anotace: zakázáno — nadpis, hnědé varování, řádek v přehledu")
+    void certificationForbidsAnnotation() {
+        ValidationResult r = result(stampOnly(),
+                SigFixture.sig().certification("MINIMAL_CHANGES_PERMITTED").build());
+        assertTrue(RevisionTailBlock.restriction(r).forbidden());
+        String text = onFx(() -> text(RevisionTailBlock.build(r)));
+        assertTrue(text.contains("Po podepsání v dokumentu přibyla anotace nad rámec toho,"
+                + " co podepisující povolil"), text);
+        assertTrue(text.contains("Certifikační podpis ale takové doplnění nedovoluje"), text);
+        assertTrue(text.contains("mohou podpis kvůli tomu označit za neplatný"), text);
+        assertFalse(text.contains("Formát PDF takové doplnění po podpisu dovoluje"),
+                "Klidná věta tu neplatí: " + text);
+        RevisionTailBlock.Notice n = RevisionTailBlock.noticeLine(r);
+        assertTrue(n.warning(), "Zakázané doplnění je v Zjednodušeném přehledu varování");
+        assertTrue(n.text().contains("nad rámec toho, co podepisující povolil"), n.text());
+    }
+
+    @Test
+    @DisplayName("Zámek polí: vyplnění zamčeného pole je zakázané, nezamčeného ne")
+    void fieldLock() {
+        RevisionTail tail = edited(List.of(),
+                List.of(new PostSignatureEdits.FieldEdit("form.Jmeno", "Tx", false, 1)));
+        SignatureSummary.PdfLock locked =
+                new SignatureSummary.PdfLock("INCLUDE", List.of("form.Jmeno"), null);
+        SignatureSummary.PdfLock other =
+                new SignatureSummary.PdfLock("INCLUDE", List.of("form.Prijmeni"), null);
+        ValidationResult bad = result(tail, SigFixture.sig().pdfLock(locked).build());
+        ValidationResult ok = result(tail, SigFixture.sig().pdfLock(other).build());
+        assertTrue(RevisionTailBlock.restriction(bad).forbidden());
+        assertEquals(RevisionTailBlock.Restriction.Kind.PERMITTED,
+                RevisionTailBlock.restriction(ok).kind());
+        String text = onFx(() -> text(RevisionTailBlock.build(bad)));
+        assertTrue(text.contains("pole „Jmeno“ zamyká"), text);
+    }
+
+    private static RevisionTail stampOnly() {
+        return edited(List.of(new PostSignatureEdits.AnnotationEdit("Stamp", 1,
+                PostSignatureEdits.Action.ADDED, true)), List.of());
+    }
+
+    private static ValidationResult result(RevisionTail tail, SignatureSummary sig) {
+        ValidationResult r = new ValidationResult("x.pdf", "PDF", false, List.of(sig), null, null, null);
+        r.setRevisionTail(tail);
+        return r;
     }
 
     @Test

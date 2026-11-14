@@ -82,10 +82,13 @@ final class RevisionTailBlock {
         RevisionTail tail = result.getRevisionTail();
         if (tail.filledOrAnnotated()) {
             // Prostřední stupeň (14. 11. 2026): stojí v Rozšířeném přehledu a je otevřený, ale
-            // záhlaví nenese verdikt — vyplnění formuláře ani poznámka nejsou chyba.
-            return AdvisorView.collapsibleBlock(title(tail),
-                    editedBody(tail, restrictedBySigner(result), openPage, openCurrent),
-                    true, AdvisorView.BlockTint.PLAIN);
+            // záhlaví nenese verdikt — vyplnění formuláře ani poznámka nejsou chyba. Výjimkou je
+            // doplnění, které podepisující zakázal (certifikační podpis, zámek): pak hnědé
+            // záhlaví jako u změny obsahu (rozhodnutí uživatele 14. 11. 2026).
+            Restriction r = restriction(result);
+            return AdvisorView.collapsibleBlock(editedTitle(tail, r),
+                    editedBody(tail, r, openPage, openCurrent),
+                    true, r.forbidden() ? AdvisorView.BlockTint.BROWN : AdvisorView.BlockTint.PLAIN);
         }
         return AdvisorView.collapsibleBlock(title(tail), body(tail, openPage, openCurrent),
                 tail.contentChanged(), tail.contentChanged()
@@ -117,29 +120,98 @@ final class RevisionTailBlock {
         String warn = warningLine(result);
         if (warn != null) return new Notice(warn, true);
         if (!isPresent(result) || !result.getRevisionTail().filledOrAnnotated()) return null;
-        return new Notice(title(result.getRevisionTail()) + " — podpis tím porušen není;"
+        RevisionTail tail = result.getRevisionTail();
+        if (restriction(result).forbidden()) {
+            return new Notice(editedTitle(tail, restriction(result))
+                    + " — podrobnosti v Rozšířeném přehledu.", true);
+        }
+        return new Notice(title(tail) + " — podpis tím porušen není;"
                 + " podrobnosti v Rozšířeném přehledu.", false);
+    }
+
+    /**
+     * Omezil některý podpis změny po podpisu, a pokud ano, vešlo se doplnění do povoleného?
+     *
+     * @param kind       {@link Kind#NONE} — nikdo nic neomezil; {@link Kind#PERMITTED} — omezení
+     *                   je, ale tohle doplnění dovoluje; {@link Kind#FORBIDDEN} — překračuje ho
+     * @param source     čím je omezeno: {@code "CERT"} certifikační podpis, {@code "LOCK"} zámek
+     *                   celého dokumentu, {@code "FIELDS"} zámek jen vybraných polí; u NONE null
+     * @param permission u CERT a LOCK hodnota DSS ({@code NO_CHANGE_PERMITTED} …), jinak null
+     * @param lockedFilled vyplněná pole, která zámek polí zamyká (jen u FIELDS)
+     */
+    record Restriction(Kind kind, String source, String permission, List<String> lockedFilled) {
+        enum Kind { NONE, PERMITTED, FORBIDDEN }
+
+        boolean forbidden() { return kind == Kind.FORBIDDEN; }
     }
 
     /**
      * Zakázal některý podpis právě takovou změnu? Certifikační podpis (DocMDP) nebo zámek
      * s {@code /P}: stupeň 1 nedovoluje nic, stupeň 2 vyplnění formuláře a podpisy, ale ne
-     * anotace, stupeň 3 obojí. Pak věta „PDF takové doplnění dovoluje" neplatí — co smí přibýt,
-     * určil podepsaný, a mluví o tom karta podpisu. Zámky jednotlivých polí (FieldMDP bez
-     * {@code /P}) se tu neposuzují.
+     * anotace, stupeň 3 obojí. Zámek polí bez {@code /P} zakazuje vyplnit pole, která jmenuje
+     * (či všechna, nebo všechna kromě jmenovaných).
+     *
+     * <p>Proč se to rozlišuje (rozhodnutí uživatele 14. 11. 2026): klidná věta „formát PDF
+     * takové doplnění dovoluje" čtenáři nestačí — chce vědět, zda to dovolil i podepisující,
+     * a když ne, nemá to být klidné. Měřeno na certifikovaném formuláři (DocMDP P=2,
+     * kvalifikovaný podpis I.CA) s razítkovou anotací přidanou po podpisu: DSS dá jen
+     * připomínku BBB_FC_ISVADMDPD_ANS a verdikt nechá TOTAL_PASSED, takže bez tohoto bloku
+     * by o porušení mluvila jen poznámka dole na kartě.
      */
-    private static boolean restrictedBySigner(ValidationResult result) {
-        if (result.getSignatures() == null) return false;
-        RevisionTail tail = result.getRevisionTail();
-        boolean annotations = tail.edits() != null && !tail.edits().visibleAnnotations().isEmpty();
-        for (var s : result.getSignatures()) {
-            for (String p : new String[] { s.getCertificationPermission(),
-                    s.getPdfLock() != null ? s.getPdfLock().permission() : null }) {
-                if ("NO_CHANGE_PERMITTED".equals(p)) return true;
-                if ("MINIMAL_CHANGES_PERMITTED".equals(p) && annotations) return true;
+    static Restriction restriction(ValidationResult result) {
+        if (result == null || result.getSignatures() == null || !isPresent(result)) {
+            return new Restriction(Restriction.Kind.NONE, null, null, List.of());
+        }
+        PostSignatureEdits edits = result.getRevisionTail().edits();
+        boolean annotations = edits != null && !edits.visibleAnnotations().isEmpty();
+        List<String> filled = edits == null ? List.of()
+                : edits.fields().stream().map(PostSignatureEdits.FieldEdit::name).toList();
+        Restriction permitted = null;
+        List<String> lockedFilled = new java.util.ArrayList<>();
+        boolean fieldLock = false;
+        for (SignatureSummary s : result.getSignatures()) {
+            String[][] sources = {
+                    { "CERT", s.getCertificationPermission() },
+                    { "LOCK", s.getPdfLock() != null ? s.getPdfLock().permission() : null } };
+            for (String[] src : sources) {
+                String p = src[1];
+                if (p == null) continue;
+                boolean bad = "NO_CHANGE_PERMITTED".equals(p)
+                        || ("MINIMAL_CHANGES_PERMITTED".equals(p) && annotations);
+                if (bad) return new Restriction(Restriction.Kind.FORBIDDEN, src[0], p, List.of());
+                if (permitted == null) {
+                    permitted = new Restriction(Restriction.Kind.PERMITTED, src[0], p, List.of());
+                }
+            }
+            SignatureSummary.PdfLock lock = s.getPdfLock();
+            if (lock != null && lock.scope() != null) {
+                fieldLock = true;
+                for (String f : filled) {
+                    if (locks(lock, f) && !lockedFilled.contains(f)) lockedFilled.add(f);
+                }
             }
         }
-        return false;
+        if (!lockedFilled.isEmpty()) {
+            return new Restriction(Restriction.Kind.FORBIDDEN, "FIELDS", null, lockedFilled);
+        }
+        if (permitted != null) return permitted;
+        if (fieldLock) return new Restriction(Restriction.Kind.PERMITTED, "FIELDS", null, List.of());
+        return new Restriction(Restriction.Kind.NONE, null, null, List.of());
+    }
+
+    /** Zamyká zámek pole tohoto (plně kvalifikovaného) jména? Rozsah podle FieldMDP /Action. */
+    private static boolean locks(SignatureSummary.PdfLock lock, String field) {
+        return switch (lock.scope()) {
+            case "ALL" -> true;
+            case "INCLUDE" -> lock.fields().contains(field);
+            case "EXCLUDE" -> !lock.fields().contains(field);
+            default -> false;
+        };
+    }
+
+    /** Nadpis prostředního stupně; u zakázaného doplnění to řekne už nadpis. */
+    static String editedTitle(RevisionTail tail, Restriction r) {
+        return r.forbidden() ? title(tail) + " nad rámec toho, co podepisující povolil" : title(tail);
     }
 
     /**
@@ -209,7 +281,7 @@ final class RevisionTailBlock {
      * i razítko nad takovým dokumentem uzná a pod nimi vypíše „Anotace vytvořeny: anotace Stamp
      * na stránce 1".
      */
-    private static VBox editedBody(RevisionTail tail, boolean restricted, IntConsumer openPage,
+    private static VBox editedBody(RevisionTail tail, Restriction restricted, IntConsumer openPage,
                                    IntConsumer openCurrent) {
         VBox body = new VBox(6);
         body.setPadding(new Insets(6, 12, 10, 12));
@@ -350,20 +422,66 @@ final class RevisionTailBlock {
      * či zámek dokumentu může vyplnění nebo anotace zakázat. Pak se odkáže na kartu podpisu,
      * kde je omezení popsané, a o přípustnosti se tu nic netvrdí.
      */
-    private static String editedMeaning(RevisionTail tail, boolean restricted) {
-        String permitted = restricted
-                ? "Některý z podpisů ale změny dokumentu po podpisu omezuje; zda je tohle"
-                        + " doplnění v jeho mezích, ukazuje karta toho podpisu."
-                : "Formát PDF takové doplnění po podpisu dovoluje a podepsaná data jím porušena"
-                        + " nejsou — verdikt uvedený výše se tím nemění. U formulářů, které se"
-                        + " podepisují ještě nevyplněné, a u poznámek, které si do dokumentu"
-                        + " vkládá příjemce, je to obvyklé.";
+    static String editedMeaning(RevisionTail tail, Restriction r) {
         String element = tail.lastElement() == RevisionTail.Element.RAZITKO
                 ? "časové razítko" : "podpis";
-        return permitted + " Jen to, co přibylo, už " + element + " nekryje: kryje podobu"
+        String covers = " Jen to, co přibylo, už " + element + " nekryje: kryje podobu"
                 + " dokumentu z okamžiku svého vzniku, takže o vyplněných hodnotách a anotacích"
-                + " z něj nelze doložit, kdo a kdy je doplnil. Jiné validátory mohou takové"
-                + " doplnění vypsat jako změny po podpisu.";
+                + " z něj nelze doložit, kdo a kdy je doplnil.";
+        if (r.forbidden()) {
+            return forbiddenSentence(r) + " Podepsaná data tím porušena nejsou a verdikt uvedený"
+                    + " výše se proto nemění; s dokumentem se ale po podpisu pracovalo způsobem,"
+                    + " který si podepisující vymínil zakázat." + covers
+                    + " Jiné validátory mohou podpis kvůli tomu označit za neplatný.";
+        }
+        String who = switch (r.kind()) {
+            case NONE -> "Žádný z podpisů změny po podpisu neomezuje: dokument není certifikován"
+                    + " a nic v něm není zamčeno. ";
+            case PERMITTED -> permittedSentence(r) + " ";
+            default -> "";
+        };
+        return who + "Formát PDF takové doplnění po podpisu dovoluje a podepsaná data jím"
+                + " porušena nejsou — verdikt uvedený výše se tím nemění. U formulářů, které se"
+                + " podepisují ještě nevyplněné, a u poznámek, které si do dokumentu vkládá"
+                + " příjemce, je to obvyklé." + covers + " Jiné validátory mohou takové doplnění"
+                + " vypsat jako změny po podpisu.";
+    }
+
+    /** Čím a co je povoleno — u omezení, do kterého se doplnění vešlo. */
+    private static String permittedSentence(Restriction r) {
+        if ("FIELDS".equals(r.source())) {
+            return "Některý z podpisů sice zamyká vybraná pole formuláře, doplnění se jich ale"
+                    + " netýká.";
+        }
+        return by(r) + " změny po podpisu omezuje, ale tohle doplnění dovoluje: povoleno je "
+                + allowed(r.permission()) + ".";
+    }
+
+    /** Čím a co je zakázáno. */
+    private static String forbiddenSentence(Restriction r) {
+        if ("FIELDS".equals(r.source())) {
+            List<String> names = r.lockedFilled().stream()
+                    .map(n -> new PostSignatureEdits.FieldEdit(n, null, false, 0))
+                    .map(RevisionTailBlock::fieldName).toList();
+            return "Některý z podpisů ale pole " + capped(names) + " zamyká, takže "
+                    + (names.size() == 1 ? "jeho" : "jejich") + " vyplnění po podpisu nedovoluje.";
+        }
+        return by(r) + " ale takové doplnění nedovoluje: povoleno je jen " + allowed(r.permission())
+                + ".";
+    }
+
+    private static String by(Restriction r) {
+        return "CERT".equals(r.source()) ? "Certifikační podpis" : "Zámek některého z podpisů";
+    }
+
+    private static String allowed(String permission) {
+        return switch (permission) {
+            case "NO_CHANGE_PERMITTED" -> "připojování údajů pro pozdější ověření a časových"
+                    + " razítek, žádné jiné změny";
+            case "MINIMAL_CHANGES_PERMITTED" -> "vyplňování formulářových polí a připojování"
+                    + " dalších podpisů, ne anotace";
+            default -> "vyplňování formulářových polí, připojování dalších podpisů a anotace";
+        };
     }
 
     /** „Podepsanou podobu ukáže náhled: strana 1, 3." — čísla stran jako odkazy. */

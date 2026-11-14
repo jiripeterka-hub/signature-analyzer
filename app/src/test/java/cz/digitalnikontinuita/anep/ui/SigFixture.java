@@ -134,6 +134,11 @@ final class SigFixture {
         /** Certifikát s vlastním podpisem — u důvodu 3 platí vlastní znění. */
         Builder certSelfSigned() { this.certSelfSigned = true; return this; }
         Builder subIndication(String v) { this.subIndication = v; return this; }
+        /** Certifikační podpis s oprávněním DSS ({@code MINIMAL_CHANGES_PERMITTED} …). */
+        Builder certification(String v) { this.certificationPermission = v; return this; }
+        Builder pdfLock(SignatureSummary.PdfLock v) { this.pdfLock = v; return this; }
+        private String certificationPermission;
+        private SignatureSummary.PdfLock pdfLock;
         Builder bestSignatureTime(Instant v) { this.bestSignatureTime = v; return this; }
 
         /** Věta o prvku, který tenhle kryje a doložil jeho dřívější existenci — situace 54. */
@@ -263,11 +268,11 @@ final class SigFixture {
                     customAnchor ? "Vlastní kotva" : null, deadline, unproven, situations, reasons, null,
                     null, null, null, null, null, null,
                     null, null, null, null, null, null, false,
-                    null, null, null, certIssuerDN, null, certNotAfter,
+                    certificationPermission, null, null, certIssuerDN, null, certNotAfter,
                     false, null, null, certSelfSigned, false, List.of(),
                     null, null, List.of(), false, null, List.of(),
                     null, null, course, records, null, null,
-                    staleRevocation, null, coveringProofDetail, null, counterSignatureOfId,
+                    staleRevocation, pdfLock, coveringProofDetail, null, counterSignatureOfId,
                     standaloneFailure, dssRemarks, reasonCertificates,
                     tsQualifiedFrom, anchorCert, newerRevocationCertNotAfter,
                     expiredResponderNotAfter, signingTimeUnreadable);
