@@ -1,5 +1,6 @@
 package cz.digitalnikontinuita.anep.ui;
 
+import cz.digitalnikontinuita.anep.core.PostSignatureEdits;
 import cz.digitalnikontinuita.anep.core.RevisionTail;
 import cz.digitalnikontinuita.anep.model.ValidationResult;
 
@@ -110,7 +111,7 @@ class RevisionTailBlockTest {
         // podpis, protože živá politika DSS má PdfVisualDifference jen jako varování.
         assertFalse(text.contains("zůstává platný"),
                 "Platnost napříč nástroji aplikace neví a slibovat ji nesmí: " + text);
-        assertTrue(text.contains("neplatností posledního podpisu nebo neznámým stavem jeho platnosti"),
+        assertTrue(text.contains("neplatností podpisů a časových razítek nebo neznámým stavem jejich platnosti"),
                 "Že přísnější posouzení existuje, se musí říct: " + text);
         // Neslibovat porovnání, které se nekoná.
         assertTrue(text.contains("Co přesně se změnilo, aplikace neříká"), text);
@@ -187,7 +188,7 @@ class RevisionTailBlockTest {
         // Věta zůstává celá i s odkazy uprostřed.
         assertTrue(text.contains("A je to podstatné: na stranách 3 a 7 je dnes vidět něco jiného"),
                 text);
-        assertTrue(text.contains("neplatností posledního podpisu nebo neznámým stavem jeho platnosti"), text);
+        assertTrue(text.contains("neplatností podpisů a časových razítek nebo neznámým stavem jejich platnosti"), text);
     }
 
     /**
@@ -259,6 +260,125 @@ class RevisionTailBlockTest {
             return text(block);
         });
         assertTrue(text.contains("na straně 3 je dnes vidět něco jiného"), text);
+    }
+
+    // ------------------------------------------------------------------ vyplnění a anotace
+
+    /**
+     * Rozhodnutí uživatele 14. 11. 2026: formulář podepsaný prázdný a teď vyplněný, či poznámka
+     * příjemce, nejsou chyba — ale čtenář se o nich má dozvědět nad kartami. Vzorkem je razítková
+     * anotace přidaná po podpisu, o které DSS mlčí.
+     */
+    @Test
+    @DisplayName("Vyplněné pole a razítková anotace: klidný blok nad kartami, bez slibu „obsah se nezměnil“")
+    void filledFormAndStampAreReportedCalmly() {
+        RevisionTail tail = edited(
+                List.of(new PostSignatureEdits.AnnotationEdit("Stamp", 1,
+                        PostSignatureEdits.Action.ADDED, true)),
+                List.of(new PostSignatureEdits.FieldEdit("topmostSubform[0].Page1[0].Jmeno[0]",
+                        "Tx", false, 1)));
+        assertTrue(tail.filledOrAnnotated());
+        assertTrue(RevisionTailBlock.inOverview(result(tail)));
+
+        String text = render(tail);
+        assertTrue(text.contains("Po podepsání byla v dokumentu vyplněna pole formuláře a přibyla anotace"),
+                text);
+        assertTrue(text.contains("Vyplněno bylo pole „Jmeno“."),
+                "Jméno pole zkrácené na poslední článek: " + text);
+        assertTrue(text.contains("Přibyla anotace: razítko na straně 1."), text);
+        assertTrue(text.contains("verdikt uvedený výše se tím nemění"), text);
+        assertTrue(text.contains("nekryje"), "Co přibylo, podpis nekryje: " + text);
+        assertFalse(text.contains("Obsah dokumentu se tím nezměnil"),
+                "Tohle tvrzení nad viditelnou anotací neplatí: " + text);
+        assertTrue(expanded(tail), "Stojí v Rozšířeném přehledu a má být vidět");
+    }
+
+    @Test
+    @DisplayName("Řádek v Zjednodušeném přehledu je u vyplnění klidný, u změny obsahu varovný")
+    void noticeLineSeverity() {
+        RevisionTailBlock.Notice calm = RevisionTailBlock.noticeLine(result(edited(
+                List.of(new PostSignatureEdits.AnnotationEdit("Stamp", 1,
+                        PostSignatureEdits.Action.ADDED, true)), List.of())));
+        assertFalse(calm.warning());
+        assertEquals("Po podepsání v dokumentu přibyla anotace — podpis tím porušen není;"
+                + " podrobnosti v Rozšířeném přehledu.", calm.text());
+        assertNull(RevisionTailBlock.warningLine(result(edited(
+                List.of(new PostSignatureEdits.AnnotationEdit("Stamp", 1,
+                        PostSignatureEdits.Action.ADDED, true)), List.of()))),
+                "Vyplnění ani anotace nejsou varování");
+
+        RevisionTailBlock.Notice warn = RevisionTailBlock.noticeLine(result(
+                new RevisionTail(RevisionTail.Element.PODPIS, 2_000, List.of(1),
+                        false, true, false, true)));
+        assertTrue(warn.warning());
+    }
+
+    @Test
+    @DisplayName("Jen neviditelné změny (odkazy) zůstávají v Analýze")
+    void hiddenChangesStayInAnalysis() {
+        RevisionTail tail = edited(List.of(new PostSignatureEdits.AnnotationEdit("Link", 1,
+                PostSignatureEdits.Action.CHANGED, false)), List.of());
+        assertFalse(tail.filledOrAnnotated());
+        assertFalse(RevisionTailBlock.inOverview(result(tail)));
+        assertNull(RevisionTailBlock.noticeLine(result(tail)));
+    }
+
+    @Test
+    @DisplayName("Strany s anotací vedou na podepsanou podobu, odkaz pod nimi na dnešní")
+    void editedPagesAreLinks() {
+        java.util.List<Integer> covered = new java.util.ArrayList<>();
+        java.util.List<Integer> current = new java.util.ArrayList<>();
+        RevisionTail tail = edited(List.of(
+                new PostSignatureEdits.AnnotationEdit("Text", 2, PostSignatureEdits.Action.ADDED, true),
+                new PostSignatureEdits.AnnotationEdit("Stamp", 1, PostSignatureEdits.Action.ADDED, true)),
+                List.of());
+        onFx(() -> {
+            VBox block = RevisionTailBlock.build(result(tail), covered::add, current::add);
+            java.util.List<javafx.scene.control.Hyperlink> found = links(block);
+            found.stream().filter(h -> h.getText().equals("2")).findFirst().orElseThrow().fire();
+            found.stream().filter(h -> h.getText().contains("dnešní podobě")).findFirst()
+                    .orElseThrow().fire();
+            return null;
+        });
+        assertEquals(List.of(2), covered);
+        assertEquals(List.of(1), current, "Dnešní podoba na první dotčené straně");
+    }
+
+    /**
+     * Nález z 14. 11. 2026: prohlášení podepsané prázdné, vyplněné (132 polí) a orazítkované.
+     * Poznámka patří na kartu podpisu, jmenuje razítko a říká, co razítko dokládá a co ne.
+     */
+    @Test
+    @DisplayName("Poznámka na kartě: vyplnění mezi podpisem a razítkem")
+    void interimNoteOnTheCard() {
+        var sig = SigFixture.sig().build();
+        assertNull(RevisionTailBlock.interimNote(sig), "Bez doplnění žádná poznámka");
+
+        List<PostSignatureEdits.FieldEdit> fields = new java.util.ArrayList<>();
+        for (int i = 1; i <= 10; i++) fields.add(new PostSignatureEdits.FieldEdit("pole" + i, "Tx", false, 1));
+        sig.setLaterEdits(new PostSignatureEdits.Interim(new PostSignatureEdits(List.of(), fields),
+                "TS-1", "Sectigo Qualified Time Stamping Signer #3",
+                PostSignatureEdits.CoveredBy.RAZITKO, false));
+        String note = RevisionTailBlock.interimNote(sig);
+
+        assertTrue(note.startsWith("Po tomto podpisu, ještě před časovým razítkem autority"
+                + " Sectigo Qualified Time Stamping Signer #3, byl dokument doplněn."), note);
+        assertTrue(note.contains("„pole7“ a 3 další"), "Dlouhý výčet se zkrátí: " + note);
+        assertTrue(note.contains("Tento podpis tato doplnění nekryje"), note);
+        assertTrue(note.contains("ne kdo je provedl"), "Co razítko nedokládá: " + note);
+        assertTrue(note.contains("Na verdikt tohoto podpisu to vliv nemá."), note);
+
+        sig.setLaterEdits(new PostSignatureEdits.Interim(sig.getLaterEdits().edits(), "S-2",
+                "Jan Novák", PostSignatureEdits.CoveredBy.PODPIS, false));
+        String bySig = RevisionTailBlock.interimNote(sig);
+        assertTrue(bySig.contains("ještě před podpisem Jan Novák,"), bySig);
+        assertTrue(bySig.contains("kryje je až pozdější podpis."), bySig);
+    }
+
+    private static RevisionTail edited(List<PostSignatureEdits.AnnotationEdit> ann,
+                                       List<PostSignatureEdits.FieldEdit> fields) {
+        return new RevisionTail(RevisionTail.Element.RAZITKO, 12_000, List.of(),
+                false, false, true, false).withEdits(new PostSignatureEdits(ann, fields));
     }
 
     private static java.util.List<javafx.scene.control.Hyperlink> links(Node root) {

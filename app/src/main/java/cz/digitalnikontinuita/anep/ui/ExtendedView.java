@@ -302,8 +302,10 @@ public class ExtendedView {
         }
 
         // Změna obsahu po podpisu — varování vedle verdiktu, pro všechny a rozbalené
-        // (rozhodnutí uživatele 9. 10. 2026). Klidná podoba bloku zůstává v Analýze.
-        if (RevisionTailBlock.contentChanged(result)) {
+        // (rozhodnutí uživatele 9. 10. 2026). Od 14. 11. 2026 sem patří i vyplněná pole
+        // formuláře a viditelné anotace, jen bez varovného odstínu: čtenář je vidí, podpis je
+        // nekryje, ale chyba to není. Klidná podoba bloku (validační data) zůstává v Analýze.
+        if (RevisionTailBlock.inOverview(result)) {
             cardsBox.getChildren().add(new Separator());
             cardsBox.getChildren().add(RevisionTailBlock.build(result,
                     coveredPreviewOpener, currentPreviewOpener));
@@ -677,6 +679,9 @@ public class ExtendedView {
         // který certifikační není, a právě takový je referenční uzamčený dokument.
         String lockNote = pdfLockNote(sig.getPdfLock(), isSeal);
         if (lockNote != null) card.getChildren().add(greyNote(lockNote));
+        // Vyplnění a anotace mezi tímto a dalším prvkem (14. 11. 2026) — tento prvek je nekryje.
+        String gapNote = RevisionTailBlock.interimNote(sig);
+        if (gapNote != null) card.getChildren().add(greyNote(gapNote));
 
         // 2. Stav platnosti
         // Neither a signature nor a seal (e.g. a standalone timestamp) always uses the

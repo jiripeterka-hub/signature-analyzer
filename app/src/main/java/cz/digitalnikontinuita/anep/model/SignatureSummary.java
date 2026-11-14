@@ -1159,6 +1159,21 @@ public class SignatureSummary {
     public ExpiredCustomAnchor getExpiredCustomAnchor()   { return expiredCustomAnchor; }
     public void setExpiredCustomAnchor(ExpiredCustomAnchor v) { this.expiredCustomAnchor = v; }
 
+    /**
+     * Vyplněná pole a anotace mezi tímto prvkem a dalším kryjícím prvkem v PDF, nebo null.
+     * Poznámka na kartě (14. 11. 2026): tento prvek je nekryje, kryje je až ten další. Úsek za
+     * posledním prvkem sem nepatří — o něm mluví blok nad kartami.
+     */
+    private cz.digitalnikontinuita.anep.core.PostSignatureEdits.Interim laterEdits;
+
+    public cz.digitalnikontinuita.anep.core.PostSignatureEdits.Interim getLaterEdits() {
+        return laterEdits;
+    }
+
+    public void setLaterEdits(cz.digitalnikontinuita.anep.core.PostSignatureEdits.Interim v) {
+        this.laterEdits = v;
+    }
+
     /** True when at least one evidence record actually proves this signature's earlier existence. */
     public boolean hasProvingEvidenceRecord() {
         return evidenceRecords.stream().anyMatch(EvidenceRecordEntry::providesProof);

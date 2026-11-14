@@ -3,6 +3,30 @@
 Změny ve verzích aplikace AnEP (Analyzátor elektronických podpisů). Slouží jako podklad
 pro soupis změn ke každé nové vydané verzi.
 
+## Připravovaná verze
+
+### Výklad výsledku
+
+- **Vyplněná pole a anotace po podpisu.** Byla-li po posledním podpisu či časovém razítku
+  vyplněna pole formuláře nebo přibyla či se změnila anotace, kterou je na stránce vidět
+  (poznámka, razítko, zvýraznění a podobně), AnEP to nově uvede nad kartami: v Zjednodušeném
+  přehledu jedním řádkem, v Rozšířeném přehledu blokem, který vyplněná pole a anotace
+  vyjmenuje i se stranami a nabídne náhled dokumentu v podobě kryté podpisem i v dnešní podobě.
+  Nejde o varování: verdikt se nemění a blok výslovně říká, že takové doplnění je u formulářů
+  podepsaných ještě nevyplněných obvyklé — jen to, co přibylo, podpis nekryje. Dosud o tom
+  AnEP mlčel a v Analýze dokonce tvrdil, že se obsah dokumentu nezměnil, protože knihovna DSS
+  anotace přidané po podpisu ve vizuálním porovnání stránek nevidí. Omezil-li podepsaný změny
+  dokumentu (certifikační podpis, uzamčení dokumentu), blok netvrdí, že je doplnění přípustné.
+- **Vyplnění mezi podpisy.** Byla-li pole formuláře vyplněna nebo anotace přidány mezi dvěma
+  podpisy (či mezi podpisem a časovým razítkem), uvede to nově karta dřívějšího podpisu ve všech
+  třech záložkách: co bylo doplněno, že je tento podpis nekryje a který pozdější podpis či
+  razítko je kryje. U razítka dodá, že dokládá jen čas, ne kdo doplnění provedl. Náhled
+  dokumentu pak nabídne i podobu krytou dřívějším podpisem. Typicky jde o formulář podepsaný
+  ještě nevyplněný, vyplněný a potom uchovaný archivním razítkem.
+- **Změna obsahu po podpisu u jiných validátorů.** Blok o změně obsahu po podpisu nově uvádí,
+  že jiné validátory mohou takovou změnu hodnotit neplatností podpisů a časových razítek, ne jen
+  posledního podpisu.
+
 ## Verze 1.4.0 (změny oproti 1.3.0)
 
 ### Výklad výsledku

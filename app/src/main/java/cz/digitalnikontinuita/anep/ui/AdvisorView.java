@@ -524,7 +524,7 @@ public class AdvisorView {
         boolean expertDoc = settings != null && settings.isExpertMode();
         java.util.List<VBox> documentBlocks = new java.util.ArrayList<>();
         if (expertDoc) addIfPresent(documentBlocks, PdfAConformanceBlock.build(result));
-        if (expertDoc && !RevisionTailBlock.contentChanged(result)) {
+        if (expertDoc && !RevisionTailBlock.inOverview(result)) {
             addIfPresent(documentBlocks, RevisionTailBlock.build(result));
         }
         //  * způsobilost jako vkladová listina pro katastr — u každého PDF s vnitřními podpisy;
@@ -2407,6 +2407,7 @@ public class AdvisorView {
         addLegalEffectsBlock(card, sig);
         addCertificationBlock(card, sig);
         addPdfLockBlock(card, sig);
+        addInterimBlock(card, sig);
         // Blok „Podepsaná osoba a čas" / „Pečetící osoba a čas" tu od 4. 9. 2026 není: kdo se
         // ptá na jméno, čas a druh certifikátu, najde je v Rozšířeném přehledu, a na kartě
         // s kladným výsledkem stály mezi odpovědí („platný") a tím, co s tím dál. Razítku blok
@@ -2981,6 +2982,7 @@ public class AdvisorView {
         addAuthorizationStampBlock(card, sig);
         addCertificationBlock(card, sig);
         addPdfLockBlock(card, sig);
+        addInterimBlock(card, sig);
         addValidationCourseBlock(card, sig, "TOTAL_FAILED");
 
         VBox body = new VBox(8);
@@ -3066,6 +3068,7 @@ public class AdvisorView {
         addAuthorizationStampBlock(card, sig);
         addCertificationBlock(card, sig);
         addPdfLockBlock(card, sig);
+        addInterimBlock(card, sig);
 
         VBox body = new VBox(8);
         body.setPadding(new Insets(10));
@@ -7367,6 +7370,26 @@ public class AdvisorView {
                 + " rozšířením podpisu, ne změnou dokumentu — zámek to nezakazuje a platnost"
                 + " tím neutrpí.", false));
         card.getChildren().add(collapsibleBlock("Zámek dokumentu", block, false));
+        card.getChildren().add(blockSeparator());
+    }
+
+    /**
+     * „Po tomto podpisu byl dokument doplněn" — vyplněná pole a anotace mezi tímto a dalším
+     * kryjícím prvkem (14. 11. 2026, přání uživatele po nálezu formuláře vyplněného mezi
+     * podpisy). Text staví {@link RevisionTailBlock#interimNote}, aby karty ve všech třech
+     * záložkách mluvily stejně. Odstín PLAIN: blok nenese verdikt, ale má být vidět i zavřený.
+     */
+    private static void addInterimBlock(VBox card, SignatureSummary sig) {
+        String note = RevisionTailBlock.interimNote(sig);
+        if (note == null) return;
+        Label text = new Label(note);
+        text.setWrapText(true);
+        text.setStyle("-fx-font-size: 12px; -fx-text-fill: #111111;");
+        VBox block = new VBox(4, text);
+        block.setPadding(new Insets(8, 12, 8, 12));
+        card.getChildren().add(collapsibleBlock(gendered(sig, "Po tomto podpisu byl dokument doplněn",
+                "Po této pečeti byl dokument doplněn", "Po tomto razítku byl dokument doplněn"),
+                block, false, BlockTint.PLAIN));
         card.getChildren().add(blockSeparator());
     }
 

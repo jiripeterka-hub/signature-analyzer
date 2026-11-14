@@ -102,10 +102,62 @@ public final class DocumentVersions {
      */
     public static List<Version> of(DiagnosticData diagnosticData, long fileLength,
                                    Set<String> visibleAppearances) {
+        return of(diagnosticData, fileLength, visibleAppearances, List.of());
+    }
+
+    /**
+     * Totéž, a navíc se stranami, na kterých po posledním kryjícím prvku přibyla vyplněná pole
+     * či viditelné anotace.
+     *
+     * <p>Doplněno 14. 11. 2026: DSS takové změny ve vizuálním porovnání nevidí (dnešní podobu
+     * kreslí bez anotací přidaných po podpisu, viz {@link PostSignatureEdits}), takže vzorek
+     * s razítkovou anotací přidanou po podpisu nabízel v náhledu jedinou podobu, ačkoli se ta
+     * podepsaná od dnešní na první pohled liší. Ty strany se přičtou <b>každému</b> kryjícímu
+     * prvku: změna přišla po posledním z nich, takže se od dneška liší všechny.
+     *
+     * @param tailPages strany změn za posledním prvkem; prázdný seznam, když žádné nejsou
+     */
+    public static List<Version> of(DiagnosticData diagnosticData, long fileLength,
+                                   Set<String> visibleAppearances, List<Integer> tailPages) {
+        return of(diagnosticData, fileLength, visibleAppearances, tailPages, java.util.Map.of());
+    }
+
+    /**
+     * Totéž, a navíc se stranami vyplnění a anotací <b>mezi</b> prvky.
+     *
+     * <p>Doplněno 14. 11. 2026 nad skutečným formulářem ze sbírky: prohlášení podepsané ještě
+     * prázdné, potom vyplněné (132 polí) a nakonec opatřené archivním razítkem. Za posledním
+     * prvkem nic není a DSS rozdíl nehlásí (vzhled pole je anotace, a ty při porovnání
+     * vynechává), takže náhled podepsanou — prázdnou — podobu nenabízel. Změna mezi prvkem
+     * a dalším odlišuje od dneška tento prvek i všechny předchozí, proto se strany kumulují
+     * od konce.
+     *
+     * @param interimPages strany změn mezi prvkem (klíč: identifikátor z DiagnosticData)
+     *                     a dalším kryjícím prvkem
+     */
+    public static List<Version> of(DiagnosticData diagnosticData, long fileLength,
+                                   Set<String> visibleAppearances, List<Integer> tailPages,
+                                   java.util.Map<String, List<Integer>> interimPages) {
         Set<String> visible = visibleAppearances == null ? Set.of() : visibleAppearances;
+        List<Integer> extra = tailPages == null ? List.of() : tailPages;
+        java.util.Map<String, List<Integer>> between =
+                interimPages == null ? java.util.Map.of() : interimPages;
         List<Version> out = new ArrayList<>();
         if (diagnosticData != null && fileLength > 0) {
             List<Element> elements = elements(diagnosticData);
+            if (!extra.isEmpty() || !between.isEmpty()) {
+                elements.sort(Comparator.comparingLong(Element::end));
+                java.util.TreeSet<Integer> later = new java.util.TreeSet<>(extra);
+                Element[] merged = new Element[elements.size()];
+                for (int i = elements.size() - 1; i >= 0; i--) {
+                    Element e = elements.get(i);
+                    later.addAll(between.getOrDefault(e.id(), List.of()));
+                    java.util.TreeSet<Integer> pages = new java.util.TreeSet<>(e.changedPages());
+                    if (e.end() < fileLength) pages.addAll(later);
+                    merged[i] = new Element(e.id(), e.label(), e.end(), List.copyOf(pages));
+                }
+                elements = new ArrayList<>(List.of(merged));
+            }
             elements.sort(Comparator.comparingLong(Element::end));
 
             // Kreslí ještě NĚKDO pozdější? DSS maskuje pole, která zná z dnešního dokumentu, když

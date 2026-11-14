@@ -325,7 +325,16 @@ Změnu obsahu stránky — tedy to, že čtenář dnes vidí něco jiného, než
 - v **Zjednodušeném přehledu** jedním řádkem s čísly dotčených stran;
 - v **Rozšířeném přehledu** samostatným blokem nad kartami prvků, který uvede dotčené strany a nabídne náhled dokumentu v podobě kryté podpisem i v dnešní podobě.
 
-Jiné validátory mohou takovou změnu hodnotit jinak, například neplatností posledního podpisu nebo neznámým stavem jeho platnosti.
+Jiné validátory mohou takovou změnu hodnotit jinak, například neplatností podpisů a časových razítek nebo neznámým stavem jejich platnosti.
+
+Byla-li za posledním podpisem či razítkem **vyplněna pole formuláře** nebo přibyly či se změnily **anotace, které jsou na stránce vidět** (poznámky, razítka, zvýraznění a podobně), AnEP to zjišťuje vlastním porovnáním podoby kryté podpisem s dnešní podobou. Výchozí politika DSS 6.5.1 takové změny ve vizuálním porovnání stránek nezachytí, protože dnešní podobu porovnává bez anotací přidaných či změněných po podpisu — a vzhled vyplněného pole je také anotace. Verdikt se tím nemění a nejde o varování: formát PDF takové doplnění po podpisu dovoluje a u formulářů podepsaných ještě nevyplněných či u poznámek příjemce je obvyklé. Doplněné hodnoty a anotace ale podpis nekryje, a proto je AnEP vykazuje:
+
+- v **Zjednodušeném přehledu** jedním řádkem bez varovného zabarvení;
+- v **Rozšířeném přehledu** samostatným blokem nad kartami prvků, který vyjmenuje vyplněná pole a anotace s čísly stran a nabídne náhled dokumentu v podobě kryté podpisem i v dnešní podobě.
+
+Omezil-li podepsaný změny dokumentu po podpisu (certifikační podpis nebo uzamčení dokumentu), blok netvrdí, že je doplnění přípustné, a odkáže na kartu podpisu. Změny anotací, které na stránce vidět nejsou (například odkazy), se uvádějí jen v Analýze.
+
+Proběhlo-li takové vyplnění či doplnění anotací **mezi dvěma podpisy** (nebo mezi podpisem a časovým razítkem), uvede to karta dřívějšího podpisu: co bylo doplněno, že je tento podpis nekryje a který pozdější prvek je kryje. Kryje-li je jen časové razítko, karta dodá, že razítko dokládá okamžik, nejpozději kdy doplnění existovalo, nikoli kdo je provedl. Náhled dokumentu nabídne i podobu krytou dřívějším podpisem.
 
 Přibyla-li za posledním podpisem či razítkem jen validační data nebo jiné rozšíření dokumentu, obsah se nemění; AnEP to uvede v expertním módu jako informaci, že přibylé údaje nekryje žádný podpis ani razítko.
 

@@ -58,17 +58,52 @@ import java.util.List;
  * @param formOrSignature po prvku se sáhlo na formulářová či podpisová pole
  * @param annotations    po prvku se sáhlo na anotace
  * @param undefined      DSS zařadil změnu jako nedefinovanou
+ * @param edits          vyplněná pole a anotace zjištěné vlastním porovnáním
+ *                       ({@link PostSignatureEdits}); {@code null}, když se nezjišťovalo nebo
+ *                       soubor nešel přečíst
  */
 public record RevisionTail(Element lastElement, long tailBytes, List<Integer> changedPages,
                            boolean validationData, boolean formOrSignature,
-                           boolean annotations, boolean undefined) {
+                           boolean annotations, boolean undefined, PostSignatureEdits edits) {
 
     /** Čím poslední kryjící prvek je. Rozlišuje se kvůli textům, ne kvůli výpočtu. */
     public enum Element { PODPIS, RAZITKO }
 
+    /** Bez vlastního porovnání — tak, jak záznam vzniká z DiagnosticData. */
+    public RevisionTail(Element lastElement, long tailBytes, List<Integer> changedPages,
+                        boolean validationData, boolean formOrSignature,
+                        boolean annotations, boolean undefined) {
+        this(lastElement, tailBytes, changedPages, validationData, formOrSignature, annotations,
+                undefined, null);
+    }
+
+    /** Týž záznam doplněný o vlastní zjištění o polích a anotacích. */
+    public RevisionTail withEdits(PostSignatureEdits e) {
+        return new RevisionTail(lastElement, tailBytes, changedPages, validationData,
+                formOrSignature, annotations, undefined, e);
+    }
+
     /** Uvidí čtenář na některé stránce něco jiného, než co ten prvek kryl? */
     public boolean contentChanged() {
         return !changedPages.isEmpty();
+    }
+
+    /**
+     * Prostřední stupeň: obsah stránek se nezměnil, ale <b>byla vyplněna pole formuláře nebo
+     * přibyla viditelná anotace</b>.
+     *
+     * <p>Zavedeno 14. 11. 2026 (rozhodnutí uživatele): vyplnění formuláře podepsaného ještě
+     * prázdného ani poznámka příjemce nejsou chyba a nemají se tak prezentovat, ale čtenář se
+     * o nich má dozvědět dřív než v Analýze — to, co dnes vidí, podpis nekryje. Vizuální rozdíl
+     * DSS je tu slepý (viz {@link PostSignatureEdits}), proto vlastní porovnání.
+     */
+    public boolean filledOrAnnotated() {
+        return !contentChanged() && edits != null && edits.notable();
+    }
+
+    /** Patří blok nad karty (Rozšířený přehled) — změněný obsah, nebo vyplnění a anotace? */
+    public boolean worthTheOverview() {
+        return contentChanged() || filledOrAnnotated();
     }
 
     /**

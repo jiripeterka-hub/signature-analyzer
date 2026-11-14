@@ -309,14 +309,19 @@ public class ResultView {
         // Změna obsahu po podpisu: tahle záložka se otevírá první a ukazuje zelené „platný“,
         // takže bez upozornění by čtenář uvěřil, že dokument je ten podepsaný. Jen odkaz,
         // celý blok stojí v Rozšířeném přehledu (rozhodnutí uživatele 9. 10. 2026).
-        String changed = RevisionTailBlock.warningLine(result);
+        // Od 14. 11. 2026 i klidný řádek o vyplněných polích a anotacích — šedý, ne hnědý:
+        // není to varování, jen to, co čtenář vidí, podpis nekryje.
+        RevisionTailBlock.Notice changed = RevisionTailBlock.noticeLine(result);
         if (changed != null) {
-            Label warn = new Label(changed);
+            Label warn = new Label(changed.text());
             warn.setWrapText(true);
             warn.setMaxWidth(Double.MAX_VALUE);
             warn.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
-            warn.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #9a6700;"
-                    + " -fx-background-color: #f3ead6; -fx-padding: 6 10 6 10;");
+            warn.setStyle(changed.warning()
+                    ? "-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #9a6700;"
+                            + " -fx-background-color: #f3ead6; -fx-padding: 6 10 6 10;"
+                    : "-fx-font-size: 13px; -fx-text-fill: #333333;"
+                            + " -fx-background-color: #ededed; -fx-padding: 6 10 6 10;");
             cardsBox.getChildren().add(warn);
         }
         if (sigs.isEmpty()) return;
@@ -600,6 +605,10 @@ public class ResultView {
         // o téže věci stejně.
         String lockNote = ExtendedView.pdfLockNote(sig.getPdfLock(), isSealForGender);
         if (lockNote != null) card.getChildren().add(greyNote(lockNote));
+        // Vyplnění a anotace mezi tímto a dalším prvkem (14. 11. 2026), týmž textem jako
+        // v Rozšířeném přehledu.
+        String gapNote = RevisionTailBlock.interimNote(sig);
+        if (gapNote != null) card.getChildren().add(greyNote(gapNote));
 
         String stavText;
         String stavColor;

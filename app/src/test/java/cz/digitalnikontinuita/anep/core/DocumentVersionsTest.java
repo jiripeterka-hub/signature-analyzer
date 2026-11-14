@@ -218,6 +218,45 @@ class DocumentVersionsTest {
                 Set.of("SIG-" + FILE)).size());
     }
 
+    /**
+     * Vzorek z 14. 11. 2026: po podpisu přibyla razítková anotace a DSS o ní žádný vizuální
+     * rozdíl nehlásí (dnešní podobu kreslí bez anotací přidaných po podpisu). Náhled přesto
+     * má podepsanou podobu nabídnout — strany dodá vlastní porovnání.
+     */
+    @Test
+    @DisplayName("Strany vyplněných polí a anotací za posledním prvkem otevřou podepsanou podobu")
+    void tailEditsOpenTheSignedVersion() {
+        List<DocumentVersions.Version> versions = DocumentVersions.of(
+                data(signature(40_000, null), timestamp(60_000, null)), FILE, Set.of(), List.of(1));
+
+        assertEquals(2, versions.size(),
+                "Obě revize se od dneška liší týmž, takže splynou v jednu položku");
+        assertEquals(40_000, versions.get(0).endOffset(), "Jméno nese nejstarší z nich");
+        assertEquals(List.of(1), versions.get(0).changedPages());
+        assertTrue(versions.get(1).current());
+
+        assertEquals(1, DocumentVersions.of(data(signature(40_000, null)), FILE, Set.of(),
+                List.of()).size(), "Bez stran zůstává jen dnešní podoba");
+    }
+
+    /**
+     * Prohlášení podepsané prázdné, vyplněné a orazítkované archivním razítkem (nález
+     * 14. 11. 2026): razítko kryje celý soubor, takže podle DSS ani podle konce souboru není
+     * co nabízet — a přesto se podepsaná podoba od dnešní liší vyplněnými poli.
+     */
+    @Test
+    @DisplayName("Vyplnění mezi podpisem a razítkem otevře podepsanou podobu")
+    void interimEditsOpenTheSignedVersion() {
+        List<DocumentVersions.Version> versions = DocumentVersions.of(
+                data(signature(40_000, null), timestamp(FILE, null)), FILE, Set.of(), List.of(),
+                java.util.Map.of("SIG-40000", List.of(1, 2)));
+
+        assertEquals(2, versions.size());
+        assertEquals(40_000, versions.get(0).endOffset());
+        assertEquals(List.of(1, 2), versions.get(0).changedPages());
+        assertTrue(versions.get(1).current(), "Razítko sahá na konec, splývá s dnešní podobou");
+    }
+
     // ------------------------------------------------------------------ přípravek
 
     private static DiagnosticData data(Object... elements) {

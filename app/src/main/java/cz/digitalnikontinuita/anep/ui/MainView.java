@@ -1491,7 +1491,8 @@ public class MainView {
                     .collect(java.util.stream.Collectors.toSet());
             final java.util.List<cz.digitalnikontinuita.anep.core.DocumentVersions.Version>
                     previewVersions = cz.digitalnikontinuita.anep.core.DocumentVersions.of(
-                            result.getDiagnosticData(), fileToOpen.length(), visibleAppearances);
+                            result.getDiagnosticData(), fileToOpen.length(), visibleAppearances,
+                            tailEditPages(result), interimEditPages(result));
             statusPreviewBtn.setOnAction(ev -> PdfPreviewWindow.open(
                     statusPreviewBtn.getScene().getWindow(), fileToOpen, previewPassword,
                     previewVersions));
@@ -1929,10 +1930,59 @@ public class MainView {
         // Co je v souboru za posledním prvkem, který ho kryje. Počítá se tady, protože
         // k tomu je potřeba délka souboru — tu ReportMapper nezná a znát nemusí.
         // U kontejnerů a odloučených podpisů vyjde null: revize jsou věc PDF.
-        mapped.setRevisionTail(cz.digitalnikontinuita.anep.core.RevisionTail.of(
-                outcome.reports().getDiagnosticData(), sf.length()));
+        cz.digitalnikontinuita.anep.core.RevisionTail tail =
+                cz.digitalnikontinuita.anep.core.RevisionTail.of(
+                        outcome.reports().getDiagnosticData(), sf.length());
+        // Vyplněná pole a anotace za posledním prvkem — DSS je ve vizuálním porovnání nevidí
+        // (14. 11. 2026, viz PostSignatureEdits). Zjišťuje se jen tam, kde za prvkem něco je,
+        // takže soubory, které končí podpisem či razítkem (většina), se znovu nečtou.
+        if (tail != null) {
+            tail = tail.withEdits(cz.digitalnikontinuita.anep.core.PostSignatureEdits.read(
+                    sf, sf.length() - tail.tailBytes()));
+        }
+        mapped.setRevisionTail(tail);
+        // Vyplnění a anotace mezi podpisy — poznámka na kartě staršího z nich (14. 11. 2026).
+        // Jen u dokumentu s aspoň dvěma kryjícími prvky; jinak interim() vrátí prázdnou mapu,
+        // aniž soubor čte.
+        java.util.Map<String, cz.digitalnikontinuita.anep.core.PostSignatureEdits.Interim> interim =
+                cz.digitalnikontinuita.anep.core.PostSignatureEdits.interim(
+                        outcome.reports().getDiagnosticData(), sf);
+        if (!interim.isEmpty()) {
+            java.util.Set<String> seals = new java.util.HashSet<>();
+            for (cz.digitalnikontinuita.anep.model.SignatureSummary s : mapped.getSignatures()) {
+                if (s.isSeal() && s.getSignatureId() != null) seals.add(s.getSignatureId());
+            }
+            for (cz.digitalnikontinuita.anep.model.SignatureSummary s : mapped.getSignatures()) {
+                var gap = s.getSignatureId() != null ? interim.get(s.getSignatureId()) : null;
+                if (gap != null) s.setLaterEdits(gap.withNextSeal(seals.contains(gap.nextId())));
+            }
+        }
         StartupTrace.mark("report mapped");
         return mapped;
+    }
+
+    /**
+     * Strany, na kterých po posledním kryjícím prvku přibyla vyplněná pole či viditelné anotace
+     * — pro náhled, který jinak (podle DSS) podepsanou podobu nenabídne (14. 11. 2026).
+     */
+    private static java.util.List<Integer> tailEditPages(ValidationResult result) {
+        cz.digitalnikontinuita.anep.core.RevisionTail tail = result.getRevisionTail();
+        if (tail == null || tail.edits() == null || !tail.edits().notable()) {
+            return java.util.List.of();
+        }
+        return tail.edits().visiblePages();
+    }
+
+    /** Strany vyplnění a anotací mezi prvky, podle prvku, po kterém přišly (14. 11. 2026). */
+    private static java.util.Map<String, java.util.List<Integer>> interimEditPages(
+            ValidationResult result) {
+        java.util.Map<String, java.util.List<Integer>> out = new java.util.HashMap<>();
+        for (cz.digitalnikontinuita.anep.model.SignatureSummary s : result.getSignatures()) {
+            if (s.getLaterEdits() != null && s.getSignatureId() != null) {
+                out.put(s.getSignatureId(), s.getLaterEdits().edits().visiblePages());
+            }
+        }
+        return out;
     }
 
     /**
