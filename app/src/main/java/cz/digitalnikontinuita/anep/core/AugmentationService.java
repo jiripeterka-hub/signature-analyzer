@@ -229,8 +229,8 @@ public class AugmentationService {
      * s jediným podpisem se veto neruší: tam brána AnEP a DSS odpovídají na tutéž otázku a druhý
      * názor se hodí.
      *
-     * <p>Vypínají se dvě, protože za první čeká druhá. Obě mají v {@code CommonCertificateVerifier}
-     * výchozí {@code ExceptionOnStatusAlert}:
+     * <p>Vypínají se dvě, protože za první čeká druhá, a třetí se zužuje. Všechny mají
+     * v {@code CommonCertificateVerifier} výchozí {@code ExceptionOnStatusAlert}:
      * <ul>
      *   <li>{@code alertOnExpiredCertificate} → {@code assertAllSignaturesNotExpired()}. Pro každý
      *       podpis se ptá, zda jeho certifikát ještě platí, a když ne, zda dokument razítkem
@@ -240,6 +240,16 @@ public class AugmentationService {
      *       Naměřeno 12. 9. 2026 na „PAdES B-B +B-T kvalifikovany ICA.pdf": po umlčení první se
      *       úkon zastavil na druhé, protože oba podpisy stojí na témže certifikátu, revokovaném
      *       27. 8. 2026.</li>
+     *   <li>{@code alertOnMissingRevocationData} → „Revocation data is missing for one or more
+     *       certificate(s)“. Naměřeno 19. 11. 2026 na PDF se dvěma prvky úrovně B: podpis, jehož
+     *       kořen v úložišti chybí, a platná kvalifikovaná pečeť. Brána nabídla uchování kvůli
+     *       pečeti, DSS ho pak zastavil u podpisu, protože pro řetězec bez kotvy revokační data
+     *       vůbec nehledá („skipped for untrusted certificate chain“). Pro ten prvek je to tentýž
+     *       případ jako u dvou výstrah výše — doložit ho nelze — a úkon se týká pečeti.
+     *       <b>Neumlčuje se ale celá</b>, jen tahle jedna příčina, viz
+     *       {@link UntrustedChainTolerantAlert}: data, která chybějí, protože je nešlo stáhnout
+     *       (výpadek sítě, mlčící respondér), by se týkala i prvku, kvůli kterému se úkon dělá,
+     *       a uchování by pak tiše skončilo archivním razítkem bez dat, která má archivovat.</li>
      * </ul>
      *
      * <p>Umlčení neznamená „neověřuj": {@code SilentOnStatusAlert} kontrolu provede a výsledek
@@ -268,6 +278,7 @@ public class AugmentationService {
         if (tolerateUnprovableSignatures) {
             verifier.setAlertOnExpiredCertificate(new SilentOnStatusAlert());
             verifier.setAlertOnRevokedCertificate(new SilentOnStatusAlert());
+            verifier.setAlertOnMissingRevocationData(new UntrustedChainTolerantAlert());
         }
 
         for (var src : base.getTrustedCertSources().getSources()) {
@@ -302,6 +313,39 @@ public class AugmentationService {
         verifier.setRevocationDataLoadingStrategyFactory(
                 OcspFirstCrlFallbackRevocationDataLoadingStrategy::new);
         return verifier;
+    }
+
+    /**
+     * Výstraha na chybějící revokační data, která propustí jen certifikáty z řetězce bez kotvy.
+     *
+     * <p>DSS u takového řetězce revokaci vůbec nehledá a v hlášení to u každého certifikátu
+     * poznamená („Revocation data is skipped for untrusted certificate chain!“). Takový prvek
+     * nedoloží žádné uchování; nemá proto vetovat úkon, který se dělá kvůli jinému prvku téhož
+     * dokumentu. Jakmile v hlášení stojí kterýkoli jiný certifikát — data k němu chybějí, protože
+     * je nešlo získat —, výstraha se chová jako výchozí {@code ExceptionOnStatusAlert}. Nalezeno
+     * 19. 11. 2026 na PDF se dvěma prvky: podpis bez kořene v úložišti a kvalifikovaná pečeť.
+     */
+    static final class UntrustedChainTolerantAlert implements eu.europa.esig.dss.alert.StatusAlert {
+        private static final String UNTRUSTED_MARK = "untrusted certificate chain";
+        private final eu.europa.esig.dss.alert.ExceptionOnStatusAlert strict =
+                new eu.europa.esig.dss.alert.ExceptionOnStatusAlert();
+
+        @Override
+        public void alert(eu.europa.esig.dss.alert.status.Status status) {
+            if (onlyUntrustedChains(status)) return;
+            strict.alert(status);
+        }
+
+        static boolean onlyUntrustedChains(eu.europa.esig.dss.alert.status.Status status) {
+            if (!(status instanceof eu.europa.esig.dss.alert.status.ObjectStatus os)) return false;
+            var ids = os.getRelatedObjectIds();
+            if (ids == null || ids.isEmpty()) return false;
+            for (String id : ids) {
+                String msg = os.getMessageForObjectWithId(id);
+                if (msg == null || !msg.contains(UNTRUSTED_MARK)) return false;
+            }
+            return true;
+        }
     }
 
     /** Size trace for -Danep.augment.trace, to attribute growth to the stage that caused it. */

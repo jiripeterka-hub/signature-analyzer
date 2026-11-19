@@ -32,6 +32,14 @@ pro soupis změn ke každé nové vydané verzi.
   že jiné validátory mohou takovou změnu hodnotit neplatností podpisů a časových razítek, ne jen
   posledního podpisu.
 
+### Opravy
+
+- **Uchování dokumentu s podpisem bez kotvy důvěry.** Nese-li dokument vedle platného podpisu
+  či pečeti i podpis, jehož kořenový certifikát není mezi důvěryhodnými (například podpis BankID
+  Sign bez kořene BankID v úložišti), uchování se sice nabídlo, ale skončilo chybou „Uchování
+  selhalo … Revocation data is missing“. Nově proběhne: platný prvek se uchová a podpis bez kotvy
+  zůstane, jak byl.
+
 ## Verze 1.4.0 (změny oproti 1.3.0)
 
 ### Výklad výsledku
