@@ -1695,7 +1695,8 @@ final class ContinuityElementBlocks {
             // datem potřetí na jedné kartě. Vypouští se jen u uchování — u prodloužení
             // a přerazítkování nese i premisu, proč zrovna ta varianta, a ta jinde nestojí.
             if (!(gates.preserve() && horizonGapExplained(anep, deadline))) {
-                addOfferIntro(body, sig, gates, deadlineSentence);
+                addOfferIntro(body, sig, gates, deadlineSentence,
+                        movesNothing && !materialToSecure(el));
             }
             addHorizonGapNote(body, sig, anep, deadline);
             // Hned za nabídkou, ne až pod ní: čtenář, který čte shora, má výhradu vidět dřív,
@@ -2566,7 +2567,7 @@ final class ContinuityElementBlocks {
      * a u prodloužení dvojí důvod — viz {@link #prolongPremise}.
      */
     private static void addOfferIntro(VBox body, SignatureSummary sig, Gates gates,
-                                      String deadlineSentence) {
+                                      String deadlineSentence, boolean nothingToday) {
         // Dva pády: „pro tento podpis“ (4. p.) a „u tohoto podpisu“ (2. p.). Jeden tvar pro obojí
         // dal „Pro tohoto podpisu“ — vidět na první vykreslené kartě.
         String elAcc = AdvisorView.gendered(sig, "tento podpis", "tuto pečeť",
@@ -2574,6 +2575,17 @@ final class ContinuityElementBlocks {
         String elGen = AdvisorView.gendered(sig, "tohoto podpisu", "této pečeti",
                 "tohoto časového razítka");
         if (gates.preserve()) {
+            if (nothingToday) {
+                body.getChildren().add(AdvisorView.continuityText(
+                        "Pro " + elAcc + " nabízí aplikace AnEP možnost plnohodnotného uchování."
+                        + " Dnes by ale nepřineslo nic: "
+                        + AdvisorView.gendered(sig, "podpis", "pečeť", "razítko")
+                        + " už nese vše, co je pro pozdější ověření potřeba, a nové časové"
+                        + " razítko od dnes vybraného zdroje by ověřitelnost neposunulo (viz"
+                        + " níže). Uchování bude potřeba zopakovat, než ověřitelnost skončí."
+                        + deadlineSentence));
+                return;
+            }
             body.getChildren().add(AdvisorView.continuityText(
                     "Pro " + elAcc + " nabízí aplikace AnEP možnost plnohodnotného uchování:"
                     + " přidání dosud chybějících informací, potřebných pro pozdější ověření,"
@@ -3132,7 +3144,10 @@ final class ContinuityElementBlocks {
         boolean actNow = !now.isEmpty() || !weak.isEmpty();
 
         if (!reached.isEmpty()) {
-            addDocumentOfferIntro(body, gates, actNow
+            addDocumentOfferIntro(body, gates,
+                    movesNothing && reached.stream()
+                            .noneMatch(ContinuityElementBlocks::materialToSecure),
+                    actNow
                     ? "" : deadlineSentence(reached, gates, deadline));
             addUnqualifiedSourceNote(body, tsa);
             String pace = actNow ? documentNowExplanation(now, weak, elements, tsa)
@@ -3226,8 +3241,23 @@ final class ContinuityElementBlocks {
      * prvku — u dokumentu s pěti prvky by z pěti různých důvodů musel jeden vyhrát. Premisy proto
      * stojí ve výčtu po prvcích, každá u svého.
      */
-    private static void addDocumentOfferIntro(VBox body, Gates gates, String deadlineSentence) {
-        if (gates.preserve()) {
+    private static void addDocumentOfferIntro(VBox body, Gates gates, boolean nothingToday,
+                                              String deadlineSentence) {
+        // Nález uživatele (19. 11. 2026) nad čerstvě uchovaným PDF s pečetí v úrovni LTA: blok
+        // o dosahu řekl „přidání takového razítka by nemělo žádný přínos“ a hned pod ním stálo
+        // „nabízí možnost plnohodnotného uchování: přidání dosud chybějících informací“ — ačkoli
+        // nic nechybělo. Brána nabídku schválně drží (uchování se musí opakovat a tlačítko má
+        // být po ruce, až to bude potřeba), takže se nemění nabídka, nýbrž to, co o ní zní.
+        // „Nic“ znamená obojí naráz: nic k vložení ani zafixování (materialToSecure) a nic
+        // k posunutí data (sourceMovesNothing); jen jedno z nich je přínos, který stojí za řeč.
+        if (gates.preserve() && nothingToday) {
+            body.getChildren().add(AdvisorView.continuityText(
+                    "Pro tento dokument nabízí aplikace AnEP možnost plnohodnotného uchování."
+                    + " Dnes by ale nepřineslo nic: prvky, na které úkon dosáhne, už nesou vše,"
+                    + " co je pro pozdější ověření potřeba, a nové časové razítko od dnes"
+                    + " vybraného zdroje by ověřitelnost neposunulo (viz níže). Uchování bude"
+                    + " potřeba zopakovat, než ověřitelnost skončí." + deadlineSentence));
+        } else if (gates.preserve()) {
             body.getChildren().add(AdvisorView.continuityText(
                     "Pro tento dokument nabízí aplikace AnEP možnost plnohodnotného uchování:"
                     + " přidání dosud chybějících informací, potřebných pro pozdější ověření,"

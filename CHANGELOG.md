@@ -39,6 +39,12 @@ pro soupis změn ke každé nové vydané verzi.
   Sign bez kořene BankID v úložišti), uchování se sice nabídlo, ale skončilo chybou „Uchování
   selhalo … Revocation data is missing“. Nově proběhne: platný prvek se uchová a podpis bez kotvy
   zůstane, jak byl.
+- **Uchování, které dnes nic nepřinese.** U dokumentu, který už je uchovaný a nic mu nechybí,
+  se uchování dál nabízí — bude potřeba ho zopakovat, než ověřitelnost skončí. Záložka
+  Digitální kontinuita ale o něm psala, že „přidá dosud chybějící informace“, a to hned pod
+  větou, že nové razítko by nemělo žádný přínos. Nově řekne, že úkon dnes nepřinese nic,
+  protože dokument nese vše potřebné a razítko od vybraného zdroje ověřitelnost neposune,
+  a uvede, do kdy je třeba uchování zopakovat.
 
 ## Verze 1.4.0 (změny oproti 1.3.0)
 
