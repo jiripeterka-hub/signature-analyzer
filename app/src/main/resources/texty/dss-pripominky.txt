@@ -511,9 +511,11 @@ vyklad =
   Zjišťování stavu odvolání má dva kroky: nejdřív zda je vůbec z čeho stav určit, a potom zda to,
   co je k dispozici, obstojí — je-li dost čerstvé, vztahuje-li se k témuž certifikátu a pochází-li
   od vydavatele, který v rozhodné době platil. Tady první krok prošel a druhý ne: údaj existuje,
-  ale za průkazný vzat nebyl. Na výsledku to nerozhodlo, jinak by nešlo o připomínku, ale o chybu;
-  závěr se opřel o jiný krok ověřování. Který údaj nakonec využit byl a který ne, vypisuje v Analýze
-  blok „Revokační informace“.
+  ale za průkazný vzat nebyl, a stav revokace tohoto certifikátu se tak nezjistil. Podle standardů
+  je to chyba, která ověření zastaví s neznámou platností. Připomínkou se stala jen proto, že byl
+  zapnut ústupek „Využij i revokační informace, vydané po expiraci certifikátu“ (nebo ověření
+  s vlastními CRL): ten tuto kontrolu sráží a ověření pak pokračuje i bez průkazného údaje. Který
+  údaj byl k dispozici a proč využit nebyl, vypisuje v Analýze blok „Revokační informace“.
 
 [BBB_XCV_ICNRAEV_ANS]
 kratce = Rozšíření noRevAvail je v certifikátu použito v rozporu s pravidly.

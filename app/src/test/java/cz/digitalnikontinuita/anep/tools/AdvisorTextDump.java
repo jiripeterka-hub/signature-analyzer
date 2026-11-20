@@ -35,6 +35,11 @@ import java.util.List;
  * Proklik „Vlastní důvěryhodné certifikáty“ v radě se ve výpisu stiskne a ohlásí řádkem
  * „(proklik: …)“ — okno se přitom neotevírá.
  *
+ * <p>{@code -crl seznam.crl} (20. 11. 2026) ověří s tímhle seznamem CRL místo stahování on-line —
+ * aby šel zopakovat stav, který už on-line není. Napsáno kvůli podpisu s jednorázovým
+ * certifikátem, ke kterému vydavatel měl venku jen CRL starší než certifikát; o pár hodin
+ * později vydal nový a případ se on-line přestal dát navodit. Seznam se nikam neukládá.
+ *
  * <p>{@code -envelope kontejner prvek} (1. 11. 2026) vyjme prvek z kontejneru a ověří ho tak,
  * jako by byl předán tlačítkem „Ověřit v AnEP" z prohlížeče obalu — tedy s důkazem existence
  * z obalu ({@code ValidatorFactory.withEnvelopeProof}).
@@ -66,9 +71,11 @@ public final class AdvisorTextDump extends Application {
     private void run(List<String> args) throws Exception {
         List<File> files = new ArrayList<>();
         File trust = null;
+        File crl = null;
         boolean tolerant = false;
         for (int i = 0; i < args.size(); i++) {
             if ("-trust".equals(args.get(i))) trust = new File(args.get(++i));
+            else if ("-crl".equals(args.get(i))) crl = new File(args.get(++i));
             // -t: všechny čtyři ústupky, jako v EnvelopeProofSmoke — bez ohledu na Nastavení.
             else if ("-t".equals(args.get(i))) tolerant = true;
             else if ("-envelope".equals(args.get(i))) {
@@ -96,6 +103,13 @@ public final class AdvisorTextDump extends Application {
         }
         CommonCertificateVerifier verifier =
                 new TrustConfig(settings).buildLotlCertificateVerifier();
+        // Před prvním ověřením: ValidatorFactory si zdroj CRL při prvním setkání s verifierem
+        // zapamatuje jako výchozí a před každým během se k němu vrací.
+        if (crl != null) {
+            verifier.setCrlSource(
+                    new eu.europa.esig.dss.spi.x509.revocation.crl.ExternalResourcesCRLSource(
+                            new eu.europa.esig.dss.model.FileDocument(crl)));
+        }
         if (trust != null) {
             CommonTrustedCertificateSource extra = new CommonTrustedCertificateSource();
             extra.addCertificate(new CertificateToken((java.security.cert.X509Certificate)
@@ -118,10 +132,16 @@ public final class AdvisorTextDump extends Application {
         if (envelopes.containsKey(file)) {
             outcome = factory.withEnvelopeProof(outcome, envelopes.get(file), verifier);
         }
+        // S měřením ústupků jako MainView. Bez něj karta u kladného tolerantního ověření
+        // tvrdila „co z nich výsledek nesl, se zjistit nepodařilo" — v aplikaci se to ale změří
+        // (zjištěno 20. 11. 2026; CardSnapshot měří od 19. 9. 2026, tahle sonda ne).
         ValidationResult result = new ReportMapper().map(file.getName(), null,
                 outcome, settings,
                 cz.digitalnikontinuita.anep.core.PdfSignatureAppearanceExtractor
-                        .extract(pdfSource, null));
+                        .extract(pdfSource, null),
+                List.of(), false, java.util.Map.of(),
+                cz.digitalnikontinuita.anep.core.RelaxationMeasurement.measure(
+                        settings, outcome, doc, null, verifier, null, List.of()));
         for (var sig : result.getSignatures()) {
             System.out.println("  ── " + sig.getIndication() + " / " + sig.getSubIndication()
                     + " / " + sig.getLegalType() + " / důvody " + sig.getDetectedReasons());

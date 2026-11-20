@@ -49,7 +49,7 @@ class SituationTextsTest {
             if (SituationTexts.get(section, "text") == null) empty.add(section);
         }
         assertEquals(List.of(), empty, "oddíl bez textu v texty/situace.txt");
-        assertEquals(55, ResultView.SITUATION_LABELS.size());
+        assertEquals(56, ResultView.SITUATION_LABELS.size());
     }
 
     @Test

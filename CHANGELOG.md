@@ -31,6 +31,17 @@ pro soupis změn ke každé nové vydané verzi.
 - **Změna obsahu po podpisu u jiných validátorů.** Blok o změně obsahu po podpisu nově uvádí,
   že jiné validátory mohou takovou změnu hodnotit neplatností podpisů a časových razítek, ne jen
   posledního podpisu.
+- **Revokační informace starší než certifikát.** Jsou-li všechny dostupné revokační informace
+  o podpisovém certifikátu vydány dřív, než certifikát vůbec vznikl, uvede to AnEP nově
+  samostatným důvodem (36) s radou počkat na nový seznam CRL od vydavatele a ověření zopakovat.
+  Dosud karta Analýzy u takového podpisu hlásila neznámou platnost s tím, že konkrétní příčinu
+  se nepodařilo pojmenovat. Typicky jde o jednorázový certifikát vydaný chvíli před podpisem.
+  Blok „Průběh ověřování“ o takovém seznamu CRL nově neříká, že byl využit.
+- **Platnost bez zjištěného stavu revokace.** Projde-li podpis jen díky ústupku „Využij i
+  revokační informace, vydané po expiraci certifikátu“, protože žádný revokační údaj o jeho
+  certifikátu použít nešlo, Analýza to nově říká v odrážce ústupku, v Závěru i v připomínce
+  knihovny DSS. Dosud tvrdila, že se stav revokace z odmítnutého údaje „přesto vzal“, že
+  certifikát „revokován nebyl“ a že se závěr „opřel o jiný krok ověřování“.
 
 ### Opravy
 

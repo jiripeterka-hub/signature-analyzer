@@ -31,7 +31,9 @@ public final class ReasonDump {
         AppSettings lenientTs = new AppSettings();
         lenientTs.setTimestampStandardsMode(false);
 
-        int maxSituation = 50;
+        // Do 20. 11. 2026 tu stálo 50 a důvody, které vznikají jen ze situací nad 50, vycházely
+        // v listu bez situace („Vzniká ze situace:" prázdné).
+        int maxSituation = 70;
 
         // Která situace sama o sobě vyvolá který důvod — a jestli k tomu potřebuje jiný režim.
         Map<Integer, List<String>> triggers = new TreeMap<>();

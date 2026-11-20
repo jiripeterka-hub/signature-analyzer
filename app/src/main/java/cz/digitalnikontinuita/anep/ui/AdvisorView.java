@@ -5078,6 +5078,11 @@ public class AdvisorView {
                 if ("postExpiry".equals(f.relaxedRule())) {
                     sb.append(" až po skončení řádné doby platnosti certifikátu")
                       .append(certUntil != null ? ", která skončila " + shortDate(certUntil) : "");
+                } else if ("preIssuance".equals(f.relaxedRule())) {
+                    // Od 20. 11. 2026 (situace 58): dřív tu padlo obecné „v podobě, kterou přísná
+                    // pravidla nepřipouštějí", které čtenáři neřeklo, co je s údajem špatně.
+                    sb.append(" dřív, než podpisový certifikát vůbec vznikl, a o jeho stavu"
+                            + " proto nic nevypovídá");
                 } else if ("expiredIssuer".equals(f.relaxedRule())) {
                     sb.append(" v pořádku, ale vydavateli mezitím vypršel vlastní certifikát");
                 } else if ("expiredIssuerNoProof".equals(f.relaxedRule())) {
@@ -5121,6 +5126,8 @@ public class AdvisorView {
                     + " z doby, kdy ještě platil");
         } else if ("expiredIssuer".equals(rule)) {
             sb.append(" — vydavatel měl v době vydání už expirovaný vlastní certifikát");
+        } else if ("preIssuance".equals(rule)) {
+            sb.append(" — pochází z doby před vznikem certifikátu");
         } else if ("postExpiry".equals(rule)) {
             sb.append(" — vzniknul až po skončení řádné doby platnosti certifikátu")
               .append(certUntil != null ? ", která skončila " + shortDate(certUntil) : "");
@@ -5150,6 +5157,19 @@ public class AdvisorView {
                   : "revokován není")
           .append(".");
         return sb.toString();
+    }
+
+    /**
+     * Neopřel se závěr o žádný revokační údaj podpisového certifikátu, ačkoli nějaký byl
+     * k dispozici (nebo se po něm aspoň sáhlo)? U kotvy důvěry se revokace nezjišťuje vůbec
+     * a ta sem nepatří — ta nemá v {@code ValidationCourse} ani odmítnutý, ani chybějící údaj.
+     */
+    private static boolean revocationUnestablished(ValidationCourse vc) {
+        return vc != null && vc.signingCertRevocation() == null
+                && vc.signingCertRevocationUsed() == null
+                && (vc.signingCertRevocationUnusableFact() != null
+                    || vc.signingCertRevocationUnusable() != null
+                    || vc.signingCertRevocationMissing() != null);
     }
 
     /** Čtvrtý odstavec: k čemu to všechno vedlo. */
@@ -5227,6 +5247,13 @@ public class AdvisorView {
                       .append(revokedAt(sig.getCertRevokedAt()))
                       .append(", tedy ").append(gapPhrase(bst, sig.getCertRevokedAt()))
                       .append(" později.");
+                } else if (revocationUnestablished(vc)) {
+                    // Kladný verdikt bez zjištěného stavu revokace: dovolil ho ústupek, který sráží
+                    // bránu „nezbyl žádný použitelný údaj" na připomínku. „A revokován nebyl" by
+                    // tu bylo zjištění, které nikdo neudělal — ani DSS, ani tahle aplikace.
+                    // Potkáno 20. 11. 2026 na podpisu s CRL starším než certifikát.
+                    body.append("; stav jeho revokace se ale nezjistil — použitelný údaj o něm"
+                            + " k dispozici nebyl.");
                 } else {
                     body.append(" a revokován nebyl.");
                 }
@@ -5244,7 +5271,19 @@ public class AdvisorView {
                 // k zadanému času tam přibývá ústupek, který si zadaný okamžik uděluje sám, a Závěr
                 // pak mluvil o „uvedeném ústupku“ v jednotném čísle nad výčtem dvou.
                 int shown = shownConcessionCount(sig, vc);
-                body.append(sig.isDecisiveSettingsInterchangeable()
+                boolean unestablished = revocationUnestablished(vc) && !sig.isAnchorCert()
+                        && !maskedRevocation(sig, true);
+                body.append(unestablished
+                        ? (sig.isDecisiveSettingsInterchangeable() || shown > 1
+                            ? " Stojí to ale celé na uvedených ústupcích: dovolily dojít k závěru"
+                              + " i bez zjištěného stavu revokace, a bez nich by stav platnosti"
+                              + " zůstal neznámý."
+                              + (sig.isDecisiveSettingsInterchangeable()
+                                  ? " Stačí přitom kterýkoli z nich." : "")
+                            : " Stojí to ale celé na uvedeném ústupku: dovolil dojít k závěru i bez"
+                              + " zjištěného stavu revokace, a bez něj by stav platnosti zůstal"
+                              + " neznámý.")
+                        : sig.isDecisiveSettingsInterchangeable()
                         ? " Stojí to ale celé na uvedených ústupcích: bez nich by o stavu"
                           + " certifikátu nebylo čím rozhodnout a stav platnosti by zůstal"
                           + " neznámý. Stačí přitom kterýkoli z nich."
@@ -6218,8 +6257,31 @@ public class AdvisorView {
                 // odrážka o certifikátu, že mu „platnost už skončila“, ač platí ještě roky:
                 // potkáno 19. 9. 2026 na jednom reportu, kde CRL vznikla pět let před
                 // certifikátem. Rozhoduje proto to, co v dokumentu opravdu je.
+                //
+                // A nevzal-li se stav revokace podpisového certifikátu z ničeho, nesmí odrážka
+                // tvrdit, že „se z takového údaje přesto vzal". Brána AcceptableRevocationDataFound
+                // sražená na WARN nedělá z odmítnutého údaje použitelný: DSS ho dál nevybere
+                // (CRS bez LatestAcceptableRevocationId) a ověření jen pokračuje bez něj. Změřeno
+                // 20. 11. 2026 na podpisu s jednorázovým certifikátem a CRL vydaným dvě hodiny
+                // před jeho vznikem (AdvisorTextDump -t -crl).
+                boolean noSigningRevocation = vc != null && vc.signingCertRevocation() == null
+                        && vc.signingCertRevocationUsed() == null;
+                boolean preIssuance = vc != null && vc.signingCertRevocationUnusableFact() != null
+                        && "preIssuance".equals(vc.signingCertRevocationUnusableFact().relaxedRule());
                 block.getChildren().add(boldBullet(
-                        vc != null && vc.postExpiryRevocationPresent()
+                        noSigningRevocation && !vc.postExpiryRevocationPresent()
+                        ? "**Připuštěn byl závěr i bez zjištěného stavu revokace.** Standardy"
+                          + " žádají, aby seznam či odpověď o stavu certifikátu spadaly do doby"
+                          + " jeho platnosti. "
+                          + (preIssuance
+                              ? "Údaj, který tu byl k dispozici, vznikl dřív, než byl certifikát"
+                                + " vydán, a o certifikátu proto nic nevypovídá."
+                              : "Žádný údaj, který tu byl k dispozici, tomu nevyhověl.")
+                          + " Knihovna DSS ho proto nepoužila; ústupek jen dovolil"
+                          + " pokračovat bez něj, takže stav revokace zůstal nezjištěný."
+                          + ((eitherWillDo || !measured) ? ""
+                              : " Bez tohoto ústupku by výsledek nebyl kladný.")
+                        : vc != null && vc.postExpiryRevocationPresent()
                         ? "**Byly využity revokační informace vydané po skončení řádné doby"
                           + " platnosti certifikátu.** Standardy takový údaj nepřipouštějí:"
                           + " o certifikátu, jehož platnost už skončila, se podle nich nedá zpětně"

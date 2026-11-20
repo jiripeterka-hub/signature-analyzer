@@ -4404,6 +4404,7 @@ public class ReportMapper {
             relaxed = strictReason.startsWith("vydáno až po expiraci") ? "postExpiry"
                     : strictReason.startsWith("vydavatel měl") ? "expiredIssuer"
                     : strictReason.startsWith("vydavateli od té doby") ? "expiredIssuerNoProof"
+                    : strictReason.startsWith("vydáno dřív, než certifikát") ? "preIssuance"
                     : "other";
         }
         String origin = rev.isInternalRevocationOrigin() ? "document"
@@ -4607,6 +4608,21 @@ public class ReportMapper {
                 && !isTrustedRevocationIssuer(rev)
                 && !acceptExpiredSources) {
             return "vydavatel měl v době vydání již expirovaný certifikát";
+        }
+        // Údaj starší než certifikát sám (BBB_XCV_REVOC_AFTER_CERT_NOT_BEFORE) o něm nevypovídá
+        // nic. Do 20. 11. 2026 tu ta mez chyběla a Analýza o takovém CRL tvrdila, že byl
+        // „využit" a že „podle něj certifikát revokován není", ačkoli ho DSS odmítl a ověření
+        // skončilo neznámou platností — viz situace 58.
+        //
+        // Platí i s ústupkem acceptNewer. Ten sráží na WARN bránu AcceptableRevocationDataFound,
+        // ne kontrolu BBB_XCV_REVOC_AFTER_CERT_NOT_BEFORE: DSS takový údaj dál nevybere (CRS
+        // bez LatestAcceptableRevocationId) a ověření jen pokračuje bez něj. Dokud tu výjimka
+        // pro ústupek stála, psal tolerantní běh v odstavci „byl využit … díky ústupku se však
+        // použil" a ve výčtu pod ním „nevyužita" — změřeno 20. 11. 2026 tímtéž podpisem se
+        // seznamem z 11:05 podstrčeným offline (AdvisorTextDump -crl).
+        if (cert.getNotBefore() != null
+                && rev.getThisUpdate().before(cert.getNotBefore())) {
+            return "vydáno dřív, než certifikát vznikl";
         }
         if (cert.getNotAfter() != null && rev.getThisUpdate().after(cert.getNotAfter())) {
             boolean stillSpeaks = postExpiryStillSpeaks(cert, rev);
@@ -6177,6 +6193,26 @@ public class ReportMapper {
     }
 
     /**
+     * Zda má podpisový certifikát revokační údaje, ale všechny vznikly dřív, než certifikát sám —
+     * thisUpdate každého z nich předchází notBefore. Je to otázka, na kterou v DSS odpovídá
+     * {@code BBB_XCV_REVOC_AFTER_CERT_NOT_BEFORE}; jediný údaj z doby platnosti stačí, aby to
+     * neplatilo, protože DSS ho pak přijme a překážkou je něco jiného. Kotva důvěry se nezkoumá:
+     * její stav revokace DSS nezjišťuje.
+     */
+    static boolean hasOnlyPreIssuanceRevocation(SignatureWrapper sw) {
+        CertificateWrapper cert = sw.getSigningCertificate();
+        if (cert == null || cert.isTrusted() || cert.getNotBefore() == null) return false;
+        List<CertificateRevocationWrapper> revocations = cert.getCertificateRevocationData();
+        if (revocations.isEmpty()) return false;
+        for (CertificateRevocationWrapper rev : revocations) {
+            if (rev.getThisUpdate() == null || !rev.getThisUpdate().before(cert.getNotBefore())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Zda je v řetězci revokační údaj, jehož vydavatel k rozhodnému okamžiku neplatil — tedy to,
      * co spraví volba {@code EXPIRED_REVOCATION_SOURCES} a nic jiného.
      *
@@ -7207,6 +7243,21 @@ public class ReportMapper {
         if (!settings.isAcceptExpiredRevocationSources()
                 && hasOutOfRangeRevocationIssuer(sw, settings.getValidationDate())) {
             result.add(46);
+        }
+
+        // S58: všechny revokační údaje o certifikátu vznikly dřív, než certifikát sám
+        // (BBB_XCV_REVOC_AFTER_CERT_NOT_BEFORE_ANS). DSS pak skončí na
+        // CERTIFICATE_CHAIN_GENERAL_FAILURE / BBB_XCV_IARDPFC_ANS a do 20. 11. 2026 pro to AnEP
+        // neměl situaci ani důvod: karta hlásila „konkrétní příčinu se nepodařilo pojmenovat".
+        // Nalezeno na podpisu služby Podepsat.online s jednorázovým certifikátem (notBefore
+        // 13:00, podpis 14:13), jehož vydavatel měl venku jen CRL s thisUpdate 11:05 —
+        // a nextUpdate 13:05, tedy už propadlý, nový seznam nevyšel ani o dvě hodiny později.
+        //
+        // Ústupek k údajům po expiraci (acceptNewerOcsp) by sice bránu AcceptableRevocationDataFound
+        // srazil na WARN, ale údaj by o certifikátu dál nic nevypovídal; radit ho proto nelze
+        // a situace se hlásí bez ohledu na něj — jen u neúspěšného ověření.
+        if (!totalPassed && hasOnlyPreIssuanceRevocation(sw)) {
+            result.add(58);
         }
 
         // S35: verification per the standards found no usable revocation information, but the
@@ -8333,7 +8384,7 @@ public class ReportMapper {
             // kde vedle důvodu 35 stál důvod 2. Fakta o revokaci (9, 22, 26) zůstávají.
             // Výčet je REVOCATION_ADVICE_REASONS, opsaný: ta konstanta stojí níž a při statické
             // inicializaci by tu ještě byla null.
-            java.util.Map.entry(35, java.util.List.of(2, 6, 10, 11, 12, 24, 25)),
+            java.util.Map.entry(35, java.util.List.of(2, 6, 10, 11, 12, 24, 25, 36)),
             // Reason 18 (chybí signing-time) suppresses most other reasons — the missing attribute
             // is the sole cause of SIG_CONSTRAINTS_FAILURE; all other observations are secondary.
             // Reason 7 (porušená integrita) is excluded: it already suppresses 18 itself, so
@@ -8425,13 +8476,14 @@ public class ReportMapper {
     /**
      * Rodina rad o revokačních údajích: 2 (údaj vydaný po expiraci), 6 (vydavatel vloženého údaje
      * mezitím expiroval), 10 (stav neznámý), 11 (vložený údaj nepoužitelný), 12 (údaj se nepodařilo
-     * získat), 24 (vydavatel mimo dobu platnosti) a 25 (stažený seznam o certifikátu mlčí).
+     * získat), 24 (vydavatel mimo dobu platnosti), 25 (stažený seznam o certifikátu mlčí) a 36
+     * (údaje vydané dřív, než certifikát vznikl; od 20. 11. 2026).
      *
      * <p>Táž rodina, jakou umlčují důvody 4, 20 a 21, a z téhož titulu: jde o rady, a rada, po které
      * se nic nestane, posílá čtenáře zkoušet zaškrtávátka nadarmo. Fakta o revokaci (9, 22, 26) v ní
      * nejsou a nikdy být nesmějí — ta se neumlčují, i když vedle nich žádná rada nikam nevede.
      */
-    private static final List<Integer> REVOCATION_ADVICE_REASONS = List.of(2, 6, 10, 11, 12, 24, 25);
+    private static final List<Integer> REVOCATION_ADVICE_REASONS = List.of(2, 6, 10, 11, 12, 24, 25, 36);
 
     /**
      * Package-private kvůli {@code ReasonSuppressionTest}: potlačovací tabulka je čistá funkce
@@ -8529,6 +8581,7 @@ public class ReportMapper {
         if (situations.contains(15)) reasons.add(15);  // SHA1
         if (situations.contains(16)) reasons.add(16);  // MD5 nebo RIPEMD160
         if (situations.contains(56)) reasons.add(35);  // otisk mimo standardy (SHA3-224)
+        if (situations.contains(58)) reasons.add(36);  // revokační údaje starší než certifikát
         if (situations.contains(19)) reasons.add(17);  // neznámý SubFilter
         // Důvod 18 (chybí signing-time) se od 3. 10. 2026 nevydává — situace 22 je poznámka.
         // Důvod 34 (deklarovaný čas mimo platnost certifikátu) se od 4. 10. 2026 nevydává —

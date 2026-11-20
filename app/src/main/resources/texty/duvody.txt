@@ -559,6 +559,26 @@ pomoc =
   jinými pravidly, mohou podpis posoudit jinak.
 # zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
 
+[36]
+kratce = revokační informace starší než certifikát
+problem =
+  Aplikace má k dispozici revokační informace o podpisovém certifikátu, ale všechny byly vydány
+  dřív, než tento certifikát vůbec vznikl. O certifikátu, který v době jejich vydání ještě
+  neexistoval, nemohou nic vypovídat — ani to, že revokován nebyl. Stav jeho revokace tak zůstává
+  nezjištěný a s ním i platnost podpisu. Nejčastěji jde o certifikát vydaný jen chvíli před
+  podpisem (například jednorázový certifikát pro jediný podpis), ke kterému vydavatel ještě
+  nezveřejnil nový seznam zneplatněných certifikátů (CRL).
+technicky =
+  Hodnota thisUpdate všech dostupných CRL seznamů či odpovědí OCSP předchází hodnotě notBefore
+  certifikátu. V knihovně DSS na tom padá kontrola BBB_XCV_REVOC_AFTER_CERT_NOT_BEFORE: "The
+  revocation data has been issued before the certificate's issuance time!"
+pomoc =
+  Počkat, až vydavatel certifikátu zveřejní nový seznam CRL, a opakovat ověření. Kdy má nový
+  seznam vyjít, uvádí stávající seznam v položce nextUpdate (Další aktualizace); vydavatelé je
+  zpravidla vydávají v řádu hodin. Je-li ten okamžik už pryč a nový seznam stále není, je
+  prodleva na straně vydavatele.
+# zkusenejsi =   (AnEP zde radu pro zkušenější neukazuje)
+
 # ======================================================================================
 #  N Á H R A D N Í   Z N Ě N Í
 #

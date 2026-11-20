@@ -65,13 +65,13 @@ class ReasonTextsTest {
     @DisplayName("každý důvod má oddíl, krátký popisek i větu o problému")
     void everyReasonIsComplete() {
         List<String> missing = new ArrayList<>();
-        for (int n = 1; n <= 35; n++) {
+        for (int n = 1; n <= 36; n++) {
             if (ReasonTexts.get(String.valueOf(n), "kratce") == null) missing.add(n + ".kratce");
             if (ReasonTexts.get(String.valueOf(n), "problem") == null) missing.add(n + ".problem");
         }
         assertEquals(List.of(), missing, "chybí v souboru texty/duvody.txt");
-        assertEquals(35, ResultView.REASONS.size());
-        assertEquals(35, ResultView.REASON_WORKING_LABELS.size());
+        assertEquals(36, ResultView.REASONS.size());
+        assertEquals(36, ResultView.REASON_WORKING_LABELS.size());
     }
 
     @Test
@@ -97,7 +97,7 @@ class ReasonTextsTest {
         assertNotNull(crlTip, "referenční znění rady o CRL chybí u důvodu 12");
 
         Set<String> expected = new LinkedHashSet<>();
-        for (int n = 1; n <= 35; n++) {
+        for (int n = 1; n <= 36; n++) {
             if (crlTip.equals(ReasonTexts.get(String.valueOf(n), "zkusenejsi"))) {
                 expected.add(String.valueOf(n));
             }
@@ -171,7 +171,7 @@ class ReasonTextsTest {
     @DisplayName("v souboru není oddíl, na který se nikdo neptá")
     void noStrandedSections() {
         Set<String> expected = new LinkedHashSet<>();
-        for (int n = 1; n <= 35; n++) expected.add(String.valueOf(n));
+        for (int n = 1; n <= 36; n++) expected.add(String.valueOf(n));
         expected.add("2/bez-data");
         expected.add("4/bez-data");
         expected.add("4/kryto");

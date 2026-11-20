@@ -257,6 +257,7 @@ public record ValidationCourse(
      * @param revokedAt   kdy, je-li to známo
      * @param relaxedRule {@code null}, když údaj obstojí i podle standardů; jinak
      *                    {@code "postExpiry"} (vznikl po expiraci certifikátu, jehož se týká)
+     *                    {@code "preIssuance"} (vznikl dřív než certifikát, jehož se týká)
      *                    nebo {@code "expiredIssuer"} (vydavateli mezitím vypršel certifikát) —
      *                    tedy pravidlo, které muselo být uvolněno, aby se údaj směl použít
      */

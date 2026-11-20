@@ -501,6 +501,13 @@ text =
   (SHA3-224, MD2 a další), v podpisu, v certifikátech řetězu nebo v časovém razítku. Funkce není
   kryptograficky slabá; žádný ústupek v nastavení tu ale nepomůže
 
+[58]
+text =
+  Dostupné revokační informace (CRL nebo OCSP) o certifikátu byly všechny vydány dřív, než
+  certifikát vůbec vznikl (jejich thisUpdate předchází začátku jeho platnosti). O stavu
+  certifikátu proto nic nevypovídají a DSS je při ověřování dle standardů odmítá. Typicky jde
+  o čerstvě vydaný certifikát, ke kterému vydavatel ještě nezveřejnil nový seznam CRL
+
 [57]
 text =
   Tento dokument byl předán k ověření z obalu, v němž je uložen — z kontejneru ASiC, z datové
