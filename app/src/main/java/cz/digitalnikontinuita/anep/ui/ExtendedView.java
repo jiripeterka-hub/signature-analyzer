@@ -127,6 +127,8 @@ public class ExtendedView {
     private File pdfOrigFile;
 
     private boolean timestampStandardsMode = true;
+    /** Okamžik důkazu existence z kryjícího razítka u prvků typu razítko — viz {@link #coveredAt}. */
+    private final Map<String, java.time.Instant> timestampCoveredAt = new HashMap<>();
     private boolean preferLatestOcsp = false;
     private final TrustListInfoBar trustListInfoBar = new TrustListInfoBar();
     private java.time.LocalDateTime customValidationTime = null;
@@ -216,6 +218,8 @@ public class ExtendedView {
         cardsBox.getChildren().add(trustListInfoBar.node());
 
         DiagnosticData dd = result.getDiagnosticData();
+        timestampCoveredAt.clear();
+        timestampCoveredAt.putAll(timestampCoverage(result.getSignatures(), dd));
 
         // Per-signature, per-timestamp expiry flags keyed by signature ID.
         // Index i corresponds to the i-th timestamp sorted by production time (ascending).
@@ -1326,15 +1330,19 @@ public class ExtendedView {
                 // pro prvek typu razítko — po expiraci toho certifikátu drží razítko už jen
                 // kvalifikovaný status služby, tedy nenastalý sunset.
                 boolean valid = "TOTAL_PASSED".equals(indication);
+                // Kryje-li razítko jiné razítko téhož dokumentu, které vzniklo ještě za platnosti
+                // certifikátu tohoto, posuzuje se certifikát k okamžiku toho důkazu, ne k dnešku.
+                java.time.Instant assessed = timestampCoveredAt.getOrDefault(
+                        sig.getSignatureId(), java.time.Instant.now());
                 // Samostatné razítko je prvek, ne položka výčtu, a údaje z důvěryhodného
                 // seznamu proto nese souhrn, ne TimestampEntry — otázka je ale táž a odpověď
                 // se skládá týmž pravidlem.
                 body.getChildren().add(timestampRow("Čas připojení razítka:",
                         sig.isQualified(), valid,
-                        valid && heldBySunset(sig.getCertNotAfter(), java.time.Instant.now()),
+                        valid && heldBySunset(sig.getCertNotAfter(), assessed),
                         TimeUtil.format(sig.getSigningTime()), null,
                         trustListNotes(sig.isQualified(), sig.getCertNotAfter(),
-                                sig.getTsQualifiedFrom(), sig.isAnchorCert(), valid)));
+                                sig.getTsQualifiedFrom(), sig.isAnchorCert(), valid, assessed)));
             }
             return body;
         }
@@ -1517,6 +1525,62 @@ public class ExtendedView {
         java.time.Instant now = java.time.Instant.now();
         java.time.Instant proof = sig == null ? null : sig.getEnvelopeProofTime();
         return proof != null && proof.isBefore(now) ? proof : now;
+    }
+
+    /**
+     * {@link #coveredAt} pro všechny prvky typu razítko: identifikátor prvku → okamžik důkazu
+     * existence z kryjícího razítka. Kryjící razítka i vazbu „kryje“ bere z DiagnosticData
+     * ({@code getTimestampedTimestamps()}). Veřejné kvůli sondě {@code CoveredTimestampScan}.
+     */
+    public static Map<String, java.time.Instant> timestampCoverage(List<SignatureSummary> sigs,
+                                                                  DiagnosticData dd) {
+        Map<String, java.time.Instant> out = new HashMap<>();
+        if (dd == null || sigs == null) return out;
+        for (SignatureSummary s : sigs) {
+            if (!"TimeStampToken".equals(s.getFormat()) || s.getSignatureId() == null) continue;
+            String id = s.getSignatureId();
+            java.util.List<java.time.Instant> proofs = new java.util.ArrayList<>();
+            for (TimestampWrapper ts : dd.getTimestampList()) {
+                if (ts.getProductionTime() == null || ts.getId().equals(id)) continue;
+                if (ts.getTimestampedTimestamps().stream()
+                        .noneMatch(t -> id.equals(t.getId()))) continue;
+                // Totéž měřítko „obstálo“ jako u následujícího razítka v tsExpiredFlags.
+                if (ts.isMessageImprintDataIntact() && ts.isSignatureIntact()
+                        && ts.isSignatureValid() && ts.isTrustedChain()) {
+                    proofs.add(ts.getProductionTime().toInstant());
+                }
+            }
+            java.time.Instant at = coveredAt(s.getCertNotAfter(), proofs);
+            if (at != null) out.put(id, at);
+        }
+        return out;
+    }
+
+    /**
+     * Okamžik, k němuž se posuzuje certifikát autority <b>samostatného</b> razítka, které kryje
+     * jiné razítko téhož dokumentu: vznik nejstaršího kryjícího razítka, které obstálo a vzniklo
+     * ještě za platnosti toho certifikátu. Nekryje-li ho takové razítko, {@code null} (posuzuje
+     * se k dnešku).
+     *
+     * <p>Nález uživatele z 21. 11. 2026 nad kontejnerem ASiC-E se dvěma samostatnými razítky:
+     * druhé (z ASiCArchiveManifest) kryje první a vzniklo měsíc před koncem platnosti jeho
+     * certifikátu. DSS tu vazbu má ({@code getTimestampedTimestamps()}), Rozšířený přehled ale
+     * posuzoval certifikát prvního razítka k dnešku a psal, že je platné „jen dle standardů“
+     * a drží ho jen kotva důvěry. U razítek uvnitř podpisu to řeší {@link #assessedAt}; tohle je
+     * totéž pravidlo pro razítka, která jsou samostatnými prvky. Záložka Digitální kontinuita
+     * tutéž vazbu bere z {@code AdvisorView.coverTimestamps}.
+     *
+     * @param notAfter konec platnosti certifikátu autority krytého razítka
+     * @param proofs   časy vzniku kryjících razítek, která obstála
+     */
+    static java.time.Instant coveredAt(java.time.Instant notAfter,
+                                       java.util.Collection<java.time.Instant> proofs) {
+        if (notAfter == null || proofs == null) return null;
+        java.time.Instant now = java.time.Instant.now();
+        return proofs.stream()
+                .filter(t -> t != null && !t.isAfter(notAfter) && t.isBefore(now))
+                .min(java.util.Comparator.naturalOrder())
+                .orElse(null);
     }
 
     /**

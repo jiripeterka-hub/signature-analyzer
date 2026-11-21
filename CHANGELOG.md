@@ -3,6 +3,18 @@
 Změny ve verzích aplikace AnEP (Analyzátor elektronických podpisů). Slouží jako podklad
 pro soupis změn ke každé nové vydané verzi.
 
+## Připravovaná verze
+
+### Výklad výsledku
+
+- **Samostatné časové razítko kryté pozdějším razítkem.** Nese-li kontejner ASiC více
+  samostatných časových razítek a pozdější razítko kryje dřívější a vzniklo ještě za platnosti
+  certifikátu jeho autority, posuzuje Rozšířený přehled certifikát dřívějšího razítka
+  k okamžiku vzniku toho pozdějšího. Dosud ho posuzoval k dnešku, a u dřívějšího razítka proto
+  chybně uváděl, že je platné jen při ověřování podle standardů (nikoli při striktním
+  ověřování podle platnosti certifikátu) a že ho drží jen to, že je certifikát autority sám
+  kotvou důvěry. Verdikt se nemění; záložka Digitální kontinuita s krytím počítala už dřív.
+
 ## Verze 1.5.0 (změny oproti 1.4.0)
 
 ### Bezpečnost

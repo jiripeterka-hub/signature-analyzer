@@ -131,4 +131,36 @@ class TimestampTrustListNotesTest {
         assertEquals(1, notes.size(), notes.toString());
         assertTrue(notes.get(0).contains("kotvou důvěry"), notes.get(0));
     }
+
+    /**
+     * Nález uživatele z 21. 11. 2026: kontejner ASiC-E se dvěma samostatnými razítky — první
+     * z 21. 3. 2019 (certifikát autority do 3. 11. 2024), druhé z 20. 10. 2024 kryje první.
+     * Certifikát prvního se posuzuje ke vzniku druhého, takže věta o kotvě ani o sunsetu nepatří.
+     */
+    @Test
+    @DisplayName("Samostatné razítko kryté pozdějším razítkem se posuzuje k jeho vzniku")
+    void aStandaloneTimestampCoveredInTimeIsAssessedAtTheCover() {
+        Instant certExpiry = Instant.parse("2024-11-03T13:34:26Z");
+        Instant cover = Instant.parse("2024-10-20T10:06:11Z");
+
+        Instant assessed = ExtendedView.coveredAt(certExpiry, List.of(cover));
+        assertEquals(cover, assessed);
+        assertEquals(List.of(), ExtendedView.trustListNotes(
+                true, certExpiry, null, true, true, assessed));
+    }
+
+    @Test
+    @DisplayName("Rozhoduje nejstarší kryjící razítko z doby platnosti certifikátu")
+    void theEarliestCoverInsideTheCertificateDecides() {
+        Instant certExpiry = Instant.parse("2024-11-03T13:34:26Z");
+        Instant early = Instant.parse("2022-05-01T00:00:00Z");
+        Instant late = Instant.parse("2024-10-20T10:06:11Z");
+        Instant afterExpiry = Instant.parse("2025-01-01T00:00:00Z");
+
+        assertEquals(early, ExtendedView.coveredAt(certExpiry, List.of(late, afterExpiry, early)));
+        // Razítko, které vzniklo až po expiraci certifikátu, důkazem existence v čas není.
+        assertEquals(null, ExtendedView.coveredAt(certExpiry, List.of(afterExpiry)));
+        assertEquals(null, ExtendedView.coveredAt(certExpiry, List.of()));
+        assertEquals(null, ExtendedView.coveredAt(null, List.of(late)));
+    }
 }
