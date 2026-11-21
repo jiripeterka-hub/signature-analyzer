@@ -13,7 +13,9 @@ pro soupis změn ke každé nové vydané verzi.
   k okamžiku vzniku toho pozdějšího. Dosud ho posuzoval k dnešku, a u dřívějšího razítka proto
   chybně uváděl, že je platné jen při ověřování podle standardů (nikoli při striktním
   ověřování podle platnosti certifikátu) a že ho drží jen to, že je certifikát autority sám
-  kotvou důvěry. Verdikt se nemění; záložka Digitální kontinuita s krytím počítala už dřív.
+  kotvou důvěry. Blok „Rozhodný okamžik ověření“ u takového razítka nově uvádí jako rozhodný
+  okamžik čas pozdějšího, kryjícího razítka, nikoli jen aktuální čas ověření. Verdikt se
+  nemění; záložka Digitální kontinuita s krytím počítala už dřív.
 
 ## Verze 1.5.0 (změny oproti 1.4.0)
 

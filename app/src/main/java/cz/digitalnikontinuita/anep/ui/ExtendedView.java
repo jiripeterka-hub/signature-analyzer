@@ -1951,6 +1951,16 @@ public class ExtendedView {
         if (vc != null && vc.bstDivergenceNote() != null) {
             body.getChildren().add(paragraph(vc.bstDivergenceNote(), "#7a4a00"));
         }
+        // Samostatné razítko kryté pozdějším razítkem (viz coveredAt): rozhodným okamžikem je
+        // vznik toho kryjícího, ne aktuální čas. Nález uživatele z 21. 11. 2026 nad kontejnerem
+        // ASiC-E se dvěma samostatnými razítky — po opravě poznámky o sunsetu blok u prvního
+        // razítka pořád uváděl jen aktuální čas ověření, jako by ho nic nekrylo.
+        java.time.Instant covered = isTs ? timestampCoveredAt.get(sig.getSignatureId()) : null;
+        if (covered != null) {
+            body.getChildren().add(row("Rozhodný okamžik:", TimeUtil.format(covered)
+                    + "  —  z pozdějšího časového razítka, které toto razítko kryje a vzniklo"
+                    + " ještě za platnosti certifikátu jeho autority"));
+        }
 
         // The anchoring time does get a row of its own once an evidence record supplies it. The
         // objection above is that the value has two answers that differ — but a record's proof is
