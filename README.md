@@ -147,6 +147,10 @@ mvn -pl app -am javafx:run
 `run.bat` does the same, picking the newest installed Adoptium JDK — the fixed path
 otherwise breaks on every JDK update.
 
+There is no macOS package (it would need Apple signing and notarization), but the same
+command runs AnEP on a Mac. [docs/spusteni-na-macos.md](docs/spusteni-na-macos.md) (in Czech)
+walks a non-developer through it with Claude Code doing the setup.
+
 ## Building
 
 ```powershell
