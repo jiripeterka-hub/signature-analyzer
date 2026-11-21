@@ -30,14 +30,22 @@ jobs:
       - uses: actions/checkout@v4
 
       # Totéž JDK jako u verze pro Windows (Temurin 25): jpackage z něj sestaví běhové prostředí.
+      # check-latest: bez něj vezme setup-java JDK z cache runneru, a ta zaostává. 21. 11. 2026
+      # tak sestavení pro x64 přibalilo 25.0.5+8 bez opravy CVE-2026-114938, zatímco aarch64
+      # (bez cache) stáhlo opravené 25.0.5.1.
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "25"
+          check-latest: true
           cache: maven
 
       - name: Sestavení
         run: bash packaging/linux/dist.sh "${{ inputs.version }}" "${{ inputs.release }}"
+
+      # Jaká Java je v balíčku, ať je to vidět v logu bez rozbalování archivu.
+      - name: Přibalené běhové prostředí
+        run: grep -E '^(JAVA_VERSION|JAVA_RUNTIME_VERSION)=' app/target/dist-image/AnEP/lib/runtime/release
 
       # Kouřová zkouška: zabalená aplikace se spustí pod virtuálním displejem. Okno nikdo
       # nezavře, takže úspěch je „běží ještě po 60 s“ (timeout vrátí 124) a v logu není výjimka.
