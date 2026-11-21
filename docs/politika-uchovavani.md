@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika uchovávání ověřitelnosti**
 
-==Verze 1.22 · stav ke dni 11. 11. 2026== · ==AnEP 1.4.0==, knihovna DSS 6.5.1
+==Verze 1.23 · stav ke dni 21. 11. 2026== · ==AnEP 1.5.0==, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -36,7 +36,7 @@ Rozdělení je věcné: politika ověřování popisuje **dnešní** ověření,
 |---|---|
 | Název | Politika uchovávání elektronických podpisů AnEP |
 | Verze | ==1.22 ze dne 11. 11. 2026== |
-| Platí pro | ==AnEP 1.4.0 (repozitář signature-analyzer, značka v1.4.0)== |
+| Platí pro | ==AnEP 1.5.0 (repozitář signature-analyzer, značka v1.5.0)== |
 | Navazuje na | Politika ověřování elektronických podpisů AnEP, verze ==1.22== |
 | Struktura dokumentu | ETSI TS 119 511 V1.1.1 (2019-06) |
 | Pojmy a schéma uchování | ETSI TS 119 512 V1.2.1 (2023-05), schéma F.4 „pds+wos+aug“ |
@@ -339,3 +339,4 @@ Z TS 119 512 AnEP odpovídá schématu F.4 se dvěma odchylkami uvedenými v 3.2
 | ==1.20== | ==11. 11. 2026== | ==oddíl 5.1: CzechPOINT ověřuje pouze dokumenty PDF s interními podpisy; u jiných prvků jej aplikace nejmenuje a o podatelnách a dalších validátorech uvádí, že záleží na jejich schopnostech; platí od verze AnEP následující po 1.3.0== |
 | ==1.21== | ==11. 11. 2026== | ==oddíl 5.2: v odhadu pro CzechPOINT se jako důkaz existence počítá i časové razítko pozdějšího podpisu, který podpis nebo pečeť v dokumentu PDF kryje; platí od verze AnEP následující po 1.3.0== |
 | ==1.22== | ==11. 11. 2026== | ==beze změny obsahu; změny ve verzích 1.20 a 1.21 platí od AnEP 1.4.0; číslo verze sjednocené s verzí 1.22 politiky ověřování; platí pro AnEP 1.4.0== |
+| ==1.23== | ==21. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.23 politiky ověřování; platí pro AnEP 1.5.0== |

@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika ověřování podpisu**
 
-==Verze 1.22== · stav ke dni ==11. 11. 2026== · ==AnEP 1.4.0==, knihovna DSS 6.5.1
+==Verze 1.23== · stav ke dni ==21. 11. 2026== · ==AnEP 1.5.0==, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -29,7 +29,7 @@ Dokument je stavěný jako politika ověřování podpisu ve smyslu ETSI TS 119 
 |---|---|
 | Název | Politika ověřování elektronických podpisů AnEP |
 | Verze | ==1.22== ze dne ==11. 11. 2026== |
-| Platí pro | ==AnEP 1.4.0 (repozitář signature-analyzer, značka v1.4.0)== |
+| Platí pro | ==AnEP 1.5.0 (repozitář signature-analyzer, značka v1.5.0)== |
 | Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.22== |
 | Ověřovací jádro | knihovna DSS (Digital Signature Service) 6.5.1 Evropské komise |
 | Postup ověřování | ETSI EN 319 102-1 V1.4.0 (2024-03) |
@@ -441,3 +441,4 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 | ==1.20== | ==11. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.20 politiky uchovávání== |
 | ==1.21== | ==11. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.21 politiky uchovávání== |
 | ==1.22== | ==11. 11. 2026== | ==beze změny obsahu; změny ve verzích 1.18 až 1.21 platí od AnEP 1.4.0; platí pro AnEP 1.4.0== |
+| ==1.23== | ==21. 11. 2026== | ==oddíl 12.6: vyplněná pole formuláře a anotace viditelné na stránce, které přibyly za posledním podpisem či razítkem nebo mezi podpisy, AnEP zjišťuje vlastním porovnáním a uvádí bez změny verdiktu, varovně jen tehdy, překračují-li to, co podepisující povolil certifikačním podpisem či zámkem; jiné validátory mohou změnu obsahu hodnotit neplatností podpisů i časových razítek; platí pro AnEP 1.5.0== |

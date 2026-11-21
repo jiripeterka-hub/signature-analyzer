@@ -3,7 +3,16 @@
 Změny ve verzích aplikace AnEP (Analyzátor elektronických podpisů). Slouží jako podklad
 pro soupis změn ke každé nové vydané verzi.
 
-## Připravovaná verze
+## Verze 1.5.0 (změny oproti 1.4.0)
+
+### Bezpečnost
+
+- **Opravené běhové prostředí Javy.** Instalátor i přenosné archivy přibalují Javu 25.0.5.1
+  místo 25.0.5. Nová verze opravuje zranitelnost CVE-2026-114938 v dekodéru Base64 uvnitř
+  Javy: na procesorech s instrukcemi AVX-512 (Intel Ice Lake a novější, AMD Zen 4 a novější)
+  ji lze zneužít upraveným vstupem ke spuštění cizího kódu. AnEP čte dokumenty z cizích
+  zdrojů a data v Base64 jsou v nich běžná, proto doporučujeme aktualizovat. Na procesorech
+  bez AVX-512 se zranitelnost neprojevuje.
 
 ### Výklad výsledku
 

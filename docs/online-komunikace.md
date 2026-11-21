@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — s kým, kdy a proč se aplikace spojuje po síti**
 
-Verze 1.1 (návrh) · stav ke dni 11. 11. 2026 · AnEP 1.4.0, knihovna DSS 6.5.1
+Verze 1.1 (návrh) · stav ke dni 21. 11. 2026 · AnEP 1.5.0, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
