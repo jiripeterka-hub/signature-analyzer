@@ -36,6 +36,17 @@ public final class ExplorerContextMenu {
         public boolean userEntry() { return userExe != null; }
         /** Položku zapsal instalátor MSI (pro celý počítač). */
         public boolean machineEntry() { return machineExe != null; }
+
+        /**
+         * Běží verze nainstalovaná instalátorem? Pozná se podle toho, že položka instalátoru vede
+         * právě na {@code exe}. Tam se tlačítko v Nastavení neukazuje (pokyn uživatele
+         * 22. 11. 2026). Přenosná verze vedle instalované vrací {@code false}.
+         */
+        public boolean installedCopy(Path exe) {
+            return exe != null && machineExe != null
+                    && machineExe.toAbsolutePath().normalize().toString()
+                        .equalsIgnoreCase(exe.toAbsolutePath().normalize().toString());
+        }
     }
 
     /**

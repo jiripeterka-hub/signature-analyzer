@@ -70,8 +70,12 @@ pro soupis změn ke každé nové vydané verzi.
   Windows 11 je položka pod „Zobrazit další možnosti“ (nebo Shift+F10), ve Windows 10 hned
   v nabídce. Instalátor položku přidá při instalaci a odebere při odinstalaci; v přenosné
   verzi ji přidá a odebere tlačítko v Nastavení (jen pro přihlášeného uživatele, bez práv
-  správce). Po přesunutí přenosné verze se položka při jejím příštím spuštění opraví sama.
-  Každý soubor otevřený z nabídky otevře vlastní okno aplikace.
+  správce); v instalované verzi tlačítko není. Po přesunutí přenosné verze se položka při
+  jejím příštím spuštění opraví sama.
+  Běží-li už AnEP, soubor se vloží do jeho okna a okno se přenese dopředu; nové okno se
+  otevře jen tehdy, když aplikace neběží. Spuštění bez souboru (z nabídky Start) otevírá
+  nové okno jako dosud. V nabídce „Otevřít v programu“ a ve Správci úloh se aplikace nově
+  jmenuje krátce „AnEP“.
 
 ### Opravy
 

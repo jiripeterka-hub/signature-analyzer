@@ -963,6 +963,29 @@ public class MainView {
         t.start();
     }
 
+    /**
+     * Soubor, který této instanci předalo další spuštění AnEP (položka „Otevřít v AnEP“ při
+     * běžící aplikaci; viz {@link cz.digitalnikontinuita.anep.core.SingleInstance}). Na rozdíl
+     * od souboru při startu nahradí, co v poli je — stejně jako přetažení: uživatel ho vybral
+     * právě teď. Ověření, které zrovna běží, to nenaruší, to má soubory své.
+     *
+     * @param onAccepted co udělat, když se soubor vložil (okno dopředu); na vlákně JavaFX
+     */
+    public void openForwarded(String path, Runnable onAccepted) {
+        if (path == null || path.isBlank()) return;
+        Thread t = new Thread(() -> {
+            File f = new File(path);
+            if (!f.isFile()) return;
+            Platform.runLater(() -> {
+                acceptSigFile(f);
+                StartupTrace.mark("forwarded file accepted");
+                if (onAccepted != null) onAccepted.run();
+            });
+        }, "forwarded-file");
+        t.setDaemon(true);
+        t.start();
+    }
+
     private void acceptSigFile(File f) {
         // Důkaz z obalu patří jen k souboru, který ho dostal od prohlížeče obalu nebo z odkazu
         // u externího podpisu; nový výběr ho ruší. Volající, kteří ho předávají, ho nastaví až

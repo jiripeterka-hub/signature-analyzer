@@ -79,6 +79,9 @@ public class Main extends Application {
         mainView.startWarmup();
         // Soubor z nabídky Průzkumníka „Otevřít v AnEP“ (22. 11. 2026) — viz ExplorerContextMenu.
         mainView.openFromCommandLine(getParameters().getRaw());
+        // Soubory z dalších spuštění: do pole jako po přetažení a okno dopředu.
+        cz.digitalnikontinuita.anep.core.SingleInstance.serve(path ->
+                mainView.openForwarded(path, () -> bringToFront(primaryStage)));
         Thread menuRepair = new Thread(
                 cz.digitalnikontinuita.anep.core.ExplorerContextMenu::repairIfMoved, "menu-repair");
         menuRepair.setDaemon(true);
@@ -108,6 +111,19 @@ public class Main extends Application {
      * Na obrazovce 1920 × 1080 by tlačítka a posuvníky zůstaly mimo dohled. Na jednom místě ze
      * stejného důvodu jako ikony výše: oken je mnoho a každé další by na to zapomnělo.
      */
+    /**
+     * Okno dopředu poté, co mu jiné spuštění předalo soubor. Windows samo {@code toFront()} od
+     * procesu na pozadí odmítne a jen rozbliká ikonu na hlavním panelu; krátké „vždy navrchu“
+     * okno skutečně vytáhne. Minimalizované se nejdřív obnoví.
+     */
+    private static void bringToFront(Stage st) {
+        if (st.isIconified()) st.setIconified(false);
+        st.setAlwaysOnTop(true);
+        st.toFront();
+        st.requestFocus();
+        st.setAlwaysOnTop(false);
+    }
+
     private static void keepOnScreen(Stage st) {
         if (!st.isShowing() || st.isMaximized() || st.isFullScreen() || st.isIconified()) return;
         double centerX = st.getX() + st.getWidth() / 2;
@@ -124,6 +140,11 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         StartupTrace.mark("main() entered");
+        // Běží-li už AnEP, převezme soubor ona a tohle spuštění skončí dřív, než otevře okno
+        // (22. 11. 2026, viz SingleInstance). Proto úplně napřed, před JavaFX i sítí.
+        if (cz.digitalnikontinuita.anep.core.SingleInstance.forward(java.util.Arrays.asList(args))) {
+            System.exit(0);
+        }
         // Proxy podle nastavení systému (NetworkProxy, režim SYSTEM). Výchozí ProxySelector JDK
         // čte tuto vlastnost jen při svém vzniku, proto dřív, než cokoli sáhne na síť.
         if (System.getProperty("java.net.useSystemProxies") == null) {

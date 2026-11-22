@@ -41,6 +41,17 @@ class ExplorerContextMenuTest {
     }
 
     @Test
+    @DisplayName("Instalovaná verze se pozná podle položky instalátoru, přenosná ne")
+    void installedCopyIsRecognised() {
+        Path installed = Path.of("C:\\Program Files\\AnEP\\AnEP.exe");
+        var withInstaller = new ExplorerContextMenu.State(null, installed);
+        assertTrue(withInstaller.installedCopy(Path.of("c:\\program files\\anep\\AnEP.exe")));
+        assertTrue(!withInstaller.installedCopy(EXE));
+        assertTrue(!withInstaller.installedCopy(null));
+        assertTrue(!new ExplorerContextMenu.State(EXE, null).installedCopy(EXE));
+    }
+
+    @Test
     @DisplayName("Příkaz bez uvozovek i prázdný export")
     void unquotedAndEmpty() {
         assertEquals(Path.of("C:\\AnEP\\AnEP.exe"),

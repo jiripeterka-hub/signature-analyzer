@@ -516,7 +516,7 @@ public class SettingsDialog {
                         labelUiScale.getText(), uiScaleHint)),
                 noteUiScale);
         if (cz.digitalnikontinuita.anep.core.ExplorerContextMenu.supported()) {
-            basicPane.getChildren().addAll(new Separator(), contextMenuRow(stage));
+            basicPane.getChildren().add(contextMenuRow(stage));
         }
         basicPane.getChildren().addAll(
                 new Separator(),
@@ -683,7 +683,6 @@ public class SettingsDialog {
         stage.setMinHeight(200);
     }
 
-    /** Wraps a main control and an info button in an HBox with the main control expanding. */
     /**
      * Položka „Otevřít v AnEP“ v nabídce Průzkumníka po pravém kliknutí (22. 11. 2026).
      * Instalátor MSI ji zapisuje sám; tlačítko je pro přenosnou verzi, která instalátor nemá.
@@ -706,9 +705,10 @@ public class SettingsDialog {
                 + " pro dokument; ověření se spouští jako obvykle.\n\n"
                 + "Ve Windows 11 je položka až pod „Zobrazit další možnosti“ (nebo po stisku"
                 + " Shift+F10), ve Windows 10 hned v nabídce.\n\n"
-                + "Instalovaná verze AnEP položku přidává sama při instalaci a odebírá při"
-                + " odinstalaci. Tlačítko je pro přenosnou verzi: položku zapíše jen pro"
-                + " přihlášeného uživatele a nepotřebuje práva správce. Když přenosnou verzi"
+                + "Tlačítko je jen v přenosné verzi; instalovaná verze položku přidává sama"
+                + " při instalaci a odebírá při odinstalaci. Položku zapíše jen pro"
+                + " přihlášeného uživatele a nepotřebuje práva správce. Je-li na počítači"
+                + " i instalovaná verze, povede pak položka pro vás na přenosnou. Když přenosnou verzi"
                 + " přesunete jinam, položka se při jejím příštím spuštění opraví sama. Před"
                 + " smazáním přenosné verze položku odeberte.\n\n"
                 + "Změna platí hned, bez tlačítka Uložit.";
@@ -716,22 +716,39 @@ public class SettingsDialog {
         HBox row = new HBox(8, action, makeInfoButton(stage, heading.getText(), hint));
         row.setAlignment(Pos.CENTER_LEFT);
 
+        // V instalované verzi se oddíl neukazuje vůbec (pokyn uživatele 22. 11. 2026: neaktivní
+        // tlačítko tam bylo zbytečné a matoucí). Pozná se podle toho, že položka zapsaná
+        // instalátorem vede právě na běžící AnEP.exe. Stav je známý až po přečtení registru,
+        // a proto je oddíl do té doby skrytý — v instalované verzi se tak nemihne ani na chvíli.
+        VBox box = new VBox(6, new Separator(), heading, row, note);
+        box.setVisible(false);
+        box.setManaged(false);
+        boolean[] decided = {false};
+
         Runnable[] refresh = new Runnable[1];
         refresh[0] = () -> {
             action.setDisable(true);
             Thread t = new Thread(() -> {
                 var state = cz.digitalnikontinuita.anep.core.ExplorerContextMenu.read();
                 java.nio.file.Path exe = cz.digitalnikontinuita.anep.core.ExplorerContextMenu.currentExe();
+                boolean installed = state.installedCopy(exe);
                 Platform.runLater(() -> {
+                    if (!decided[0]) {
+                        decided[0] = true;
+                        if (installed) return;
+                        box.setVisible(true);
+                        box.setManaged(true);
+                        // Jen na základní stránce, na níž oddíl leží: jinak by se okno
+                        // přizpůsobilo stránce, kterou uživatel právě nevidí.
+                        if (stage.isShowing() && box.getScene() != null) {
+                            fit(stage, Double.MAX_VALUE);
+                        }
+                    }
                     if (state.userEntry()) {
                         action.setText("Odebrat z nabídky");
                         action.setDisable(false);
                         action.setOnAction(e -> apply(action, note, refresh[0], null));
                         note.setText("Položka je přidaná a otevírá " + state.userExe() + ".");
-                    } else if (state.machineEntry()) {
-                        action.setText("Přidat do nabídky");
-                        action.setDisable(true);
-                        note.setText("Položku přidal instalátor AnEP; odebere ji odinstalace.");
                     } else if (exe == null) {
                         action.setText("Přidat do nabídky");
                         action.setDisable(true);
@@ -740,7 +757,10 @@ public class SettingsDialog {
                         action.setText("Přidat do nabídky");
                         action.setDisable(false);
                         action.setOnAction(e -> apply(action, note, refresh[0], exe));
-                        note.setText("");
+                        note.setText(state.machineEntry()
+                                ? "Položku má i instalovaná verze AnEP; přidáním povede pro vás"
+                                  + " na tuto přenosnou verzi."
+                                : "");
                     }
                 });
             }, "context-menu-state");
@@ -748,7 +768,7 @@ public class SettingsDialog {
             t.start();
         };
         refresh[0].run();
-        return new VBox(6, heading, row, note);
+        return box;
     }
 
     /** Zapíše ({@code exe} ≠ null), nebo odebere položku nabídky a znovu načte stav. */
@@ -776,6 +796,7 @@ public class SettingsDialog {
         t.start();
     }
 
+    /** Wraps a main control and an info button in an HBox with the main control expanding. */
     private static HBox infoRow(javafx.scene.Node main, Button info) {
         HBox.setHgrow(main, Priority.ALWAYS);
         Region spacer = new Region();

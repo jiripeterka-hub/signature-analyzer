@@ -46,7 +46,26 @@ public final class ContextMenuButtonSmoke extends Application {
                     Platform.runLater(() -> SettingsDialog.show(owner, AppSettings.load(),
                             () -> "Hotovo.", null));
                 });
+                if (getParameters().getRaw().contains("installed")) {
+                    // Instalovaná verze (22. 11. 2026): oddíl se neukáže vůbec.
+                    Thread.sleep(3000);
+                    CompletableFuture<Boolean> shown = new CompletableFuture<>();
+                    Platform.runLater(() -> {
+                        Button b = find("Přidat do nabídky");
+                        if (b == null) b = find("Odebrat z nabídky");
+                        if (b == null) b = find("Zjišťuji…");
+                        shown.complete(b != null && b.getParent() != null
+                                && b.getParent().getParent() != null
+                                && b.getParent().getParent().isVisible());
+                    });
+                    boolean visible = shown.get();
+                    System.out.println("oddíl vidět  = " + visible);
+                    if (visible) failures++;
+                    finish(failures);
+                    return;
+                }
                 Button add = waitForButton("Přidat do nabídky");
+                System.out.println("pozn. před   = " + noteBelow(add));
                 onFx(add::fire);
                 Button remove = waitForButton("Odebrat z nabídky");
                 var afterAdd = ExplorerContextMenu.read();
@@ -75,15 +94,34 @@ public final class ContextMenuButtonSmoke extends Application {
                 t.printStackTrace(System.out);
                 failures++;
             }
-            System.out.println(failures == 0 ? "VÝSLEDEK: OK" : "VÝSLEDEK: CHYB " + failures);
-            // Modální dialog zavřít dřív, než skončí JavaFX — jinak glass.dll při ukončení spadne.
-            Platform.runLater(() -> {
-                for (Window w : new java.util.ArrayList<>(Window.getWindows())) {
-                    if (w instanceof Stage s) s.close();
-                }
-                Platform.exit();
-            });
+            finish(failures);
         }, "smoke").start();
+    }
+
+    private static void finish(int failures) {
+        System.out.println(failures == 0 ? "VÝSLEDEK: OK" : "VÝSLEDEK: CHYB " + failures);
+        // Modální dialog zavřít dřív, než skončí JavaFX — jinak glass.dll při ukončení spadne.
+        Platform.runLater(() -> {
+            for (Window w : new java.util.ArrayList<>(Window.getWindows())) {
+                if (w instanceof Stage s) s.close();
+            }
+            Platform.exit();
+        });
+    }
+
+    /** Text poznámky pod řádkem s tlačítkem (oddíl: oddělovač, nadpis, řádek, poznámka). */
+    private static String noteBelow(Button b) throws Exception {
+        CompletableFuture<String> f = new CompletableFuture<>();
+        Platform.runLater(() -> {
+            Parent box = b.getParent() == null ? null : b.getParent().getParent();
+            String text = null;
+            if (box != null) {
+                var kids = box.getChildrenUnmodifiable();
+                if (kids.get(kids.size() - 1) instanceof Label l) text = l.getText();
+            }
+            f.complete(text);
+        });
+        return f.get();
     }
 
     private static void onFx(Runnable r) throws Exception {

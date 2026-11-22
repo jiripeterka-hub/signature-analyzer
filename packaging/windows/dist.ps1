@@ -213,7 +213,11 @@ $jArgs = @(
     "--app-version",  $AppVersion,
     "--vendor",       "Jiří Peterka",
     "--copyright",    "Copyright (c) 2024-2026 Jiří Peterka, licence EUPL-1.2",
-    "--description",  "Analyzátor elektronických podpisů",
+    # Popis se zapise do AnEP.exe jako FileDescription a Windows ho ukazuji jako jmeno
+    # aplikace v nabidce na prave tlacitko (Otevrit v programu) i ve Spravci uloh.
+    # Plny nazev tam byl zbytecne dlouhy (pozadavek uzivatele 22. 11. 2026). Popis MSI
+    # nize zustava plny - ten je v Aplikacich a funkcich.
+    "--description",  "AnEP",
     "--input",        $InputDir,
     "--main-jar",     $AppJar,
     "--main-class",   $MainClass,

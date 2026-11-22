@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — podklad pro posouzení podle zákona o kybernetické bezpečnosti a aktu o kybernetické odolnosti**
 
-Verze 1.2 (návrh) · stav ke dni 21. 11. 2026 · AnEP 1.5.0, knihovna DSS 6.5.1
+Verze 1.2 (návrh) · stav ke dni 22. 11. 2026 · AnEP 1.5.0, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -134,6 +134,7 @@ Vše uživatelské leží ve složce `%APPDATA%\SignatureAnalyzer` (na Linuxu `$
 | `custom-crls` | seznamy CRL, které uživatel vložil | nízká (veřejné údaje) |
 | `trusted-certs` | vlastní kotvy důvěry uživatele | **integritně citlivá**: co je zde, tomu aplikace důvěřuje |
 | `tl-cache`, `trust-state-v2.bin` | mezipaměť důvěryhodných seznamů | integritně citlivá (viz riziko R3) |
+| `instance` | zámek běžící instance a krátkodobé požadavky dalších spuštění (cesta k souboru, který se má vložit do pole pro dokument); požadavek se po vyzvednutí maže | nízká: cesta k souboru |
 
 Mimo tuto složku aplikace zapisuje jen soubory, které uživatel výslovně uloží. Klientský certifikát k autoritě razítek zůstává tam, kde ho uživatel má; aplikace si pamatuje cestu k němu.
 
@@ -151,7 +152,7 @@ Do registru Windows se zapisuje jen položka „Otevřít v AnEP“ v nabídce P
 | Časová razítka | síť | ověření podpisu a certifikátu autority po přijetí |
 | Kontrola verze | síť | čte se jen číslo a datum podle pevného vzoru; nic se nestahuje ani nespouští |
 | Nastavení a data v `%APPDATA%` | místní, pod účtem uživatele | ochrana operačním systémem |
-| Cesta k souboru v příkazové řádce (položka „Otevřít v AnEP“) | místní | bere se jen cesta k existujícímu souboru, který se vloží do pole pro dokument; nic se neověřuje ani nespouští bez pokynu uživatele |
+| Cesta k souboru v příkazové řádce (položka „Otevřít v AnEP“) a její předání běžící instanci | místní, pod účtem uživatele | běží-li AnEP, předá mu další spuštění cestu souborem ve složce `instance` a skončí — bez síťového spojení; bere se jen cesta k existujícímu souboru, který se vloží do pole pro dokument; nic se neověřuje ani nespouští bez pokynu uživatele |
 
 ### 5.2 Co aplikace nemá
 
