@@ -932,6 +932,37 @@ public class MainView {
      * stát. Je to táž situace jako skládání dvojice a pozná se podle rozsvíceného tlačítka;
      * ověření takovou dvojici ohlásí jako nesprávnou (důvod 8).
      */
+    /**
+     * Soubor předaný při spuštění — z položky „Otevřít v AnEP“ v nabídce Průzkumníka
+     * ({@link cz.digitalnikontinuita.anep.core.ExplorerContextMenu}) nebo z příkazové řádky.
+     * Vloží se do pole stejně, jako kdyby byl přetažen; ověření spouští uživatel jako vždy
+     * (požadavek uživatele 22. 11. 2026). Bere se první argument, který je existující soubor.
+     *
+     * <p>Existence se zjišťuje na pozadí, z téhož důvodu jako u tlačítka obnovy: u cesty
+     * na nedostupný síťový disk {@code File.isFile()} visí desítky sekund.
+     */
+    public void openFromCommandLine(List<String> args) {
+        if (args == null || args.isEmpty()) return;
+        Thread t = new Thread(() -> {
+            for (String a : args) {
+                if (a == null || a.isBlank() || a.startsWith("--")) continue;
+                File f = new File(a.strip());
+                if (f.isFile()) {
+                    Platform.runLater(() -> {
+                        // Mezitím zadal uživatel něco sám — jeho volba má přednost.
+                        if (sigFile == null) {
+                            acceptSigFile(f);
+                            StartupTrace.mark("command-line file accepted");
+                        }
+                    });
+                    return;
+                }
+            }
+        }, "command-line-file");
+        t.setDaemon(true);
+        t.start();
+    }
+
     private void acceptSigFile(File f) {
         // Důkaz z obalu patří jen k souboru, který ho dostal od prohlížeče obalu nebo z odkazu
         // u externího podpisu; nový výběr ho ruší. Volající, kteří ho předávají, ho nastaví až

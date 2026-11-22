@@ -77,6 +77,12 @@ public class Main extends Application {
         primaryStage.show();
         StartupTrace.mark("stage shown");
         mainView.startWarmup();
+        // Soubor z nabídky Průzkumníka „Otevřít v AnEP“ (22. 11. 2026) — viz ExplorerContextMenu.
+        mainView.openFromCommandLine(getParameters().getRaw());
+        Thread menuRepair = new Thread(
+                cz.digitalnikontinuita.anep.core.ExplorerContextMenu::repairIfMoved, "menu-repair");
+        menuRepair.setDaemon(true);
+        menuRepair.start();
 
         // Startup measurement aid: -Danep.exitAfterStartup=<ms> closes the app on its own,
         // which is what lets a profiling run (or a CDS archive dump) end cleanly.

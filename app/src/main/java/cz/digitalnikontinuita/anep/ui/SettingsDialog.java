@@ -514,7 +514,11 @@ public class SettingsDialog {
                 new Separator(),
                 infoRow(uiScaleControl, makeInfoButton(stage,
                         labelUiScale.getText(), uiScaleHint)),
-                noteUiScale,
+                noteUiScale);
+        if (cz.digitalnikontinuita.anep.core.ExplorerContextMenu.supported()) {
+            basicPane.getChildren().addAll(new Separator(), contextMenuRow(stage));
+        }
+        basicPane.getChildren().addAll(
                 new Separator(),
                 btnToAdvanced,
                 new Separator(),
@@ -680,6 +684,98 @@ public class SettingsDialog {
     }
 
     /** Wraps a main control and an info button in an HBox with the main control expanding. */
+    /**
+     * Položka „Otevřít v AnEP“ v nabídce Průzkumníka po pravém kliknutí (22. 11. 2026).
+     * Instalátor MSI ji zapisuje sám; tlačítko je pro přenosnou verzi, která instalátor nemá.
+     * Na rozdíl od ostatních voleb platí hned po stisku, ne až po „Uložit“: zapisuje do registru
+     * Windows, ne do nastavení aplikace. Stav se čte na pozadí — {@code reg.exe} se spouští.
+     */
+    private static VBox contextMenuRow(Stage stage) {
+        Label heading = new Label("Nabídka po pravém kliknutí");
+        heading.setStyle("-fx-font-size:13px;-fx-font-weight:bold;");
+        Button action = new Button("Zjišťuji…");
+        action.setDisable(true);
+        Label note = new Label();
+        note.setStyle("-fx-font-size:11px;-fx-text-fill:#555555;");
+        note.setWrapText(true);
+        note.setMaxWidth(420);
+
+        String hint = "Přidá do nabídky, která se v Průzkumníku Windows otevře pravým kliknutím"
+                + " na soubor, položku „" + cz.digitalnikontinuita.anep.core.ExplorerContextMenu.LABEL
+                + "“. Vybraný soubor se pak v AnEP otevře stejně, jako kdyby byl přetažen do pole"
+                + " pro dokument; ověření se spouští jako obvykle.\n\n"
+                + "Ve Windows 11 je položka až pod „Zobrazit další možnosti“ (nebo po stisku"
+                + " Shift+F10), ve Windows 10 hned v nabídce.\n\n"
+                + "Instalovaná verze AnEP položku přidává sama při instalaci a odebírá při"
+                + " odinstalaci. Tlačítko je pro přenosnou verzi: položku zapíše jen pro"
+                + " přihlášeného uživatele a nepotřebuje práva správce. Když přenosnou verzi"
+                + " přesunete jinam, položka se při jejím příštím spuštění opraví sama. Před"
+                + " smazáním přenosné verze položku odeberte.\n\n"
+                + "Změna platí hned, bez tlačítka Uložit.";
+
+        HBox row = new HBox(8, action, makeInfoButton(stage, heading.getText(), hint));
+        row.setAlignment(Pos.CENTER_LEFT);
+
+        Runnable[] refresh = new Runnable[1];
+        refresh[0] = () -> {
+            action.setDisable(true);
+            Thread t = new Thread(() -> {
+                var state = cz.digitalnikontinuita.anep.core.ExplorerContextMenu.read();
+                java.nio.file.Path exe = cz.digitalnikontinuita.anep.core.ExplorerContextMenu.currentExe();
+                Platform.runLater(() -> {
+                    if (state.userEntry()) {
+                        action.setText("Odebrat z nabídky");
+                        action.setDisable(false);
+                        action.setOnAction(e -> apply(action, note, refresh[0], null));
+                        note.setText("Položka je přidaná a otevírá " + state.userExe() + ".");
+                    } else if (state.machineEntry()) {
+                        action.setText("Přidat do nabídky");
+                        action.setDisable(true);
+                        note.setText("Položku přidal instalátor AnEP; odebere ji odinstalace.");
+                    } else if (exe == null) {
+                        action.setText("Přidat do nabídky");
+                        action.setDisable(true);
+                        note.setText("Jen v sestavené aplikaci (AnEP.exe).");
+                    } else {
+                        action.setText("Přidat do nabídky");
+                        action.setDisable(false);
+                        action.setOnAction(e -> apply(action, note, refresh[0], exe));
+                        note.setText("");
+                    }
+                });
+            }, "context-menu-state");
+            t.setDaemon(true);
+            t.start();
+        };
+        refresh[0].run();
+        return new VBox(6, heading, row, note);
+    }
+
+    /** Zapíše ({@code exe} ≠ null), nebo odebere položku nabídky a znovu načte stav. */
+    private static void apply(Button action, Label note, Runnable refresh, java.nio.file.Path exe) {
+        action.setDisable(true);
+        Thread t = new Thread(() -> {
+            String error = null;
+            try {
+                if (exe != null) cz.digitalnikontinuita.anep.core.ExplorerContextMenu.install(exe);
+                else cz.digitalnikontinuita.anep.core.ExplorerContextMenu.uninstall();
+            } catch (java.io.IOException ex) {
+                error = ex.getMessage();
+            }
+            String err = error;
+            Platform.runLater(() -> {
+                if (err == null) {
+                    refresh.run();
+                } else {
+                    note.setText("Chyba: " + err);
+                    action.setDisable(false);
+                }
+            });
+        }, "context-menu-apply");
+        t.setDaemon(true);
+        t.start();
+    }
+
     private static HBox infoRow(javafx.scene.Node main, Button info) {
         HBox.setHgrow(main, Priority.ALWAYS);
         Region spacer = new Region();

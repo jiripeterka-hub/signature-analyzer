@@ -3,20 +3,6 @@
 Změny ve verzích aplikace AnEP (Analyzátor elektronických podpisů). Slouží jako podklad
 pro soupis změn ke každé nové vydané verzi.
 
-## Připravovaná verze
-
-### Výklad výsledku
-
-- **Samostatné časové razítko kryté pozdějším razítkem.** Nese-li kontejner ASiC více
-  samostatných časových razítek a pozdější razítko kryje dřívější a vzniklo ještě za platnosti
-  certifikátu jeho autority, posuzuje Rozšířený přehled certifikát dřívějšího razítka
-  k okamžiku vzniku toho pozdějšího. Dosud ho posuzoval k dnešku, a u dřívějšího razítka proto
-  chybně uváděl, že je platné jen při ověřování podle standardů (nikoli při striktním
-  ověřování podle platnosti certifikátu) a že ho drží jen to, že je certifikát autority sám
-  kotvou důvěry. Blok „Rozhodný okamžik ověření“ u takového razítka nově uvádí jako rozhodný
-  okamžik čas pozdějšího, kryjícího razítka, nikoli jen aktuální čas ověření. Verdikt se
-  nemění; záložka Digitální kontinuita s krytím počítala už dřív.
-
 ## Verze 1.5.0 (změny oproti 1.4.0)
 
 ### Bezpečnost
@@ -65,6 +51,27 @@ pro soupis změn ke každé nové vydané verzi.
   certifikátu použít nešlo, Analýza to nově říká v odrážce ústupku, v Závěru i v připomínce
   knihovny DSS. Dosud tvrdila, že se stav revokace z odmítnutého údaje „přesto vzal“, že
   certifikát „revokován nebyl“ a že se závěr „opřel o jiný krok ověřování“.
+
+- **Samostatné časové razítko kryté pozdějším razítkem.** Nese-li kontejner ASiC více
+  samostatných časových razítek a pozdější razítko kryje dřívější a vzniklo ještě za platnosti
+  certifikátu jeho autority, posuzuje Rozšířený přehled certifikát dřívějšího razítka
+  k okamžiku vzniku toho pozdějšího. Dosud ho posuzoval k dnešku, a u dřívějšího razítka proto
+  chybně uváděl, že je platné jen při ověřování podle standardů (nikoli při striktním
+  ověřování podle platnosti certifikátu) a že ho drží jen to, že je certifikát autority sám
+  kotvou důvěry. Blok „Rozhodný okamžik ověření“ u takového razítka nově uvádí jako rozhodný
+  okamžik čas pozdějšího, kryjícího razítka, nikoli jen aktuální čas ověření. Verdikt se
+  nemění; záložka Digitální kontinuita s krytím počítala už dřív.
+
+### Ovládání
+
+- **Otevřít v AnEP z nabídky Průzkumníka.** Na kterýkoli soubor lze v Průzkumníku Windows
+  klepnout pravým tlačítkem a zvolit „Otevřít v AnEP“: aplikace se spustí a soubor vloží do
+  pole pro dokument stejně, jako kdyby byl přetažen; ověření se spouští jako obvykle. Ve
+  Windows 11 je položka pod „Zobrazit další možnosti“ (nebo Shift+F10), ve Windows 10 hned
+  v nabídce. Instalátor položku přidá při instalaci a odebere při odinstalaci; v přenosné
+  verzi ji přidá a odebere tlačítko v Nastavení (jen pro přihlášeného uživatele, bez práv
+  správce). Po přesunutí přenosné verze se položka při jejím příštím spuštění opraví sama.
+  Každý soubor otevřený z nabídky otevře vlastní okno aplikace.
 
 ### Opravy
 

@@ -77,7 +77,28 @@
       <ComponentGroupRef Id="Files"/>
       <ComponentGroupRef Id="FileAssociations"/>
       <ComponentGroupRef Id="FragmentOsCondition"/>
+      <ComponentRef Id="AnepExplorerMenu"/>
     </Feature>
+
+    <!-- ================= PRIDANO PRO AnEP (22. 11. 2026) =================
+         Polozka "Otevrit v AnEP" v nabidce Pruzkumnika po pravem kliknuti na
+         libovolny soubor. AnEP.exe ji dostane jako prvni argument a vlozi ji do
+         pole pro dokument (MainView.openFromCommandLine). HKMU je HKLM pri
+         instalaci pro pocitac a HKCU pri instalaci pro uzivatele; odinstalace
+         klice odebere. Pro prenosnou verzi zapisuje tentyz klic pod HKCU tlacitko
+         v Nastaveni (ExplorerContextMenu) - text polozky musi zustat stejny.
+         Ve Windows 11 je to klasicka polozka, tedy pod "Zobrazit dalsi moznosti". -->
+    <DirectoryRef Id="INSTALLDIR">
+      <Component Id="AnepExplorerMenu" Guid="6f0c7c1e-3b2a-4d8e-9a51-2c4b8e7d1f30" Win64="yes">
+        <RegistryKey Root="HKMU" Key="Software\Classes\*\shell\AnEP">
+          <RegistryValue Type="string" Value="Otevřít v AnEP" KeyPath="yes"/>
+          <RegistryValue Type="string" Name="Icon" Value="&quot;[INSTALLDIR]AnEP.exe&quot;,0"/>
+        </RegistryKey>
+        <RegistryKey Root="HKMU" Key="Software\Classes\*\shell\AnEP\command">
+          <RegistryValue Type="string" Value="&quot;[INSTALLDIR]AnEP.exe&quot; &quot;%1&quot;"/>
+        </RegistryKey>
+      </Component>
+    </DirectoryRef>
 
     <CustomAction Id="JpSetARPINSTALLLOCATION" Property="ARPINSTALLLOCATION" Value="[INSTALLDIR]" />
     <CustomAction Id="JpSetARPCOMMENTS" Property="ARPCOMMENTS" Value="$(var.JpAppDescription)" />

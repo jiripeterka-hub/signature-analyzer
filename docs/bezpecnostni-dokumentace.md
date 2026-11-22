@@ -137,6 +137,8 @@ Vše uživatelské leží ve složce `%APPDATA%\SignatureAnalyzer` (na Linuxu `$
 
 Mimo tuto složku aplikace zapisuje jen soubory, které uživatel výslovně uloží. Klientský certifikát k autoritě razítek zůstává tam, kde ho uživatel má; aplikace si pamatuje cestu k němu.
 
+Do registru Windows se zapisuje jen položka „Otevřít v AnEP“ v nabídce Průzkumníka po pravém kliknutí (klíč `Software\Classes\*\shell\AnEP`). Instalátor ji zapisuje pod `HKLM` a odinstalace ji odebírá. Přenosná verze ji zapisuje pod `HKCU`, a to jen po stisku tlačítka v Nastavení; když přenosnou verzi uživatel přesune, aplikace při spuštění položku přesměruje na sebe, ale jen tehdy, vede-li do prázdna. Položka spustí AnEP s cestou k vybranému souboru; aplikace soubor jen vloží do pole pro dokument, ověření spouští uživatel.
+
 ## 5 Rozhraní a prostor útoku
 
 ### 5.1 Vstupy
@@ -149,6 +151,7 @@ Mimo tuto složku aplikace zapisuje jen soubory, které uživatel výslovně ulo
 | Časová razítka | síť | ověření podpisu a certifikátu autority po přijetí |
 | Kontrola verze | síť | čte se jen číslo a datum podle pevného vzoru; nic se nestahuje ani nespouští |
 | Nastavení a data v `%APPDATA%` | místní, pod účtem uživatele | ochrana operačním systémem |
+| Cesta k souboru v příkazové řádce (položka „Otevřít v AnEP“) | místní | bere se jen cesta k existujícímu souboru, který se vloží do pole pro dokument; nic se neověřuje ani nespouští bez pokynu uživatele |
 
 ### 5.2 Co aplikace nemá
 
