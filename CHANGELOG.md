@@ -3,6 +3,15 @@
 Změny ve verzích aplikace AnEP (Analyzátor elektronických podpisů). Slouží jako podklad
 pro soupis změn ke každé nové vydané verzi.
 
+## Připravovaná verze
+
+### Prohlížeč kontejnerů
+
+- **Více podpisů v jednom souboru .p7s.** Nese-li soubor s podpisem CAdES v kontejneru několik
+  souběžných podpisů (u ASiC-S je to jediná možnost, jak k obsahu připojit další podpis), uvede
+  to nově strom u položky, například „podpis CAdES (2 podpisy v jedné obálce CMS)“. Dosud
+  ukazoval jen jeden soubor .p7s, zatímco přehled hlásil dva podpisy.
+
 ## Verze 1.5.0 (změny oproti 1.4.0)
 
 ### Bezpečnost

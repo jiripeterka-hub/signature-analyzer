@@ -681,6 +681,20 @@ public final class ContainerInspector {
             } else {
                 role = "podepisovaný obsah";
             }
+            // Souběžné podpisy v jedné obálce. ASiC-S smí mít jen jediný META-INF/signature.p7s
+            // (ETSI EN 319 162-1), takže druhý podpis téhož obsahu se přidává jako další
+            // SignerInfo do téže obálky CMS. Strom pak ukazoval jeden soubor .p7s, zatímco
+            // přehled hlásil dva podpisy, a čtenář se ptal, kde je ten druhý. Nález uživatele
+            // z 25. 11. 2026 nad ASiC-S s CAdES-LTA se dvěma podepisujícími od dvou různých
+            // poskytovatelů. U jediného podpisu zůstává popisek beze změny.
+            if ("podpis CAdES".equals(role)) {
+                int signers = cmsSignerCount(n.data);
+                if (signers > 1) {
+                    role += " (" + signers + (signers < 5 ? " podpisy" : " podpisů")
+                            + " v jedné obálce CMS)";
+                    n.info.put("Počet podpisů v obálce", String.valueOf(signers));
+                }
+            }
             if (role != null) n.info.put("Role", role);
             // Razítko uložené jako samostatná položka se čte stejně jako to v nepodepsaném
             // atributu CMS: čtenář se u obou ptá na totéž a jiná cesta do stromu není důvod,
@@ -692,6 +706,21 @@ public final class ContainerInspector {
             // bez hlesu; chytila to až sonda nad skutečným kontejnerem.
             String readable = readableValidationDataName(p, role, counters);
             if (readable != null) n.displayName(readable);
+        }
+    }
+
+    /**
+     * Počet SignerInfo na nejvyšší úrovni obálky CMS, nebo 0, když se obálku nepodařilo
+     * přečíst (popisek pak zůstane holý — strom kvůli vadné položce nesmí spadnout).
+     * Protipodpisy a razítka v nepodepsaných atributech se nepočítají: ty nejsou
+     * samostatnými podpisy obsahu.
+     */
+    static int cmsSignerCount(byte[] der) {
+        if (der == null || der.length == 0) return 0;
+        try {
+            return new CMSSignedData(der).getSignerInfos().size();
+        } catch (Exception | StackOverflowError e) {
+            return 0;
         }
     }
 
