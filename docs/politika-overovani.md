@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika ověřování podpisu**
 
-==Verze 1.23== · stav ke dni ==21. 11. 2026== · ==AnEP 1.5.0==, knihovna DSS 6.5.1
+==Verze 1.24== · stav ke dni ==24. 11. 2026== · ==AnEP 1.5.0==, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -376,6 +376,8 @@ Celkový verdikt je **platný**, obstojí-li integrita, matematika podpisu, cert
 
 ==U každého údaje se uvede hodnota z certifikátu, nebo že chybí. U čísla autorizace AnEP upozorní na neobvyklý tvar (u ČKA mívá pět číslic, u ČKAIT sedm); na výsledek ověření podpisu to vliv nemá. Posouzení vychází z výsledku ověření a z údajů certifikátu; zda je osoba v seznamu autorizovaných osob skutečně zapsána a zda autorizace trvá, AnEP neověřuje.==
 
+==Zákon ani pravidla komor neurčují, ve kterých položkách certifikátu mají tyto údaje být. Rozložení odpovídá profilu kvalifikovaného certifikátu pro elektronický podpis, který vydává Česká pošta (PostSignum) a v němž je zákazníkem Komora: položka O a organizationIdentifier nesou název a IČO zákazníka, povinná položka OU číslo žadatele u zákazníka (zde číslo autorizace), nepovinná položka OU rozlišující organizační jednotku (zde označení „Elektronické autorizační razítko“) a položka title funkci žadatele (zde obor či specializaci) – Certifikační politika PostSignum QCA, Kvalifikované certifikáty pro elektronický podpis, verze 2.1.5, kapitola 7.1, tabulka 2. Samotné označení „Elektronické autorizační razítko“ žádný zveřejněný dokument nestanoví; AnEP je převzal z certifikátů, které komory vydávají.==
+
 ## 13 Omezení podle ETSI TS 119 172-1
 
 Tabulka uvádí, jak AnEP naplňuje omezení podle přílohy A.4.2.1 (tabulka A.2) a přílohy C normy ETSI TS 119 172-1.
@@ -442,3 +444,4 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 | ==1.21== | ==11. 11. 2026== | ==beze změny obsahu; číslo verze sjednocené s verzí 1.21 politiky uchovávání== |
 | ==1.22== | ==11. 11. 2026== | ==beze změny obsahu; změny ve verzích 1.18 až 1.21 platí od AnEP 1.4.0; platí pro AnEP 1.4.0== |
 | ==1.23== | ==21. 11. 2026== | ==oddíl 12.6: vyplněná pole formuláře a anotace viditelné na stránce, které přibyly za posledním podpisem či razítkem nebo mezi podpisy, AnEP zjišťuje vlastním porovnáním a uvádí bez změny verdiktu, varovně jen tehdy, překračují-li to, co podepisující povolil certifikačním podpisem či zámkem; jiné validátory mohou změnu obsahu hodnotit neplatností podpisů i časových razítek; platí pro AnEP 1.5.0== |
+| ==1.24== | ==24. 11. 2026== | ==oddíl 12.9: doplněno, o jaký profil certifikátu se rozložení údajů elektronického autorizačního razítka opírá (certifikační politika PostSignum QCA); ověřování samo se nemění== |

@@ -24,6 +24,15 @@ import java.util.Locale;
  *   <li>O a organizationIdentifier — název a IČO Komory.</li>
  * </ul>
  *
+ * <p>Formální oporu má tento tvar v profilu certifikátu PostSignum (Certifikační politika
+ * PostSignum QCA – Kvalifikované certifikáty pro elektronický podpis v. 2.1.5, kap. 7.1,
+ * tab. 2, certifikát zákazníka-organizace). Komora je tam zákazníkem: O a organizationIdentifier
+ * {@code NTRCZ-IČO} nesou zákazníka, povinná OU „číslo žadatele v prostředí zákazníka“ je
+ * číslo autorizace, nepovinná OU „rozlišující organizační jednotka“ nese značku razítka
+ * a title („funkce žadatele“) obory. Žádná z komor ani politika nestanoví hodnotu značky
+ * ani to, která z OU ji nese — proto se značka hledá mezi všemi OU a číslo se pozná podle
+ * tvaru (dohledáno 24. 11. 2026; zákon i Pravidla ČKAIT R2503-12 jen opakují obsah podle § 13).
+ *
  * @param name      jméno autorizované osoby (CN), nebo {@code null}
  * @param number    číslo autorizace (druhá OU), nebo {@code null}
  * @param fields    obor, popřípadě specializace (title), nebo {@code null}
