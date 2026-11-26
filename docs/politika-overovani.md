@@ -30,7 +30,7 @@ Dokument je stavěný jako politika ověřování podpisu ve smyslu ETSI TS 119 
 | Název | Politika ověřování elektronických podpisů AnEP |
 | Verze | ==1.25== ze dne ==25. 11. 2026== |
 | Platí pro | ==AnEP 1.5.0 (repozitář signature-analyzer, značka v1.5.0)== |
-| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.23== |
+| Navazující dokument | Politika uchovávání elektronických podpisů AnEP, verze ==1.25== |
 | Ověřovací jádro | knihovna DSS (Digital Signature Service) 6.5.1 Evropské komise |
 | Postup ověřování | ETSI EN 319 102-1 V1.4.0 (2024-03) |
 | Struktura dokumentu | ETSI TS 119 172-1 (politika ověřování podpisu) |
