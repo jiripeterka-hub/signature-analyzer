@@ -35,9 +35,9 @@ Rozdělení je věcné: politika ověřování popisuje **dnešní** ověření,
 | Položka | Hodnota |
 |---|---|
 | Název | Politika uchovávání elektronických podpisů AnEP |
-| Verze | ==1.22 ze dne 11. 11. 2026== |
+| Verze | ==1.23 ze dne 21. 11. 2026== |
 | Platí pro | ==AnEP 1.5.0 (repozitář signature-analyzer, značka v1.5.0)== |
-| Navazuje na | Politika ověřování elektronických podpisů AnEP, verze ==1.22== |
+| Navazuje na | Politika ověřování elektronických podpisů AnEP, verze ==1.25== |
 | Struktura dokumentu | ETSI TS 119 511 V1.1.1 (2019-06) |
 | Pojmy a schéma uchování | ETSI TS 119 512 V1.2.1 (2023-05), schéma F.4 „pds+wos+aug“ |
 | Cílová úroveň podpisů | B-LTA podle ETSI EN 319 142-1 (PAdES), EN 319 122-1 (CAdES), EN 319 132-1 (XAdES), TS 119 182-1 (JAdES), ==TS 119 152-1 (CB-AdES)== a EN 319 162-1 (ASiC) |
