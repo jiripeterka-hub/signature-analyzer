@@ -2,7 +2,7 @@
 
 **Analyzátor elektronických podpisů (AnEP) — politika ověřování podpisu**
 
-==Verze 1.24== · stav ke dni ==24. 11. 2026== · ==AnEP 1.5.0==, knihovna DSS 6.5.1
+==Verze 1.25== · stav ke dni ==25. 11. 2026== · ==AnEP 1.5.0==, knihovna DSS 6.5.1
 
 ## 1 Úvod
 
@@ -76,6 +76,8 @@ Při ověřování externího podpisu se posuzuje jen externí podpis. Podpisy, 
 | Office Open XML (DOCX, XLSX, PPTX) | — | **neověřuje se**; AnEP jen přečte, co v podpisu stojí. DSS nezná transformaci, kterou OOXML ke krytí obsahu potřebuje |
 | Samostatné časové razítko (RFC 3161) | — | ověří se jako samostatný prvek |
 | Evidenční záznam (RFC 4998, RFC 6283) | — | jako doklad existence dat; viz 8.4 |
+
+==Kontejner ASiC-S nese jeden podepsaný soubor a v META-INF jediný soubor s podpisy, který může obsahovat i více souběžných podpisů (ETSI EN 319 162-1, čl. 4.3.1 a 4.3.3.2 bod 4). AnEP ověřuje každý z těchto podpisů samostatně a ve výsledku je uvádí jako samostatné podpisy.==
 
 PDF, jehož hlavička `%PDF-` nezačíná na prvním bajtu, ale do prvního kilobajtu, se ověří od hlavičky; bajty před ní nekryje žádný podpis a výsledek je uvede.
 
@@ -445,3 +447,4 @@ Pro orientaci, proč mohou různé nástroje dojít k různým závěrům. Údaj
 | ==1.22== | ==11. 11. 2026== | ==beze změny obsahu; změny ve verzích 1.18 až 1.21 platí od AnEP 1.4.0; platí pro AnEP 1.4.0== |
 | ==1.23== | ==21. 11. 2026== | ==oddíl 12.6: vyplněná pole formuláře a anotace viditelné na stránce, které přibyly za posledním podpisem či razítkem nebo mezi podpisy, AnEP zjišťuje vlastním porovnáním a uvádí bez změny verdiktu, varovně jen tehdy, překračují-li to, co podepisující povolil certifikačním podpisem či zámkem; jiné validátory mohou změnu obsahu hodnotit neplatností podpisů i časových razítek; platí pro AnEP 1.5.0== |
 | ==1.24== | ==24. 11. 2026== | ==oddíl 12.9: doplněno, o jaký profil certifikátu se rozložení údajů elektronického autorizačního razítka opírá (certifikační politika PostSignum QCA); ověřování samo se nemění== |
+| ==1.25== | ==25. 11. 2026== | ==kapitola 4: doplněno, že soubor s podpisy v kontejneru ASiC-S může nést více souběžných podpisů a že AnEP každý z nich ověřuje samostatně; ověřování samo se nemění== |
