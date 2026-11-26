@@ -11,6 +11,12 @@ pro soupis změn ke každé nové vydané verzi.
   souběžných podpisů (u ASiC-S je to jediná možnost, jak k obsahu připojit další podpis), uvede
   to nově strom u položky, například „podpis CAdES (2 podpisy v jedné obálce CMS)“. Dosud
   ukazoval jen jeden soubor .p7s, zatímco přehled hlásil dva podpisy.
+- **Krytí dokumentu v ASiC-S s podpisem CAdES nebo časovým razítkem.** U dokumentu v kontejneru
+  ASiC-S, který nese podpis CAdES (`signature.p7s`) nebo časové razítko (`timestamp.tst`), uvádí
+  prohlížeč nově v údaji „Kryto podpisem“, že dokument je kryt, a porovná jeho otisk s otiskem
+  uvedeným v podpisu či razítku (u více podpisů u každého zvlášť). Dosud psal „podle
+  manifestů/podpisů XML nezjištěno“, protože krytí zjišťoval jen z manifestů a podpisů XAdES,
+  které takový kontejner nemá. Nesouhlasí-li otisk, prohlížeč na to upozorní.
 
 ## Verze 1.5.0 (změny oproti 1.4.0)
 

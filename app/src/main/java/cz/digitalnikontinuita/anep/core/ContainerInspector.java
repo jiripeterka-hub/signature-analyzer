@@ -802,6 +802,7 @@ public final class ContainerInspector {
                 target.info.put("Kryto podpisem", existing == null ? verdict : existing + "; " + verdict);
             }
         }
+        applyAsicSimpleCmsCoverage(byPath, warnings);
         // Everything that carries content but no reference is unsigned — say so explicitly.
         for (Map.Entry<String, Node> e : byPath.entrySet()) {
             Node n = e.getValue();
@@ -809,9 +810,121 @@ public final class ContainerInspector {
             String lower = e.getKey().toLowerCase(Locale.ROOT);
             if (lower.startsWith("meta-inf/") || lower.equals("mimetype")) continue;
             if (!n.info.containsKey("Kryto podpisem")) {
-                n.info.put("Kryto podpisem", "podle manifestů/podpisů XML nezjištěno");
+                n.info.put("Kryto podpisem",
+                        "nezjištěno — žádný podpis, časové razítko ani manifest na soubor neodkazuje");
             }
         }
+    }
+
+    /**
+     * Krytí datového souboru v ASiC-S podpisem CAdES ({@code META-INF/signature.p7s}) nebo
+     * časovým razítkem ({@code META-INF/timestamp.tst}).
+     *
+     * <p>Krytí se dřív zjišťovalo jen ze souborů XML v META-INF (manifesty a podpisy XAdES).
+     * ASiC-S s CAdES ani s razítkem žádný manifest nemá — podpis CMS je odloučený a kryje
+     * jediný datový soubor v kořeni kontejneru (ETSI EN 319 162-1, čl. 4.3.3.2 body 2 a 4).
+     * Prohlížeč pak u podepsaného dokumentu psal „podle manifestů/podpisů XML nezjištěno“,
+     * přestože přehled hlásil platný podpis. Nález uživatele z 26. 11. 2026 nad ASiC-S
+     * s kvalifikovaným podpisem CAdES.
+     *
+     * <p>Otisk se bere z podepsaného atributu messageDigest každého SignerInfo, resp.
+     * z messageImprint razítka, a porovná se s otiskem souboru. Matematiku podpisu to
+     * neověřuje — to dělá ověření v hlavním okně —, jen říká, zda soubor v kontejneru je ten,
+     * na který podpis ukazuje.
+     *
+     * <p>Jen pro ASiC-S: má-li kontejner ASiCManifest, je to ASiC-E a soubor .p7s či .tst
+     * kryje manifest, který se čte výše.
+     */
+    private static void applyAsicSimpleCmsCoverage(Map<String, Node> byPath, List<String> warnings) {
+        boolean hasManifest = byPath.keySet().stream()
+                .anyMatch(p -> p.toLowerCase(Locale.ROOT).startsWith("meta-inf/asicmanifest"));
+        if (hasManifest) return;
+        List<Map.Entry<String, Node>> rootFiles = byPath.entrySet().stream()
+                .filter(e -> !e.getValue().directory && !e.getKey().contains("/")
+                        && !e.getKey().equalsIgnoreCase("mimetype"))
+                .toList();
+        if (rootFiles.size() != 1) return;
+        String targetPath = rootFiles.get(0).getKey();
+        Node target = rootFiles.get(0).getValue();
+        if (target.data == null) return;
+
+        for (Map.Entry<String, Node> e : byPath.entrySet()) {
+            String lower = e.getKey().toLowerCase(Locale.ROOT);
+            Node source = e.getValue();
+            if (source.directory || source.data == null) continue;
+            String sourceName = e.getKey().substring(e.getKey().lastIndexOf('/') + 1);
+            List<String> verdicts = new ArrayList<>();
+            if (lower.equals("meta-inf/signature.p7s")) {
+                CMSSignedData cms;
+                try {
+                    cms = new CMSSignedData(source.data);
+                } catch (Exception | StackOverflowError ex) {
+                    continue;
+                }
+                List<SignerInformation> signers = new ArrayList<>(cms.getSignerInfos().getSigners());
+                for (int i = 0; i < signers.size(); i++) {
+                    SignerInformation si = signers.get(i);
+                    String label = "ano — " + sourceName
+                            + (signers.size() > 1 ? ", podpis č. " + (i + 1) : "");
+                    byte[] expected = null;
+                    AttributeTable signed = si.getSignedAttributes();
+                    Attribute md = signed == null ? null
+                            : signed.get(org.bouncycastle.asn1.cms.CMSAttributes.messageDigest);
+                    if (md != null && md.getAttrValues().size() > 0) {
+                        try {
+                            expected = org.bouncycastle.asn1.ASN1OctetString
+                                    .getInstance(md.getAttrValues().getObjectAt(0)).getOctets();
+                        } catch (Exception ignored) {
+                            // Vadný atribut = nelze zkontrolovat, ne „nesouhlasí“.
+                        }
+                    }
+                    verdicts.add(digestVerdict(label, target, targetPath, sourceName,
+                            digestNameForOid(si.getDigestAlgOID()), expected, warnings));
+                }
+            } else if (lower.equals("meta-inf/timestamp.tst")) {
+                TimeStampTokenInfo info;
+                try {
+                    info = new TimeStampToken(new CMSSignedData(source.data)).getTimeStampInfo();
+                } catch (Exception | StackOverflowError ex) {
+                    continue;
+                }
+                verdicts.add(digestVerdict("ano — časovým razítkem " + sourceName, target, targetPath,
+                        sourceName, digestNameForOid(info.getMessageImprintAlgOID().getId()),
+                        info.getMessageImprintDigest(), warnings));
+            }
+            for (String verdict : verdicts) {
+                String existing = target.info.get("Kryto podpisem");
+                target.info.put("Kryto podpisem", existing == null ? verdict : existing + "; " + verdict);
+            }
+        }
+    }
+
+    private static String digestVerdict(String label, Node target, String targetPath, String sourceName,
+                                        String algorithm, byte[] expected, List<String> warnings) {
+        if (algorithm == null || expected == null) return label;
+        boolean match = digestMatches(target.data, algorithm, expected);
+        if (!match) {
+            warnings.add("Otisk souboru " + targetPath + " neodpovídá hodnotě uvedené v "
+                    + sourceName + " — obsah kontejneru byl po podepsání změněn.");
+        }
+        return label + " (" + algorithm + (match ? ": otisk souhlasí ✔" : ": otisk NESOUHLASÍ ✘") + ")";
+    }
+
+    /** Název algoritmu pro {@link MessageDigest}, nebo {@code null}, když ho neznáme. */
+    private static String digestNameForOid(String oid) {
+        if (oid == null) return null;
+        return switch (oid) {
+            case "1.3.14.3.2.26"           -> "SHA-1";
+            case "2.16.840.1.101.3.4.2.4"  -> "SHA-224";
+            case "2.16.840.1.101.3.4.2.1"  -> "SHA-256";
+            case "2.16.840.1.101.3.4.2.2"  -> "SHA-384";
+            case "2.16.840.1.101.3.4.2.3"  -> "SHA-512";
+            case "2.16.840.1.101.3.4.2.7"  -> "SHA3-224";
+            case "2.16.840.1.101.3.4.2.8"  -> "SHA3-256";
+            case "2.16.840.1.101.3.4.2.9"  -> "SHA3-384";
+            case "2.16.840.1.101.3.4.2.10" -> "SHA3-512";
+            default -> null;
+        };
     }
 
     /** A digest reference taken from a {@code ds:Reference} or an ASiC {@code DataObjectReference}. */
