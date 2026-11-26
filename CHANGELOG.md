@@ -17,6 +17,10 @@ pro soupis změn ke každé nové vydané verzi.
   uvedeným v podpisu či razítku (u více podpisů u každého zvlášť). Dosud psal „podle
   manifestů/podpisů XML nezjištěno“, protože krytí zjišťoval jen z manifestů a podpisů XAdES,
   které takový kontejner nemá. Nesouhlasí-li otisk, prohlížeč na to upozorní.
+- **Krytí souborů ve vnořeném archivu.** Je-li podepsaným souborem kontejneru archiv ZIP
+  (tak se v ASiC-S podepisuje více souborů najednou), uvede prohlížeč po jeho otevření tlačítkem
+  „Otevřít jako kontejner“ u každého souboru v něm, že je kryt jako součást archivu, a kterým
+  podpisem. Dosud psal, že na soubor žádný podpis neodkazuje.
 
 ## Verze 1.5.0 (změny oproti 1.4.0)
 

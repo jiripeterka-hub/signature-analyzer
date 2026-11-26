@@ -817,6 +817,41 @@ public final class ContainerInspector {
     }
 
     /**
+     * Přenese krytí ze souboru, který je sám kontejnerem, na soubory v něm.
+     *
+     * <p>ASiC-S podepisuje jediný datový soubor, a chce-li někdo podepsat víc souborů, zabalí
+     * je do ZIPu a podepíše ten (ETSI EN 319 162-1, čl. 4.3.2). Prohlížeč otevřený nad tímto
+     * vnitřním ZIPem o podpisu v obalu nevěděl a u každého souboru psal „nezjištěno — žádný
+     * podpis … na soubor neodkazuje“, ačkoli podpis je kryje celé. Nález uživatele
+     * z 26. 11. 2026 nad ASiC-S s CAdES, jehož datovým souborem je ZIP se dvěma dokumenty.
+     *
+     * <p>Přenáší se jen na prvky, které údaj „Kryto podpisem“ mají (obsah ZIPu), a jen tehdy,
+     * když nadřazený soubor kryt je. Nezjištěné krytí se nahradí, vlastní krytí vnořeného
+     * kontejneru (vnitřní ASiC) se doplní. Text nadřazeného krytí se přebírá i se značkou
+     * ✔/✘, takže nesouhlasící otisk obalu se ukáže i o úroveň níž.
+     *
+     * @param root            strom vnořeného kontejneru
+     * @param envelopeEntry   jméno souboru v nadřazeném kontejneru, který byl otevřen
+     * @param parentCoverage  jeho údaj „Kryto podpisem“, nebo {@code null}
+     */
+    public static void inheritCoverage(Node root, String envelopeEntry, String parentCoverage) {
+        if (root == null || parentCoverage == null || !parentCoverage.startsWith("ano")) return;
+        String via = parentCoverage.replaceFirst("^ano — ", "").replace("; ano — ", "; ");
+        String inherited = "ano — jako součást souboru " + envelopeEntry + ", který kryje " + via;
+        inheritCoverage(root, inherited);
+    }
+
+    private static void inheritCoverage(Node n, String inherited) {
+        if (!n.directory) {
+            String own = n.info.get("Kryto podpisem");
+            if (own != null) {
+                n.info.put("Kryto podpisem", own.startsWith("ano") ? own + "; " + inherited : inherited);
+            }
+        }
+        for (Node child : n.children) inheritCoverage(child, inherited);
+    }
+
+    /**
      * Krytí datového souboru v ASiC-S podpisem CAdES ({@code META-INF/signature.p7s}) nebo
      * časovým razítkem ({@code META-INF/timestamp.tst}).
      *

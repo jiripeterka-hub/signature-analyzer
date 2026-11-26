@@ -1422,7 +1422,13 @@ public class ContainerView {
         if (ContainerInspector.detectKind(data) == ContainerInspector.Kind.CODE) {
             return openCode(stage, data, node.getName(), null);
         }
-        return open(stage, data, node.getName(), explain, nestedOrigin(node));
+        if (!ContainerInspector.isContainerKind(ContainerInspector.detectKind(data))) return false;
+        // Krytí obalu se přenáší dovnitř: soubor v ZIPu, který podpis kryje jako celek,
+        // je kryt i sám (26. 11. 2026), viz ContainerInspector.inheritCoverage.
+        Result nested = ContainerInspector.inspect(data, node.getName());
+        ContainerInspector.inheritCoverage(nested.root(), node.getDisplayName(),
+                node.getInfo().get("Kryto podpisem"));
+        return show(stage, nested, node.getName(), explain, data, nestedOrigin(node));
     }
 
     /**
